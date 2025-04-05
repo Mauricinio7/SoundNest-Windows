@@ -8,5 +8,6 @@ namespace Services.Infrestructure
 {
     class MediatorKeys
     {
+    
     }
 }
