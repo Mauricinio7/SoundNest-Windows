@@ -30,7 +30,17 @@
 
             <TextBlock Canvas.Left="1184" Canvas.Top="40" Text="&#xECC8;" FontFamily="Segoe Fluent Icons" Foreground="{StaticResource SecondaryColor2}" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
-            <TextBlock Canvas.Left="1253" Canvas.Top="38" Text="&#xE8F2;" FontFamily="Segoe Fluent Icons" Foreground="{StaticResource SecondaryColor2}" FontSize="24" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            <Button
+                Canvas.Left="1253"
+                Canvas.Top="38"
+                Background="Transparent"
+                BorderThickness="0"
+                FontFamily="Segoe Fluent Icons"
+                FontSize="24"
+                Foreground="{StaticResource SecondaryColor2}" 
+                Command="{Binding OpenCommentsCommand}">
+                &#xE8F2;
+            </Button>
 
             <TextBlock Canvas.Left="1360" Canvas.Top="38" Text="&#xE767;" FontFamily="Segoe Fluent Icons" Foreground="{StaticResource SecondaryColor2}" FontSize="24" HorizontalAlignment="Left" VerticalAlignment="Top"/>
             <Slider Canvas.Left="1404" Canvas.Top="42" Width="142" Minimum="0" Maximum="100" Value="50" HorizontalAlignment="Left" VerticalAlignment="Top"  />

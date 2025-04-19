@@ -14,8 +14,11 @@
         <DataTemplate DataType="{x:Type viewModel:InitViewModel}">
             <view:InitView/>
         </DataTemplate>
-            <DataTemplate DataType="{x:Type viewModel:HomeViewModel}">
-                <view:HomeView/>
+        <DataTemplate DataType="{x:Type viewModel:HomeViewModel}">
+            <view:HomeView/>
+        </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:CommentsViewModel}">
+                <view:CommentsView/>
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

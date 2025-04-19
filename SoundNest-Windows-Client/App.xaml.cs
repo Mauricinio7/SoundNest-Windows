@@ -4,7 +4,7 @@ using System.Configuration;
 using System.Data;
 using System.Windows;
 using SoundNest_Windows_Client.ViewModels;
-using Services.Navegation;
+using Services.Navigation;
 
 namespace SoundNest_Windows_Client;
 
@@ -27,8 +27,9 @@ public partial class App : Application
         service.AddTransient<MainWindowViewModel>();
         service.AddTransient<InitViewModel>();
         service.AddTransient<HomeViewModel>();
+        service.AddTransient<CommentsViewModel>();
 
-        service.AddSingleton<INavigationService, Services.Navegation.NavigationService>();
+        service.AddSingleton<INavigationService, Services.Navigation.NavigationService>();
         service.AddSingleton<Func<Type, ViewModel>>(provider =>
             viewModelType => (ViewModel)provider.GetRequiredService(viewModelType));
 

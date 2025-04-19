@@ -5,12 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using Services.Infrestructure;
-using Services.Navegation;
+using Services.Navigation;
 using SoundNest_Windows_Client.Views;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
-    class MainWindowViewModel : Services.Navegation.ViewModel
+    class MainWindowViewModel : Services.Navigation.ViewModel
     {
         private INavigationService navigation;
         public INavigationService Navigation
