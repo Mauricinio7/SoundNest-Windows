@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Services.Infrestructure
 {
-    class Mediator
+    public class Mediator
     {
         private static IDictionary<string, Action<object>> actions = new Dictionary<string, Action<object>>();
 

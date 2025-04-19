@@ -1,0 +1,41 @@
+﻿<UserControl x:Class="SoundNest_Windows_Client.Views.SideBarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:SoundNest_Windows_Client.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="850" Width="611">
+
+    <Viewbox Stretch="Fill" Margin="0,0,0,0">
+
+        <Grid Background="#171717" x:Name="SidebarGrid"  Width="481" Height="850">
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="SidebarTransform" X="-325" />
+            </Grid.RenderTransform>
+            <Grid.Triggers>
+                <EventTrigger RoutedEvent="MouseEnter">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetName="SidebarGrid"
+                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                         To="0" Duration="0:0:0.3" />
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+                <EventTrigger RoutedEvent="MouseLeave">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetName="SidebarGrid"
+                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                         To="-325" Duration="0:0:0.3" />
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Grid.Triggers>
+
+            <TextBlock Canvas.Left="998" Canvas.Top="40" Text="" FontFamily="Segoe Fluent Icons" Foreground="White" FontSize="24" HorizontalAlignment="Left" VerticalAlignment="Top" Height="30" Width="26" Margin="427,425,0,0"/>
+
+        </Grid>
+    </Viewbox>
+</UserControl>

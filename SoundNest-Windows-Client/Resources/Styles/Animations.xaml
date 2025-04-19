@@ -1,0 +1,89 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Storyboard x:Key="FadeInAnimation">
+        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                 From="0" To="1" Duration="0:0:2" />
+    </Storyboard>
+
+    <Storyboard x:Key="FadeOutAnimation">
+        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+             From="1" To="0" Duration="0:0:4" />
+    </Storyboard>
+
+    <Storyboard x:Key="SlideInFromTopAnimation">
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                 From="-1200" To="0" Duration="0:0:2"/>
+    </Storyboard>
+
+    <Storyboard x:Key="FastSlideInFromTopAnimation">
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+             From="-1200" To="0" Duration="0:0:0.3"/>
+    </Storyboard>
+
+    <Storyboard x:Key="SLIDE_OUT_FROM_TOP_ANIMATION">
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+             From="0" To="-1200" Duration="0:0:1"/>
+    </Storyboard>
+
+    <Storyboard x:Key="SlideInFromRightAnimation" >
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                 From="2000" To="0" Duration="0:0:1"/>
+    </Storyboard>
+
+    <Storyboard x:Key="SlideInFromRightAnimationForPanels" >
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+             From="800" To="0" Duration="0:0:1"/>
+    </Storyboard>
+
+    <Storyboard x:Key="SlideOutFromRightAnimation" >
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+             From="0" To="2000" Duration="0:0:1"/>
+    </Storyboard>
+
+    <Storyboard x:Key="SlideOutFromRightAnimationForPanels" >
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+         From="0" To="800" Duration="0:0:1"/>
+    </Storyboard>
+
+    <Storyboard x:Key="SlideInFromLeftAnimation" >
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+             From="-2000" To="0" Duration="0:0:1"/>
+    </Storyboard>
+
+    <Storyboard x:Key="SlideOutFromLeftAnimation" >
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+         From="0" To="-2000" Duration="0:0:1"/>
+    </Storyboard>
+
+    <Storyboard x:Key="SlideInFromLeftAnimationForPanels" >
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+         From="-800" To="0" Duration="0:0:1"/>
+    </Storyboard>
+
+    <Storyboard x:Key="SlideOutFromLeftAnimationForPanels" >
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+     From="0" To="-800" Duration="0:0:1"/>
+    </Storyboard>
+
+
+    <Storyboard x:Key="LiftUpAnimation">
+        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)"
+                     To="-5" Duration="0:0:0.2" />
+    </Storyboard>
+
+    <Storyboard x:Key="LiftDownAnimation">
+        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)"
+                     To="0" Duration="0:0:0.2" />
+    </Storyboard>
+
+
+    <Storyboard x:Key="ClickAnimation">
+        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleX"
+                     To="0.9" Duration="0:0:0.1" AutoReverse="True"/>
+        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.ScaleY"
+                     To="0.9" Duration="0:0:0.1" AutoReverse="True"/>
+    </Storyboard>
+
+
+</ResourceDictionary>

@@ -1,0 +1,18 @@
+﻿<Window x:Class="SoundNest_Windows_Client.Views.MainWindowView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SoundNest_Windows_Client.Views"
+        mc:Ignorable="d"
+        Background="Black"
+        Title="MainWindowView" Height="450" Width="800">
+    
+    <Viewbox Stretch="Fill">
+        <Grid>
+            <ContentControl Content="{Binding Navigation.CurrentView}"/>
+            <ContentControl Content="{Binding MusicPlayerBar}" Margin="200,965,0,0"/>
+            <ContentControl Content="{Binding SideBar}" Margin="0,0,1309,0" />
+        </Grid>
+    </Viewbox>
+</Window>
