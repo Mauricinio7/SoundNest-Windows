@@ -1,5 +1,5 @@
 ﻿using Services.Infrestructure;
-using Services.Navegation;
+using Services.Navigation;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,7 +10,7 @@ using System.Windows.Input;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
-    class SearchBarViewModel : Services.Navegation.ViewModel
+    class SearchBarViewModel : Services.Navigation.ViewModel
     {
         private readonly string historyFilePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),

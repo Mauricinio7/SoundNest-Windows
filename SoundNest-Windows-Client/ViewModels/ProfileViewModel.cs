@@ -1,5 +1,5 @@
 ﻿using Services.Infrestructure;
-using Services.Navegation;
+using Services.Navigation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +9,7 @@ using System.Windows.Input;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
-    class ProfileViewModel : Services.Navegation.ViewModel
+    class ProfileViewModel : Services.Navigation.ViewModel
     {
         private INavigationService navigation;
         public INavigationService Navigation

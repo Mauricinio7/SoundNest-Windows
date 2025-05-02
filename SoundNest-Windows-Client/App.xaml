@@ -38,12 +38,6 @@
             <DataTemplate DataType="{x:Type viewModel:VerifyAccountViewModel}">
                 <view:VerifyAccountView/>
             </DataTemplate>
-        <DataTemplate DataType="{x:Type viewModel:InitViewModel}">
-            <view:InitView/>
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type viewModel:HomeViewModel}">
-            <view:HomeView/>
-        </DataTemplate>
             <DataTemplate DataType="{x:Type viewModel:CommentsViewModel}">
                 <view:CommentsView/>
             </DataTemplate>

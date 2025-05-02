@@ -1,5 +1,5 @@
 ﻿using Services.Infrestructure;
-using Services.Navegation;
+using Services.Navigation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
-    class ConfirmCodeViewModel : Services.Navegation.ViewModel
+    class ConfirmCodeViewModel : Services.Navigation.ViewModel
     {
         private INavigationService navigation;
         public INavigationService Navigation
