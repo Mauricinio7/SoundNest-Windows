@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using SoundNest_Windows_Client.ViewModels;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,14 +16,13 @@ using System.Windows.Shapes;
 namespace SoundNest_Windows_Client.Views
 {
     /// <summary>
-    /// Lógica de interacción para SideBarView.xaml
+    /// Lógica de interacción para ProfileView.xaml
     /// </summary>
-    public partial class SideBarView : UserControl
+    public partial class ProfileView : UserControl
     {
-        public SideBarView()
+        public ProfileView()
         {
             InitializeComponent();
-            DataContext = App.ServiceProvider.GetRequiredService<SideBarViewModel>();
         }
     }
 }

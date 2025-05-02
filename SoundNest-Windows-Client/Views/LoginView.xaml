@@ -109,13 +109,13 @@
                             Height="88"
                             VerticalAlignment="Top"/>
 
-                    <Label Content="¿Olvidaste la contraseña?"
-                           Margin="493,1068,42,0"
-                           Height="70"
-                           VerticalAlignment="Top"
-                           FontSize="30"
-                           FontWeight="Bold"
-                           Foreground="LightBlue"/>
+                    <controls:AnimatedLabelButton 
+                        LabelText="¿Olvidaste la contraseña?"
+                        LabelFontSize="30"
+                        Foreground="LightBlue"
+                        FontWeight="Bold"
+                        ClickCommand="{Binding ForgottenPasswordCommand}" 
+                        Margin="473,1081,53,91"/>
 
                 </Grid>
             </Viewbox>

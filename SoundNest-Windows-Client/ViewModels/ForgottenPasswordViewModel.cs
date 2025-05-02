@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
-    class InitViewModel : Services.Navegation.ViewModel
+    class ForgottenPasswordViewModel : Services.Navegation.ViewModel
     {
         private INavigationService navigation;
         public INavigationService Navigation
@@ -21,26 +21,26 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-        public RelayCommand LoginCommand { get; set; }
-        public RelayCommand RegisterCommand { get; set; }
+        public RelayCommand CancelCommand { get; set; }
+        public RelayCommand SubmitRecoveryCommand { get; set; }
 
-        public InitViewModel(INavigationService navigationService)
+        public ForgottenPasswordViewModel(INavigationService navigationService)
         {
             Navigation = navigationService;
 
-            LoginCommand = new RelayCommand(ExecuteLoginCommand);
-            RegisterCommand = new RelayCommand(ExecuteRegisterCommand);
+            CancelCommand = new RelayCommand(ExecuteCancelCommand);
+            SubmitRecoveryCommand = new RelayCommand(ExecuteSubmitRecoveryCommand);
 
         }
-
-        private void ExecuteLoginCommand(object parameter)
+        private void ExecuteCancelCommand(object parameter)
         {
             Navigation.NavigateTo<LoginViewModel>();
         }
-        private void ExecuteRegisterCommand(object parameter)
+        private void ExecuteSubmitRecoveryCommand(object parameter)
         {
-            Navigation.NavigateTo<CreateAccountViewModel>();
+            Navigation.NavigateTo<VerifyAccountViewModel>();
         }
+
 
 
     }

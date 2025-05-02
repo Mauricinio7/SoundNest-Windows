@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:SoundNest_Windows_Client.Views"
+             xmlns:controls="clr-namespace:SoundNest_Windows_Client.Resources.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="850" Width="611">
 
@@ -34,7 +35,23 @@
                 </EventTrigger>
             </Grid.Triggers>
 
-            <TextBlock Canvas.Left="998" Canvas.Top="40" Text="" FontFamily="Segoe Fluent Icons" Foreground="White" FontSize="24" HorizontalAlignment="Left" VerticalAlignment="Top" Height="30" Width="26" Margin="427,425,0,0"/>
+            <Label Content="Tus Playlists: "
+       FontSize="40"
+       FontWeight="Bold"
+       Foreground="{StaticResource ForegroundWhiteColor}"
+       HorizontalAlignment="Left"
+       Margin="43,10,0,0"
+       VerticalAlignment="Top"/>
+
+
+            <controls:AnimatedLabelButton 
+                LabelText=""
+                LabelFontSize="32"
+                ForegroundColor="White"
+                ClickCommand="{Binding ViewProfileCommand}" 
+                Margin="390,753,35,27"/>
+
+
 
         </Grid>
     </Viewbox>

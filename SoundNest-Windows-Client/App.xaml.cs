@@ -27,6 +27,15 @@ public partial class App : Application
         service.AddTransient<MainWindowViewModel>();
         service.AddTransient<InitViewModel>();
         service.AddTransient<HomeViewModel>();
+        service.AddTransient<SideBarViewModel>();
+        service.AddTransient<SearchBarViewModel>();
+        service.AddTransient<ProfileViewModel>();
+        service.AddTransient<ChangePasswordViewModel>();
+        service.AddTransient<ConfirmCodeViewModel>();
+        service.AddTransient<CreateAccountViewModel>();
+        service.AddTransient<ForgottenPasswordViewModel>();
+        service.AddTransient<LoginViewModel>();
+        service.AddTransient<VerifyAccountViewModel>();
 
         service.AddSingleton<INavigationService, Services.Navegation.NavigationService>();
         service.AddSingleton<Func<Type, ViewModel>>(provider =>

@@ -91,6 +91,7 @@
             <Button x:Name="RegisterButton"
                     Content="Registrarse"
                     Style="{StaticResource PrimaryButtonStyle}"
+                    Command="{Binding RegisterCommand}"
                     Width="638" Height="131"
                     Canvas.Left="614" Canvas.Top="757">
                 <Button.RenderTransform>

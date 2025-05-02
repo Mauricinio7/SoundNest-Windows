@@ -11,11 +11,32 @@
                 
             </ResourceDictionary.MergedDictionaries>
 
-        <DataTemplate DataType="{x:Type viewModel:InitViewModel}">
-            <view:InitView/>
-        </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:InitViewModel}">
+                <view:InitView/>
+            </DataTemplate>
             <DataTemplate DataType="{x:Type viewModel:HomeViewModel}">
                 <view:HomeView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:ProfileViewModel}">
+                <view:ProfileView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:ChangePasswordViewModel}">
+                <view:ChangePasswordView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:ConfirmCodeViewModel}">
+                <view:ConfirmCodeView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:CreateAccountViewModel}">
+                <view:CreateAccountView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:ForgottenPasswordViewModel}">
+                <view:ForgottenPasswordView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:LoginViewModel}">
+                <view:LoginView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:VerifyAccountViewModel}">
+                <view:VerifyAccountView/>
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

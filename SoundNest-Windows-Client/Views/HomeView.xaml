@@ -11,26 +11,7 @@
     <Viewbox Stretch="Uniform">
         <Canvas Width="1920" Height="1080">
 
-            <Rectangle Fill="Black"
-           Height="108"
-           Width="1419"
-           RadiusX="50"
-           RadiusY="50"
-           Canvas.Left="334"
-           Canvas.Top="41"
-           HorizontalAlignment="Center"
-           VerticalAlignment="Top"/>
-            <TextBlock Canvas.Left="384" Canvas.Top="73" Text="&#xEA8A;" FontFamily="Segoe Fluent Icons" Foreground="{StaticResource SecondaryColor2}" FontSize="44" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-            <controls:PlaceholderTextBoxControl x:Name="TextBoxMail"
-    PlaceholderText="¿Qué quieres reproducir?"
-    PaddingValue="30,5,0,0"
-    Style="{StaticResource PrimarySimpleTextBoxStyle}"
-    Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
-    FontSizeValue="20" Canvas.Left="467" Canvas.Top="60" Height="69" Width="1131" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-            <TextBlock Canvas.Left="1635" Canvas.Top="66" Text="&#xf78b;" FontFamily="Segoe Fluent Icons" Foreground="{StaticResource SecondaryColor2}" FontSize="54" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-
-
-
+            
         </Canvas>
     </Viewbox>
 </UserControl>

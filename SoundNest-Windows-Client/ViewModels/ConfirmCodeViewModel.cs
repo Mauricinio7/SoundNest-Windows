@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
-    class InitViewModel : Services.Navegation.ViewModel
+    class ConfirmCodeViewModel : Services.Navegation.ViewModel
     {
         private INavigationService navigation;
         public INavigationService Navigation
@@ -22,24 +22,20 @@ namespace SoundNest_Windows_Client.ViewModels
         }
 
         public RelayCommand LoginCommand { get; set; }
-        public RelayCommand RegisterCommand { get; set; }
 
-        public InitViewModel(INavigationService navigationService)
+        public ConfirmCodeViewModel(INavigationService navigationService)
         {
             Navigation = navigationService;
 
             LoginCommand = new RelayCommand(ExecuteLoginCommand);
-            RegisterCommand = new RelayCommand(ExecuteRegisterCommand);
 
         }
 
         private void ExecuteLoginCommand(object parameter)
         {
-            Navigation.NavigateTo<LoginViewModel>();
-        }
-        private void ExecuteRegisterCommand(object parameter)
-        {
-            Navigation.NavigateTo<CreateAccountViewModel>();
+            Mediator.Notify(MediatorKeys.SHOW_SIDE_BAR, null);
+            Mediator.Notify(MediatorKeys.SHOW_MUSIC_PLAYER, null);
+            Navigation.NavigateTo<HomeViewModel>();
         }
 
 
