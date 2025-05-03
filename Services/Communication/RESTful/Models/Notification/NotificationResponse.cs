@@ -9,28 +9,43 @@ namespace Services.Communication.RESTful.Models.Notification
 {
     public class NotificationResponse
     {
-        [JsonPropertyName("id")]
-        public string Id { get; set; }
+        [JsonPropertyName("_id")]
+        public string? Id { get; set; }
 
         [JsonPropertyName("sender")]
-        public string Sender { get; set; }
+        public string? Sender { get; set; }
 
         [JsonPropertyName("user_id")]
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
 
         [JsonPropertyName("user")]
-        public string User { get; set; }
+        public string? User { get; set; }
 
         [JsonPropertyName("notification")]
-        public string Notification { get; set; }
+        public string? Notification { get; set; }
 
         [JsonPropertyName("relevance")]
-        public Relevance Relevance { get; set; }
+        public Relevance? Relevance { get; set; }
+
+        [JsonPropertyName("read")]
+        public bool? Read { get; set; }
+
+        [JsonPropertyName("createdAt")]
+        public string? CreatedAt { get; set; }
+
+        [JsonPropertyName("__v")]
+        public int? Version { get; set; }
     }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum Relevance
     {
+        [JsonPropertyName("low")]
         low,
+
+        [JsonPropertyName("medium")]
         medium,
-        high,
+
+        [JsonPropertyName("high")]
+        high
     }
 }

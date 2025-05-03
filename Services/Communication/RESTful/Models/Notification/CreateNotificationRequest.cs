@@ -22,6 +22,6 @@ namespace Services.Communication.RESTful.Models.Notification
         public string Notification { get; set; }
 
         [JsonPropertyName("relevance")]
-        public string Relevance { get; set; }
+        public Relevance Relevance { get; set; }
     }
 }
