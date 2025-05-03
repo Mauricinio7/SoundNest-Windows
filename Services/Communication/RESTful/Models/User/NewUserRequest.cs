@@ -27,13 +27,7 @@ namespace Services.Communication.RESTful.Models.User
 
     public class AdditionalInformation
     {
-        [JsonPropertyName("bio")]
-        public string Bio { get; set; }
-
-        [JsonPropertyName("instagram")]
-        public string Instagram { get; set; }
-
-        [JsonPropertyName("genres")]
-        public List<string> Genres { get; set; }
+        [JsonPropertyName("info")]
+        public List<string> Info { get; set; }
     }
 }
