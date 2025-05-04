@@ -11,7 +11,7 @@
     <Viewbox Stretch="Fill">
         <Grid>
             <ContentControl Content="{Binding Navigation.CurrentView}"/>
-            <ContentControl Content="{Binding SearchBar}"/>
+            <ContentControl Content="{Binding SearchBar}" Margin="0,-10,10,924"/>
             <ContentControl Content="{Binding MusicPlayerBar}" Margin="200,965,0,0"/>
             <ContentControl Content="{Binding SideBar}" Margin="0,0,1309,0" />
             

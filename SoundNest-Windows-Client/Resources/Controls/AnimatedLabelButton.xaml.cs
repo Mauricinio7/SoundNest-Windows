@@ -55,6 +55,16 @@ namespace SoundNest_Windows_Client.Resources.Controls
         public static readonly DependencyProperty ClickCommandProperty =
             DependencyProperty.Register("ClickCommand", typeof(ICommand), typeof(AnimatedLabelButton), new PropertyMetadata(null));
 
+        public static readonly DependencyProperty CommandParameterProperty =
+    DependencyProperty.Register("CommandParameter", typeof(object), typeof(AnimatedLabelButton), new PropertyMetadata(null));
+
+        public object CommandParameter
+        {
+            get { return GetValue(CommandParameterProperty); }
+            set { SetValue(CommandParameterProperty, value); }
+        }
+
+
         public ICommand ClickCommand
         {
             get { return (ICommand)GetValue(ClickCommandProperty); }
@@ -66,9 +76,9 @@ namespace SoundNest_Windows_Client.Resources.Controls
             var animation = (Storyboard)FindResource("ClickAnimation");
             animation.Begin();
 
-            if (ClickCommand != null && ClickCommand.CanExecute(null))
+            if (ClickCommand != null && ClickCommand.CanExecute(CommandParameter))
             {
-                ClickCommand.Execute(null);
+                ClickCommand.Execute(CommandParameter);
             }
         }
     }

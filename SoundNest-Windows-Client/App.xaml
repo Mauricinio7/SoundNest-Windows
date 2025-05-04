@@ -41,6 +41,15 @@
             <DataTemplate DataType="{x:Type viewModel:CommentsViewModel}">
                 <view:CommentsView/>
             </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:CreatePlaylistViewModel}">
+                <view:CreatePlaylistView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:NotificationViewModel}">
+                <view:NotificationsView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModel:UploadSongViewModel}">
+                <view:UploadSongView/>
+            </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

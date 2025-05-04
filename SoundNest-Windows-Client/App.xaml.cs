@@ -27,8 +27,8 @@ public partial class App : Application
         service.AddTransient<MainWindowViewModel>();
         service.AddTransient<InitViewModel>();
         service.AddTransient<HomeViewModel>();
-        service.AddTransient<SideBarViewModel>();
-        service.AddTransient<SearchBarViewModel>();
+        service.AddSingleton<SideBarViewModel>();
+        service.AddSingleton<SearchBarViewModel>();
         service.AddTransient<ProfileViewModel>();
         service.AddTransient<ChangePasswordViewModel>();
         service.AddTransient<ConfirmCodeViewModel>();
@@ -37,6 +37,9 @@ public partial class App : Application
         service.AddTransient<LoginViewModel>();
         service.AddTransient<VerifyAccountViewModel>();
         service.AddTransient<CommentsViewModel>();
+        service.AddTransient<CreatePlaylistViewModel>();
+        service.AddTransient<NotificationViewModel>();
+        service.AddTransient<UploadSongViewModel>();
 
         service.AddSingleton<INavigationService, Services.Navigation.NavigationService>();
         service.AddSingleton<Func<Type, ViewModel>>(provider =>

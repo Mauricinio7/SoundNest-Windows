@@ -8,15 +8,14 @@
              xmlns:converters="clr-namespace:SoundNest_Windows_Client.Resources.Converters"
              mc:Ignorable="d"
              x:Name="Root"
-             Background="Transparent"
-             d:DesignHeight="450" d:DesignWidth="800">
+             Background="Transparent" d:DesignWidth="800" d:DesignHeight="91">
 
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
     </UserControl.Resources>
 
-    <Viewbox Stretch="Uniform">
-        <Canvas Width="1920" Height="1080">
+    <Viewbox Margin="0,0,0,0"  >
+        <Canvas Width="1920" Height="214"  >
 
             <Rectangle Fill="Black"
                        Height="108"
@@ -24,7 +23,8 @@
                        RadiusX="50"
                        RadiusY="50"
                        Canvas.Left="334"
-                       Canvas.Top="41"/>
+                       Canvas.Top="41"
+                       />
 
             <TextBlock Canvas.Left="384"
                        Canvas.Top="73"
