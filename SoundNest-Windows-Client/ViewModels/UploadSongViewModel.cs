@@ -85,6 +85,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private void UploadSong()
         {
+            //TODO : Implementar la lógica para subir la canción a la API
             MessageBox.Show(
                 $"Nombre: {PlaylistName}\n" +
                 $"Género: {SelectedGenre}\n" +
