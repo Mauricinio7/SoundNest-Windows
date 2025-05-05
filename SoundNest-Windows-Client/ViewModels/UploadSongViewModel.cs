@@ -14,6 +14,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using Services.Communication.gRPC.Http;
+using Services.Communication.gRPC.Constants;
+using Services.Communication.gRPC.Services;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -79,13 +82,12 @@ namespace SoundNest_Windows_Client.ViewModels
             ofd.Filter = "Archivos de audio (*.mp3;*.wav;*.flac)|*.mp3;*.wav;*.flac";
             if (ofd.ShowDialog() == true)
             {
-                SelectedFileName = System.IO.Path.GetFileName(ofd.FileName);
+                SelectedFileName = System.IO.Path.GetFullPath(ofd.FileName);
             }
         }
 
-        private void UploadSong()
+        private async void UploadSong()
         {
-            //TODO : Implementar la lógica para subir la canción a la API
             MessageBox.Show(
                 $"Nombre: {PlaylistName}\n" +
                 $"Género: {SelectedGenre}\n" +
@@ -94,6 +96,19 @@ namespace SoundNest_Windows_Client.ViewModels
                 "Publicar Cancion",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
+            var grpcClient = new SongGrpcClient(ApiRoute.BaseUrl);
+            //grpcClient.SetAuthorizationToken(miTokenJWT);
+            var upload = new SongUploader(grpcClient);
+            byte[] fileBytes = File.ReadAllBytes(SelectedFileName);
+            bool result = await upload.UploadFullAsync(PlaylistName, fileBytes, 1, AdditionalInfo);
+
+            //TODO: Errase the line below  or above
+             using var fs = File.OpenRead(SelectedFileName);
+                bool okStream = await upload.UploadStreamAsync(PlaylistName, genreId: 5, description: "Demo", fileStream: fs);
+
+
+
+
         }
     }
 }
