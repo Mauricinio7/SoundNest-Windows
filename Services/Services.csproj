@@ -5,13 +5,23 @@
 	</PropertyGroup>
 	<ItemGroup>
 	  <None Remove="Communication\Certificates\server.crt" />
+	  <None Remove="Communication\gRPC\ProtoFiles\song.proto" />
 	</ItemGroup>
 	<ItemGroup>
 	  <EmbeddedResource Include="Communication\Certificates\server.crt" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Communication\RESTful\Exceptions\" />
-	  <Folder Include="Communication\gRPC\Constants\" />
-	  <Folder Include="Communication\gRPC\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Google.Protobuf" Version="3.30.2" />
+	  <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+	  <PackageReference Include="Grpc.Tools" Version="2.71.0">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Protobuf Include="Communication\gRPC\ProtoFiles\song.proto" GrpcServices="Client" />
 	</ItemGroup>
 </Project>
