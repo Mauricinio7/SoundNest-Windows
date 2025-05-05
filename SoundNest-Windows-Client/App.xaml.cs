@@ -28,6 +28,7 @@ public partial class App : Application
         service.AddTransient<InitViewModel>();
         service.AddTransient<HomeViewModel>();
         service.AddSingleton<SideBarViewModel>();
+        service.AddTransient<MusicPlayerBarViewModel>();
         service.AddSingleton<SearchBarViewModel>();
         service.AddTransient<ProfileViewModel>();
         service.AddTransient<ChangePasswordViewModel>();
