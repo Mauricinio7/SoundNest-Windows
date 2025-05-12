@@ -22,3 +22,5 @@ namespace Services.Communication.RESTful.Models.User
         public AdditionalInformation AdditionalInformation { get; set; }
     }
 }
+
+

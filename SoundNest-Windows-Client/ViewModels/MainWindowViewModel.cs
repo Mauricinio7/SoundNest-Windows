@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using Services.Infrestructure;
 using Services.Navigation;
 using SoundNest_Windows_Client.Views;
+using SoundNest_Windows_Client.Resources.Controls;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -56,12 +57,25 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
+        private UserControl loadingScreen;
+        public UserControl LoadingScreen
+        {
+            get => loadingScreen;
+            set
+            {
+                loadingScreen = value;
+                OnPropertyChanged(nameof(LoadingScreen));
+            }
+        }
+
         public RelayCommand ShowSideBarCommand { get; set; }
         public RelayCommand ShowMusicPlayerBarCommand { get; set; }
         public RelayCommand ShowSearchBarCommand { get; set; }
         public RelayCommand HideSideBarCommand { get; set; }
         public RelayCommand HideMusicPlayerBarCommand { get; set; }
         public RelayCommand HideSearchBarCommand { get; set; }
+        public RelayCommand ShowLoadingScreenCommand { get; set; }
+        public RelayCommand HideLoadingScreenCommand { get; set; }
 
         public MainWindowViewModel(INavigationService navigationService)
         {
@@ -79,6 +93,8 @@ namespace SoundNest_Windows_Client.ViewModels
             HideMusicPlayerBarCommand = new RelayCommand(ExecuteHideMusicPlayerBar);
             ShowSearchBarCommand = new RelayCommand(ExecuteShowSearchBar);
             HideSearchBarCommand = new RelayCommand(ExecuteHideSearchBar);
+            ShowLoadingScreenCommand = new RelayCommand(ExecuteShowLoadingScreen);
+            HideLoadingScreenCommand = new RelayCommand(ExecuteHideLoadingScreen);
         }
 
         private void RegisterMediator()
@@ -89,6 +105,8 @@ namespace SoundNest_Windows_Client.ViewModels
             Services.Infrestructure.Mediator.Register(MediatorKeys.HIDE_MUSIC_PLAYER, ActivatingKeyTipEventArgs => HideMusicPlayerBarCommand.Execute(null));
             Services.Infrestructure.Mediator.Register(MediatorKeys.SHOW_SEARCH_BAR, ActivatingKeyTipEventArgs => ShowSearchBarCommand.Execute(null));
             Services.Infrestructure.Mediator.Register(MediatorKeys.HIDE_SEARCH_BAR, ActivatingKeyTipEventArgs => HideSearchBarCommand.Execute(null));
+            Services.Infrestructure.Mediator.Register(MediatorKeys.SHOW_LOADING_SCREEN, ActivatingKeyTipEventArgs => ShowLoadingScreenCommand.Execute(null));
+            Services.Infrestructure.Mediator.Register(MediatorKeys.HIDE_LOADING_SCREEN, ActivatingKeyTipEventArgs => HideLoadingScreenCommand.Execute(null));
         }
 
         private void ExecuteShowMusicPlayerBar()
@@ -115,6 +133,14 @@ namespace SoundNest_Windows_Client.ViewModels
         private void ExecuteHideSearchBar()
         {
             SearchBar = null;
+        }
+        private void ExecuteShowLoadingScreen()
+        {
+            LoadingScreen = new LoadingScreen();
+        }
+        private void ExecuteHideLoadingScreen()
+        {
+            LoadingScreen = null;
         }
 
 

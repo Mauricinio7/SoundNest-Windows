@@ -18,32 +18,33 @@
         HorizontalAlignment="Left"
         VerticalAlignment="Top" Canvas.Left="432" Canvas.Top="117"/>
 
-            <ItemsControl ItemsSource="{Binding Notifications}" Height="615" Width="1427" Canvas.Left="349" Canvas.Top="263" HorizontalAlignment="Left" VerticalAlignment="Top">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Margin="10" Padding="10"
+            <ScrollViewer Height="615" Width="1427" Canvas.Left="349" Canvas.Top="263" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding Notifications}"  Width="1427" Canvas.Left="349" Canvas.Top="263" HorizontalAlignment="Left" VerticalAlignment="Top">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="10" Padding="10"
                     Background="#222"
                     CornerRadius="8"
                     MouseLeftButtonDown="Notification_Click">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="40"/>
+                                        <RowDefinition Height="40"/>
+                                    </Grid.RowDefinitions>
 
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-                                <TextBlock Text="{Binding Title}"
+                                    <TextBlock Text="{Binding Title}"
                                FontSize="20"
                                FontWeight="Bold"
                                Foreground="White"
                                Grid.Row="0"
                                Grid.Column="0"/>
 
-                                <Button Content="❌"
+                                    <Button Content="❌"
                             Command="{Binding DataContext.DeleteNotificationCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                             CommandParameter="{Binding}"
                             Background="Transparent"
@@ -52,19 +53,21 @@
                             Foreground="White"
                             Grid.Row="0"
                             Grid.Column="1"
+                            Margin="0,0,30,0"
                             Cursor="Hand"/>
 
-                                <TextBlock Text="{Binding Sender}"
+                                    <TextBlock Text="{Binding Sender}"
                                Grid.Row="1"
                                Grid.ColumnSpan="2"
                                FontSize="14"
                                Foreground="LightGray"
                                Margin="0,5,0,0"/>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
 
         </Canvas>
     </Viewbox>

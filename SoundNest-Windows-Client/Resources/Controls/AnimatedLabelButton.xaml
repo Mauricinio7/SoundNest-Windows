@@ -9,7 +9,7 @@
              d:DesignHeight="40" d:DesignWidth="150">
     <Grid>
         <Label Content="{Binding LabelText, ElementName=AnimatedLabel}"
-               FontSize="{Binding LabelFontSize, ElementName=AnimatedLabel}"
+               FontSize="{Binding LabelFontSize, ElementName=AnimatedLabel}"           
                FontWeight="Bold"
                Foreground="{Binding ForegroundColor, ElementName=AnimatedLabel}"
                Cursor="Hand"

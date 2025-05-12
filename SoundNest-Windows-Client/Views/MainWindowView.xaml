@@ -12,8 +12,9 @@
         <Grid>
             <ContentControl Content="{Binding Navigation.CurrentView}"/>
             <ContentControl Content="{Binding SearchBar}" Margin="0,-10,10,924"/>
-            <ContentControl Content="{Binding MusicPlayerBar}" Margin="200,965,0,0"/>
-            <ContentControl Content="{Binding SideBar}" Margin="0,0,1309,0" />
+            <ContentControl Content="{Binding MusicPlayerBar}" Margin="140,965,0,0"/>
+            <ContentControl Content="{Binding SideBar}" Margin="-50,0,1309,0" />
+            <ContentControl Content="{Binding LoadingScreen}"/>
             
         </Grid>
     </Viewbox>

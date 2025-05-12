@@ -11,5 +11,7 @@ namespace Services.Communication.RESTful.Models.Auth
     {
         [JsonPropertyName("token")]
         public string Token { get; set; }
+
+
     }
 }

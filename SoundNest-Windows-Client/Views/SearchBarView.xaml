@@ -19,19 +19,14 @@
 
             <Rectangle Fill="Black"
                        Height="108"
-                       Width="1419"
+                       Width="1584"
                        RadiusX="50"
                        RadiusY="50"
-                       Canvas.Left="334"
-                       Canvas.Top="41"
+                       Canvas.Left="264"
+                       Canvas.Top="40" HorizontalAlignment="Left" VerticalAlignment="Top"
                        />
 
-            <TextBlock Canvas.Left="384"
-                       Canvas.Top="73"
-                       Text="&#xEA8A;"
-                       FontFamily="Segoe Fluent Icons"
-                       Foreground="{StaticResource SecondaryColor2}"
-                       FontSize="44"/>
+
 
             <controls:PlaceholderTextBoxControl x:Name="TextBoxSearch"
                                                 PlaceholderText="¿Qué quieres reproducir?"
@@ -39,25 +34,47 @@
                                                 Style="{StaticResource PrimarySimpleTextBoxStyle}"
                                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                                 FontSizeValue="20"
-                                                Canvas.Left="467"
-                                                Canvas.Top="60"
-                                                Height="69"
+                                                Canvas.Left="331"
+                                                Canvas.Top="59"
+                                                Height="70"
                                                 Width="1131"
                                                 GotFocus="TextBoxSearch_GotFocus"
                                                 LostFocus="TextBoxSearch_LostFocus"
-                                                KeyDown="TextBoxSearch_KeyDown"/>
+                                                KeyDown="TextBoxSearch_KeyDown" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
             <controls:AnimatedLabelButton x:Name="SearchButton"
-                                          Canvas.Left="1635"
-                                          Canvas.Top="66"
+                                          Canvas.Left="1491"
+                                          Canvas.Top="63"
                                           LabelText="&#xf78b;"
                                           FontFamily="Segoe Fluent Icons"
                                           Focusable="True"
-                                          Foreground="{StaticResource SecondaryColor2}"
+                                          ForegroundColor="{StaticResource SecondaryColor2}"
                                           LabelFontSize="54"
                                           Height="63"
                                           Width="64"
-                                          ClickCommand="{Binding SearchCommand}" />
+                                          ClickCommand="{Binding SearchCommand}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <controls:AnimatedLabelButton 
+                               Canvas.Left="1596"
+                               Canvas.Top="63"
+                               LabelText="&#xE71C;"
+                               FontFamily="Segoe Fluent Icons"
+                               Focusable="True"
+                               ForegroundColor="{StaticResource SecondaryColor2}"
+                               LabelFontSize="54"
+                               Height="63"
+                               Width="64"
+                               ClickCommand="{Binding SearchCommand}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <controls:AnimatedLabelButton 
+                               Canvas.Left="1702"
+                               Canvas.Top="63"
+                               LabelText="&#xF133;"
+                               FontFamily="Segoe Fluent Icons"
+                               Focusable="True"
+                               ForegroundColor="{StaticResource SecondaryColor2}"
+                               LabelFontSize="54"
+                               Height="63"
+                               Width="64"
+                               ClickCommand="{Binding SearchCommand}" HorizontalAlignment="Left" VerticalAlignment="Center" />
 
             <Popup x:Name="RecentPopup"
                    IsOpen="{Binding IsRecentVisible}"

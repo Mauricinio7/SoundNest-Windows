@@ -36,19 +36,20 @@
             </Grid.Triggers>
 
             <Label Content="Tus Playlists: "
-       FontSize="40"
-       FontWeight="Bold"
-       Foreground="{StaticResource ForegroundWhiteColor}"
-       HorizontalAlignment="Left"
-       Margin="41,196,0,0"
-       VerticalAlignment="Top"/>
+               FontSize="40"
+               FontWeight="Bold"
+               Foreground="{StaticResource ForegroundWhiteColor}"
+               HorizontalAlignment="Left"
+               Margin="42,190,0,0"
+               VerticalAlignment="Top"/>
 
             <controls:AnimatedLabelButton 
-    LabelText="Crear playlist"
-    LabelFontSize="32"
-    ForegroundColor="White"
-    ClickCommand="{Binding CreatePlaylistCommand}" 
-    Margin="40,107,182,673"/>
+                LabelText="&#xECC8;"
+                LabelFontSize="50"
+                ForegroundColor="White"
+                FontFamily="Segoe Fluent Icons"
+                ClickCommand="{Binding CreatePlaylistCommand}" 
+                Margin="364,194,41,589"/>
 
             <controls:AnimatedLabelButton 
                 LabelText="Volver al inicio"
@@ -56,60 +57,142 @@
                 ForegroundColor="White"
                 ClickCommand="{Binding GoHomeCommand}" 
                 Margin="40,32,182,748"/>
-
+            <controls:AnimatedLabelButton 
+                LabelText="&#xEA8A;"
+                LabelFontSize="50"
+                ForegroundColor="White"
+                FontFamily="Segoe Fluent Icons"
+                ClickCommand="{Binding GoHomeCommand}" 
+                Margin="364,32,41,751"/>
 
             <controls:AnimatedLabelButton 
-                LabelText=""
-                LabelFontSize="32"
+                LabelText="Ver información del perfil"
+                LabelFontSize="22"
                 ForegroundColor="White"
                 ClickCommand="{Binding ViewProfileCommand}" 
-                Margin="390,753,35,27"/>
+                Margin="40,752,161,28"/>
+
+            <Border Width="70" Height="70" 
+                Margin="367,752,44,28" BorderBrush="Transparent" BorderThickness="0" 
+                Background="Transparent">
+                <Border.Clip>
+                    <EllipseGeometry RadiusX="35" RadiusY="35" Center="35,35" />
+                </Border.Clip>
+
+                <controls:AnimatedImageButton ImageSource="{Binding ProfilePhoto}"
+                                  Width="86"
+                                  Height="86"
+                                  VerticalAlignment="Center"
+                                  HorizontalAlignment="Center"
+                                  Stretch="UniformToFill"  
+                                  ClickCommand="{Binding ViewProfileCommand}"/>
+            </Border>
 
             <controls:AnimatedLabelButton 
-                LabelText="Noti"
-                LabelFontSize="32"
+                LabelText="Notificaciones recibidas"
+                LabelFontSize="25"
                 ForegroundColor="White"
                 ClickCommand="{Binding ViewNotificationsCommand}" 
-                Margin="390,651,35,129"/>
+                Margin="27,673,159,107"/>
+            <controls:AnimatedLabelButton 
+                LabelText="&#xEDAC;"
+                LabelFontSize="50"
+                ForegroundColor="White"
+                FontFamily="Segoe Fluent Icons"
+                ClickCommand="{Binding ViewNotificationsCommand}" 
+                Margin="364,674,41,108"/>
 
             <controls:AnimatedLabelButton 
                 LabelText="Publicar canción"
                 LabelFontSize="32"
                 ForegroundColor="White"
                 ClickCommand="{Binding UploadSongCommand}" 
-                Margin="41,673,181,107"/>
+                Margin="41,107,181,673"/>
+            <controls:AnimatedLabelButton 
+                LabelText="&#xE78B;"
+                LabelFontSize="50"
+                ForegroundColor="White"
+                FontFamily="Segoe Fluent Icons"
+                ClickCommand="{Binding UploadSongCommand}" 
+                Margin="364,111,41,672"/>
 
-            <ItemsControl ItemsSource="{Binding Playlists}" Margin="40,260,10,204">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Grid Margin="0,10" Height="100">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="150" />
-                            </Grid.ColumnDefinitions>
+          
+                <ScrollViewer 
+                    VerticalScrollBarVisibility="Auto" 
+                    HorizontalScrollBarVisibility="Disabled" 
+                    Margin="40,260,3,188"
+                    Padding="0">
+                    <ScrollViewer.Style>
+                    <Style TargetType="ScrollViewer">
+                        <Setter Property="Template">
+                                <Setter.Value>
+                                <ControlTemplate TargetType="ScrollViewer">
+                                    <Grid>
+                                        <Grid>
+                                            <ScrollContentPresenter />
+                                        </Grid>
+                                        <!-- Scrollbars jus sucks, just quit it bro -->
+                                        <ScrollBar x:Name="PART_VerticalScrollBar"
+                                               Orientation="Vertical"
+                                               Width="6"
+                                               Opacity="0"
+                                               HorizontalAlignment="Right"
+                                               Margin="0">
+                                        </ScrollBar>
+                                    </Grid>
 
-                            <controls:AnimatedLabelButton LabelText="{Binding Name}"
-                           Grid.Column="0"
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Left"
-                           LabelFontSize="25" 
-                           FontWeight="Bold"
-                           Foreground="White"
-                           ClickCommand="{Binding DataContext.OpenPlaylistCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"      
-                           CommandParameter="{Binding}"/>
 
-                            <controls:AnimatedImageButton ImageSource="{Binding Image}"
-                           Grid.Column="1"
-                           Width="90"
-                           Height="90"
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Center"
-                           ClickCommand="{Binding DataContext.OpenPlaylistCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"       
-                           CommandParameter="{Binding}"/>
-                        </Grid>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ScrollViewer.Style>
+
+                    <ItemsControl ItemsSource="{Binding Playlists}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0" Height="100">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="150" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <controls:AnimatedLabelButton LabelText="{Binding Name}"
+                                                                  Grid.Column="0"
+                                                                  VerticalAlignment="Center"
+                                                                  HorizontalAlignment="Left"
+                                                                  LabelFontSize="25"
+                                                                  FontWeight="Bold"
+                                                                  Foreground="White"
+                                                                  ClickCommand="{Binding DataContext.OpenPlaylistCommand, 
+                                                                    RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                  CommandParameter="{Binding}"/>
+
+                                    <Border Width="70" Height="70"
+                                            Grid.Column="1" 
+                                            BorderBrush="Transparent" 
+                                            BorderThickness="0"
+                                            Background="{StaticResource PrimaryColor2}">
+                                        <Border.Clip>
+                                            <RectangleGeometry RadiusX="15" RadiusY="15" Rect="0,0,70,70" />
+                                        </Border.Clip>
+                                        <controls:AnimatedImageButton ImageSource="{Binding Image}"
+                                                                      Width="70"
+                                                                      Height="70"
+                                                                      VerticalAlignment="Center"
+                                                                      HorizontalAlignment="Center"
+                                                                      Stretch="UniformToFill"
+                                                                      ClickCommand="{Binding DataContext.OpenPlaylistCommand, 
+                                                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                      CommandParameter="{Binding}"/>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+
 
         </Grid>
     </Viewbox>

@@ -36,7 +36,7 @@ namespace SoundNest_Windows_Client.ViewModels
             Navigation = navigationService;
             Title = notification.Title;
             Sender = $"De: {notification.Sender}";
-            //Message = notification.Message;
+            Message = notification.Message;
 
 
         }

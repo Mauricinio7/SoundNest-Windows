@@ -18,15 +18,34 @@
     <Viewbox Stretch="Uniform">
         <Canvas Width="1920" Height="1080">
 
+            <Ellipse Width="172" Height="172" Canvas.Left="425" Canvas.Top="155" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <Ellipse.Fill>
+                    <ImageBrush ImageSource="{Binding ProfilePhoto}" Stretch="UniformToFill"/>
+                </Ellipse.Fill>
+            </Ellipse>
+
+            <Label Content="{Binding Email}"
+                   FontSize="35" FontWeight="Bold"
+                   Foreground="{StaticResource ForegroundWhiteColor}"
+                   Canvas.Left="618" Canvas.Top="269" HorizontalAlignment="Center" VerticalAlignment="Top" Width="734" Height="64"/>
+
+            <Border Background="#5D2D6B" BorderBrush="Transparent" BorderThickness="1" CornerRadius="20"
+                    Canvas.Left="618" Canvas.Top="155" HorizontalAlignment="Left" VerticalAlignment="Center" Width="249">
+                <TextBlock Text="{Binding Role}"
+                           FontSize="35" FontWeight="Bold"
+                           Foreground="White" VerticalAlignment="Center"
+                           HorizontalAlignment="Center" Margin="20"/>
+            </Border>
+
             <Label Content="Nombre de usuario:"
                    FontSize="35" FontWeight="Bold"
                    Foreground="{StaticResource ForegroundWhiteColor}"
-                   Canvas.Left="409" Canvas.Top="121"/>
+                   Canvas.Left="410" Canvas.Top="398" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
             <TextBlock Text="{Binding Username}"
                        FontSize="35" Foreground="White"
                        Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisibilityConverter}}"
-                       Canvas.Left="386" Canvas.Top="191" Width="928" Height="110"/>
+                       Canvas.Left="425" Canvas.Top="460" Width="903" Height="110" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
             <controls:PlaceholderTextBoxControl
                 Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
@@ -36,19 +55,19 @@
                 FontSizeValue="35"
                 BackgroundColorValue="{StaticResource BackgroundyColor2}"
                 Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"
-                Canvas.Left="386" Canvas.Top="191" Height="110" Width="928" />
+                Canvas.Left="400" Canvas.Top="472" Height="110" Width="928" HorizontalAlignment="Left" VerticalAlignment="Center" />
 
             <Label Content="Información adicional:"
                    FontSize="35" FontWeight="Bold"
                    Foreground="{StaticResource ForegroundWhiteColor}"
-                   Canvas.Left="409" Canvas.Top="370"/>
+                   Canvas.Left="409" Canvas.Top="613" HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
             <TextBlock Text="{Binding AdditionalInfo}"
                        FontSize="25" Foreground="White"
                        TextWrapping="Wrap"
                        Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisibilityConverter}}"
-                       Width="908" Height="409"
-                       Canvas.Left="396" Canvas.Top="450"/>
+                       Width="898" Height="250"
+                       Canvas.Left="434" Canvas.Top="693" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
             <TextBox Text="{Binding AdditionalInfo, UpdateSourceTrigger=PropertyChanged}"
                      Background="{StaticResource BackgroundyColor2}"
@@ -60,8 +79,8 @@
                      Padding="10"
                      BorderBrush="Transparent"
                      Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"
-                     Width="908" Height="409"
-                     Canvas.Left="396" Canvas.Top="450"/>
+                     Width="908" Height="231"
+                     Canvas.Left="410" Canvas.Top="704" HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
             <Button Content="Editar"
                     FontSize="35"
@@ -69,8 +88,8 @@
                     Style="{StaticResource PrimaryButtonStyle}"
                     Command="{Binding EditCommand}"
                     Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisibilityConverter}}"
-                    Canvas.Left="1428" Canvas.Top="100"
-                    Width="358" Height="110"/>
+                    Canvas.Left="1428" Canvas.Top="345"
+                    Width="358" Height="110" HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
             <Button Content="Cambiar contraseña"
                     FontSize="30"
@@ -78,8 +97,8 @@
                     Style="{StaticResource PrimaryButtonStyle}"
                     Command="{Binding ChangePasswordCommand}"
                     Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"
-                    Canvas.Left="1428" Canvas.Top="234"
-                    Width="358" Height="110"/>
+                    Canvas.Left="1428" Canvas.Top="214"
+                    Width="358" Height="110" HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
             <Button Content="Guardar cambios"
                     FontSize="35"
@@ -87,8 +106,8 @@
                     Style="{StaticResource PositiveButtonStyle}"
                     Command="{Binding SaveChangesCommand}"
                     Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"
-                    Canvas.Left="1428" Canvas.Top="441"
-                    Width="358" Height="110"/>
+                    Canvas.Left="1428" Canvas.Top="359"
+                    Width="358" Height="110" HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
             <Button Content="Cancelar"
                     FontSize="35"
@@ -96,8 +115,22 @@
                     Style="{StaticResource NegativeButtonStyle}"
                     Command="{Binding CancelCommand}"
                     Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"
-                    Canvas.Left="1428" Canvas.Top="655"
-                    Width="358" Height="110"/>
+                    Canvas.Left="1428" Canvas.Top="501"
+                    Width="358" Height="110" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+
+            <Button Content="Cerrar sesión"
+                FontSize="35"
+                FontWeight="Bold"
+                Style="{StaticResource DeleteButtonStyle}"
+                Command="{Binding CloseSesionCommand}"
+                Canvas.Left="1428" Canvas.Top="748"
+                Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisibilityConverter}}"
+                Width="358" Height="110" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+
+            <Label Content="Perfil:"
+                   FontSize="60" FontWeight="Bold"
+                   Foreground="{StaticResource ForegroundWhiteColor}"
+                   Canvas.Left="410" Canvas.Top="26" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
         </Canvas>
     </Viewbox>

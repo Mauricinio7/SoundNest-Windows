@@ -33,6 +33,14 @@ namespace SoundNest_Windows_Client.Resources.Controls
             get { return (ImageSource)GetValue(ImageSourceProperty); }
             set { SetValue(ImageSourceProperty, value); }
         }
+        public static readonly DependencyProperty StretchProperty =
+        DependencyProperty.Register("Stretch", typeof(Stretch), typeof(AnimatedImageButton), new PropertyMetadata(Stretch.UniformToFill));
+
+        public Stretch Stretch
+        {
+            get { return (Stretch)GetValue(StretchProperty); }
+            set { SetValue(StretchProperty, value); }
+        }
 
         public static readonly DependencyProperty ClickCommandProperty =
             DependencyProperty.Register("ClickCommand", typeof(ICommand), typeof(AnimatedImageButton), new PropertyMetadata(null));

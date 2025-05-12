@@ -1,31 +1,44 @@
 ﻿using Services.Communication.RESTful.Constants;
 using Services.Communication.RESTful.Http;
 using Services.Communication.RESTful.Models.User;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Services.Communication.RESTful.Models;
 using System.Threading.Tasks;
+using System.Net;
 
 namespace Services.Communication.RESTful.Services
 {
-    public class UserService
+    public interface IUserService
     {
-        private readonly ApiClient _apiClient;
+        Task<ApiResult<bool>> CreateUserAsync(NewUserRequest request);
+        Task<ApiResult<bool>> EditUserAsync(EditUserRequest request);
+    }
+    public class UserService : IUserService
+    {
+        private readonly IApiClient _apiClient;
 
-        public UserService(ApiClient apiClient)
+        public UserService(IApiClient apiClient)
         {
             _apiClient = apiClient;
         }
 
-        public async Task CreateUserAsync(NewUserRequest request)
+        public async Task<ApiResult<bool>> CreateUserAsync(NewUserRequest request)
         {
-            await _apiClient.PostAsync<NewUserRequest, object>(ApiRoutes.UserNewUser, request);
+            var result = await _apiClient.PostAsync<NewUserRequest, object>(ApiRoutes.UserNewUser, request);
+
+            if (result.IsSuccess)
+                return ApiResult<bool>.Success(true, "Usuario creado exitosamente", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al crear usuario", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
-        public async Task EditUserAsync(EditUserRequest request)
+        public async Task<ApiResult<bool>> EditUserAsync(EditUserRequest request)
         {
-            await _apiClient.PatchAsync(ApiRoutes.UserEditUser, request);
+            var result = await _apiClient.PatchAsync(ApiRoutes.UserEditUser, request);
+
+            if (result.IsSuccess)
+                return ApiResult<bool>.Success(true, "Usuario editado correctamente", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al editar usuario", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
     }
 }

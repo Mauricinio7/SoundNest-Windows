@@ -1,50 +1,82 @@
 ﻿using Services.Communication.RESTful.Constants;
 using Services.Communication.RESTful.Http;
 using Services.Communication.RESTful.Models.Notification;
-using System;
+using Services.Communication.RESTful.Models;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using System.Net;
 
 namespace Services.Communication.RESTful.Services
 {
-    public class NotificationService
+    public interface INotificationService
     {
-        private readonly ApiClient _apiClient;
+        Task<ApiResult<bool>> CreateNotificationAsync(CreateNotificationRequest request);
+        Task<ApiResult<NotificationResponse>> GetNotificationByIdAsync(string notificationId);
+        Task<ApiResult<List<NotificationResponse>>> GetNotificationsByUserIdAsync(string userId);
+        Task<ApiResult<bool>> DeleteNotificationAsync(string notificationId);
+        Task<ApiResult<bool>> MarkNotificationAsReadAsync(string notificationId);
+    }
 
-        public NotificationService(ApiClient apiClient)
+    public class NotificationService : INotificationService
+    {
+        private readonly IApiClient _apiClient;
+
+        public NotificationService(IApiClient apiClient)
         {
             _apiClient = apiClient;
         }
 
-        public async Task CreateNotificationAsync(CreateNotificationRequest request)
+        public async Task<ApiResult<bool>> CreateNotificationAsync(CreateNotificationRequest request)
         {
-            await _apiClient.PostAsync<CreateNotificationRequest, object>(ApiRoutes.NotificationCreate, request);
+            var result = await _apiClient.PostAsync<CreateNotificationRequest, object>(ApiRoutes.NotificationCreate, request);
+            if (result.IsSuccess)
+                return ApiResult<bool>.Success(true, "Notificación creada exitosamente", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al crear la notificación", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)) ;
         }
 
-        public async Task<NotificationResponse> GetNotificationByIdAsync(string notificationId)
+        public async Task<ApiResult<NotificationResponse>> GetNotificationByIdAsync(string notificationId)
         {
             var url = ApiRoutes.NotificationGetById.Replace("{id}", notificationId);
-            return await _apiClient.GetAsync<NotificationResponse>(url);
+            var result = await _apiClient.GetAsync<NotificationResponse>(url);
+
+            if (result.IsSuccess && result.Data is not null)
+                return ApiResult<NotificationResponse>.Success(result.Data, "Succes", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<NotificationResponse>.Failure(result.ErrorMessage ?? "No se encontró la notificación", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
-        public async Task<List<NotificationResponse>> GetNotificationsByUserIdAsync(string userId)
+        public async Task<ApiResult<List<NotificationResponse>>> GetNotificationsByUserIdAsync(string userId)
         {
             var url = ApiRoutes.NotificationGetByUserId.Replace("{userId}", userId);
-            return await _apiClient.GetAsync<List<NotificationResponse>>(url);
+            var result = await _apiClient.GetAsync<List<NotificationResponse>>(url);
+
+            if (result.IsSuccess && result.Data is not null)
+                return ApiResult<List<NotificationResponse>>.Success(result.Data, "Succes", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<List<NotificationResponse>>.Failure(result.ErrorMessage ?? "No se pudieron obtener las notificaciones", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
-        public async Task DeleteNotificationAsync(string notificationId)
+        public async Task<ApiResult<bool>> DeleteNotificationAsync(string notificationId)
         {
             var url = ApiRoutes.NotificationDelete.Replace("{id}", notificationId);
-            await _apiClient.DeleteAsync(url);
+            var result = await _apiClient.DeleteAsync(url);
+
+            if (result.IsSuccess)
+                return ApiResult<bool>.Success(true, "Notificación eliminada", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al eliminar la notificación", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
-        public async Task MarkNotificationAsReadAsync(string notificationId)
+        public async Task<ApiResult<bool>> MarkNotificationAsReadAsync(string notificationId)
         {
             var url = ApiRoutes.NotificationMarkAsRead.Replace("{id}", notificationId);
-            await _apiClient.PatchAsync<object>(url, null);
+            var result = await _apiClient.PatchAsync<object>(url, null);
+
+            if (result.IsSuccess)
+                return ApiResult<bool>.Success(true, "Notificación marcada como leída", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al marcar como leída", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
     }
 }

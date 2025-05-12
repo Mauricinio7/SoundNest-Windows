@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:SoundNest_Windows_Client.Views"
              xmlns:converters="clr-namespace:SoundNest_Windows_Client.Resources.Converters"
+             xmlns:controls="clr-namespace:SoundNest_Windows_Client.Resources.Controls"
              mc:Ignorable="d" 
              d:DesignWidth="800" d:DesignHeight="65">
 
@@ -17,8 +18,8 @@
 
             <Image Source="{Binding SongImage}" Height="55" Width="78" Canvas.Left="44" Canvas.Top="23"/>
 
-            <TextBlock Canvas.Left="149" Canvas.Top="27" Text="{Binding SongTittle}" Foreground="White" FontSize="20" FontWeight="Bold"/>
-            <TextBlock Canvas.Left="149" Canvas.Top="60" Text="{Binding SongArtist}" Foreground="LightGray" FontSize="14"/>
+            <TextBlock TextTrimming="CharacterEllipsis" Canvas.Left="149" Canvas.Top="27" Text="{Binding SongTittle}" Foreground="White" FontSize="17" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Center" Width="302"/>
+            <TextBlock TextTrimming="CharacterEllipsis" Canvas.Left="149" Canvas.Top="60" Text="{Binding SongArtist}" Foreground="LightGray" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center" Width="277"/>
 
             <TextBlock Canvas.Left="440" Canvas.Top="64" Text="{Binding CurrentTime}" Foreground="White" FontSize="12"/>
             <TextBlock Canvas.Left="979" Canvas.Top="64" Text="{Binding TotalTime}" Foreground="White" FontSize="12"/>
@@ -125,20 +126,29 @@
                 </Button.Template>
             </Button>
 
-            <TextBlock Canvas.Left="603" Canvas.Top="27" Text="" FontFamily="Segoe Fluent Icons" Foreground="{StaticResource SecondaryColor2}" FontSize="24"/>
-            <TextBlock Canvas.Left="789" Canvas.Top="24" Text="&#xEB9D;" FontFamily="Segoe Fluent Icons" Foreground="{StaticResource SecondaryColor2}" FontSize="24"/>
-            <TextBlock Canvas.Left="1123" Canvas.Top="38" Text="" FontFamily="Segoe Fluent Icons" Foreground="{StaticResource SecondaryColor2}" FontSize="24"/>
-            <TextBlock Canvas.Left="1184" Canvas.Top="40" Text="&#xECC8;" FontFamily="Segoe Fluent Icons" Foreground="{StaticResource SecondaryColor2}" FontSize="24"/>
+            <controls:AnimatedLabelButton 
+                LabelText="" FontFamily="Segoe Fluent Icons" ForegroundColor="{StaticResource SecondaryColor2}" LabelFontSize="24"
+                ClickCommand="{Binding PreviosSongCommand}" 
+               Canvas.Left="600" Canvas.Top="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
-            <Button Canvas.Left="1253" Canvas.Top="38"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    FontFamily="Segoe Fluent Icons"
-                    FontSize="24"
-                    Foreground="{StaticResource SecondaryColor2}" 
-                    Command="{Binding OpenCommentsCommand}">
-                &#xE8F2;
-            </Button>
+            <controls:AnimatedLabelButton 
+                LabelText="&#xEB9D;" FontFamily="Segoe Fluent Icons" ForegroundColor="{StaticResource SecondaryColor2}" LabelFontSize="24"
+                ClickCommand="{Binding NextSongCommand}" 
+               Canvas.Left="813" Canvas.Top="16" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+
+            <controls:AnimatedLabelButton 
+                LabelText="&#xE8F2;" FontFamily="Segoe Fluent Icons" ForegroundColor="{StaticResource SecondaryColor2}" LabelFontSize="24"
+                ClickCommand="{Binding CommentsViewCommand}" 
+               Canvas.Left="1237" Canvas.Top="34" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+            <controls:AnimatedLabelButton 
+                LabelText="" FontFamily="Segoe Fluent Icons" ForegroundColor="{StaticResource SecondaryColor2}" LabelFontSize="24"
+                ClickCommand="{Binding DownloadSongCommand}" 
+               Canvas.Left="1118" Canvas.Top="34" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <controls:AnimatedLabelButton 
+                LabelText="&#xECC8;" FontFamily="Segoe Fluent Icons" ForegroundColor="{StaticResource SecondaryColor2}" LabelFontSize="24"
+                ClickCommand="{Binding AddToPlaylistCommand}" 
+               Canvas.Left="1179" Canvas.Top="34" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+
 
             <TextBlock Canvas.Left="1360"
            Canvas.Top="38"

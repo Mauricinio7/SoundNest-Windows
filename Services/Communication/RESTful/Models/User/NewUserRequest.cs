@@ -19,10 +19,10 @@ namespace Services.Communication.RESTful.Models.User
         public string Password { get; set; }
 
         [JsonPropertyName("code")]
-        public int Code { get; set; }
+        public string Code { get; set; }
 
-        [JsonPropertyName("additionalInformation")]
-        public AdditionalInformation AdditionalInformation { get; set; }
+        //[JsonPropertyName("additionalInformation")]
+        //public AdditionalInformation AdditionalInformation { get; set; }
     }
 
     public class AdditionalInformation

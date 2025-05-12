@@ -9,7 +9,7 @@ namespace Services.Communication.RESTful.Models.Comment
 {
     public class CommentResponse
     {
-        [JsonPropertyName("id")]
+        [JsonPropertyName("_id")]
         public string Id { get; set; }
 
         [JsonPropertyName("song_id")]
@@ -20,5 +20,8 @@ namespace Services.Communication.RESTful.Models.Comment
 
         [JsonPropertyName("message")]
         public string Message { get; set; }
+
+        [JsonPropertyName("timestamp")]
+        public string Timestap { get; set; }
     }
 }

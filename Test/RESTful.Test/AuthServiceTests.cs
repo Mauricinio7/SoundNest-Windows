@@ -25,7 +25,7 @@ namespace Test.RESTful.Test
         [TestMethod]
         public async Task Login_ValidCredentials_ReturnsToken()
         {
-            var loginRequest = new LoginRequest
+            LoginRequest loginRequest = new LoginRequest
             {
                 Username = "1",
                 Password = "1"

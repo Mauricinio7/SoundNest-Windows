@@ -52,7 +52,7 @@
                 <controls:PlaceholderTextBoxControl
                 PlaceholderText="Ingrese el nombre por el que se le llamará"
                 Style="{StaticResource PrimaryTextBoxStyle}"
-                Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
+                Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
                 FontSizeValue="24"
                 Width="660"
                 Canvas.Left="60" Canvas.Top="245" Height="100" HorizontalAlignment="Center" VerticalAlignment="Top" />
@@ -66,7 +66,7 @@
                 <controls:PlaceholderTextBoxControl
                 PlaceholderText="Ingrese su correo electrónico"
                 Style="{StaticResource PrimaryTextBoxStyle}"
-                Text="{Binding ConfirmPassword, UpdateSourceTrigger=PropertyChanged}" 
+                Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" 
                 FontSizeValue="24"
                 Width="660"
                 Canvas.Left="60" Canvas.Top="448" Height="100" HorizontalAlignment="Left" VerticalAlignment="Center" />
@@ -81,7 +81,7 @@
                 <controls:ShowPasswordPlaceholderControl
                     PlaceholderText="Ingrese su nueva contraseña segura"
                     Style="{StaticResource PrimaryPasswordBoxStyle}"
-                    Password="{Binding NewPassword, UpdateSourceTrigger=PropertyChanged}"
+                    Password="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
                     TextBoxWidth="660" TextBoxHeight="95"
                     FontSizeValue="24" CheckBoxFontSize="20"
                     CheckBoxMargin="5,140,0,0"

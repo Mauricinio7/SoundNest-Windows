@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SoundNest_Windows_Client.Utilities;
 using System.Windows;
+using SoundNest_Windows_Client.Models;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -23,6 +24,12 @@ namespace SoundNest_Windows_Client.ViewModels
                 OnPropertyChanged();
             }
         }
+        private string profilePhoto;
+        public string ProfilePhoto
+        {
+            get => profilePhoto;
+            set { profilePhoto = value; OnPropertyChanged(); }
+        }
 
         public RelayCommand ViewProfileCommand { get; set; }
         public RelayCommand ViewNotificationsCommand { get; set; }
@@ -33,7 +40,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
         public ObservableCollection<Playlist> Playlists { get; set; } = new();
 
-        public SideBarViewModel(INavigationService navigationService)
+        public SideBarViewModel(INavigationService navigationService, IAccountService user)
         {
             Navigation = navigationService;
 
@@ -50,6 +57,7 @@ namespace SoundNest_Windows_Client.ViewModels
                     App.Current.Dispatcher.Invoke(() => Playlists.Add(newPlaylist));
             });
 
+            ProfilePhoto = user.CurrentUser.ProfileImagePath;
         }
 
         private void ExecuteUploadSongCommand(object parameter)
