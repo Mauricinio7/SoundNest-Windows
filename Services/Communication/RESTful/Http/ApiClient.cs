@@ -17,11 +17,8 @@ namespace Services.Communication.RESTful.Http
         void SetAuthorizationToken(string token);
 
         Task<ApiResult<T>> GetAsync<T>(string url);
-
         Task<ApiResult<TResponse>> PostAsync<TRequest, TResponse>(string url, TRequest data);
-
         Task<ApiResult<bool>> PatchAsync<TRequest>(string url, TRequest data);
-
         Task<ApiResult<bool>> DeleteAsync(string url);
     }
 
@@ -32,8 +29,10 @@ namespace Services.Communication.RESTful.Http
 
         public ApiClient(string baseUrl)
         {
-            HttpClientHandler handler = new HttpClientHandler();
-            handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, errors) => true;
+            HttpClientHandler handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (sender, cert, chain, errors) => true
+            };
 
             _httpClient = new HttpClient(handler)
             {
@@ -69,16 +68,21 @@ namespace Services.Communication.RESTful.Http
                 }
 
                 return ApiResult<T>.Failure(
-                    error: $"Error {response.StatusCode}: {json}",
-                    userMessage: "No se pudo obtener la información.",
+                    error: $"HTTP {(int)response.StatusCode} - {response.ReasonPhrase}: {json}",
+                    userMessage: MapFriendlyMessage(response.StatusCode),
                     code: response.StatusCode
                 );
             }
             catch (Exception ex)
             {
+                var isNetworkError = ex is HttpRequestException || ex.InnerException is System.Net.Sockets.SocketException;
+
                 return ApiResult<T>.Failure(
                     error: $"Excepción: {ex.Message}",
-                    userMessage: "Ocurrió un error inesperado al intentar obtener los datos."
+                    userMessage: isNetworkError
+                        ? "No se pudo conectar con el servidor. Verifica tu conexión a internet."
+                        : "Error inesperado al obtener los datos.",
+                    code: null
                 );
             }
         }
@@ -96,25 +100,28 @@ namespace Services.Communication.RESTful.Http
                 if (response.IsSuccessStatusCode)
                 {
                     if (string.IsNullOrWhiteSpace(result))
-                    {
                         return ApiResult<TResponse>.Success(default, "Registro exitoso (sin contenido).", response.StatusCode);
-                    }
 
                     var deserialized = JsonSerializer.Deserialize<TResponse>(result);
                     return ApiResult<TResponse>.Success(deserialized, "Registro exitoso.", response.StatusCode);
                 }
 
                 return ApiResult<TResponse>.Failure(
-                    error: $"Error {response.StatusCode}: {result}",
-                    userMessage: "No se pudo completar el registro.",
+                    error: $"HTTP {(int)response.StatusCode} - {response.ReasonPhrase}: {result}",
+                    userMessage: MapFriendlyMessage(response.StatusCode),
                     code: response.StatusCode
                 );
             }
             catch (Exception ex)
             {
+                var isNetworkError = ex is HttpRequestException || ex.InnerException is System.Net.Sockets.SocketException;
+
                 return ApiResult<TResponse>.Failure(
                     error: $"Excepción: {ex.Message}",
-                    userMessage: "Ocurrió un error inesperado al registrar la información."
+                    userMessage: isNetworkError
+                        ? "No se pudo conectar con el servidor. Verifica tu conexión a internet."
+                        : "Error inesperado al registrar la información.",
+                    code: null
                 );
             }
         }
@@ -138,16 +145,21 @@ namespace Services.Communication.RESTful.Http
                 }
 
                 return ApiResult<bool>.Failure(
-                    error: $"Error {response.StatusCode}: {result}",
-                    userMessage: "No se pudo actualizar la información.",
+                    error: $"HTTP {(int)response.StatusCode} - {response.ReasonPhrase}: {result}",
+                    userMessage: MapFriendlyMessage(response.StatusCode),
                     code: response.StatusCode
                 );
             }
             catch (Exception ex)
             {
+                var isNetworkError = ex is HttpRequestException || ex.InnerException is System.Net.Sockets.SocketException;
+
                 return ApiResult<bool>.Failure(
                     error: $"Excepción: {ex.Message}",
-                    userMessage: "Error inesperado al intentar actualizar."
+                    userMessage: isNetworkError
+                        ? "No se pudo conectar con el servidor. Verifica tu conexión a internet."
+                        : "Error inesperado al actualizar.",
+                    code: null
                 );
             }
         }
@@ -165,18 +177,34 @@ namespace Services.Communication.RESTful.Http
                 }
 
                 return ApiResult<bool>.Failure(
-                    error: $"Error {response.StatusCode}: {result}",
-                    userMessage: "No se pudo eliminar el recurso.",
+                    error: $"HTTP {(int)response.StatusCode} - {response.ReasonPhrase}: {result}",
+                    userMessage: MapFriendlyMessage(response.StatusCode),
                     code: response.StatusCode
                 );
             }
             catch (Exception ex)
             {
+                var isNetworkError = ex is HttpRequestException || ex.InnerException is System.Net.Sockets.SocketException;
+
                 return ApiResult<bool>.Failure(
                     error: $"Excepción: {ex.Message}",
-                    userMessage: "Error inesperado al intentar eliminar."
+                    userMessage: isNetworkError
+                        ? "No se pudo conectar con el servidor. Verifica tu conexión a internet."
+                        : "Error inesperado al eliminar.",
+                    code: null
                 );
             }
         }
+
+        private static string MapFriendlyMessage(HttpStatusCode statusCode) => statusCode switch
+        {
+            HttpStatusCode.BadRequest => "La solicitud es inválida. Verifica los datos ingresados.",
+            HttpStatusCode.Unauthorized => "No autorizado. Verifica tus credenciales.",
+            HttpStatusCode.Forbidden => "No tienes permiso para realizar esta acción.",
+            HttpStatusCode.NotFound => "El recurso solicitado no fue encontrado.",
+            HttpStatusCode.Conflict => "Conflicto. Es posible que el recurso ya exista.",
+            HttpStatusCode.InternalServerError => "Error interno del servidor. Inténtalo más tarde.",
+            _ => "Ocurrió un error inesperado. Intenta nuevamente."
+        };
     }
 }

@@ -159,18 +159,17 @@ namespace SoundNest_Windows_Client.ViewModels
                 }
             };
 
-            Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
-            var response = await userService.EditUserAsync(editUserRequest);
-            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+                var response = await ExecuteRESTfulApiCall(() => userService.EditUserAsync(editUserRequest));
 
-            if (response.IsSuccess)
-            {
-                MessageBox.Show("Usuario editado correctamente", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            else
-            {
-                MessageBox.Show(response.ErrorMessage ?? "Error al editar el usuario", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+                if (response.IsSuccess)
+                {
+                    MessageBox.Show("Usuario editado correctamente", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show(response.Message ?? "Error al editar el usuario", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            
 
             IsEditing = false;
         }

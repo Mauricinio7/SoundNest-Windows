@@ -31,7 +31,7 @@ namespace Services.Communication.RESTful.Services
             if (result.IsSuccess)
                 return ApiResult<bool>.Success(true, "Comentario creado exitosamente", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
 
-            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al crear comentario", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al crear comentario", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
         public async Task<ApiResult<List<CommentResponse>>> GetCommentsBySongIdAsync(string songId)
@@ -40,9 +40,9 @@ namespace Services.Communication.RESTful.Services
             var result = await _apiClient.GetAsync<List<CommentResponse>>(url);
 
             if (result.IsSuccess && result.Data is not null)
-                return ApiResult<List<CommentResponse>>.Success(result.Data, "Succes", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+                return ApiResult<List<CommentResponse>>.Success(result.Data, result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
 
-            return ApiResult<List<CommentResponse>>.Failure(result.ErrorMessage ?? "No se pudieron obtener los comentarios", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+            return ApiResult<List<CommentResponse>>.Failure(result.ErrorMessage ?? "No se pudieron obtener los comentarios", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
         public async Task<ApiResult<CommentResponse>> GetCommentByIdAsync(string commentId)
@@ -53,7 +53,7 @@ namespace Services.Communication.RESTful.Services
             if (result.IsSuccess && result.Data is not null)
                 return ApiResult<CommentResponse>.Success(result.Data, "Succes", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
 
-            return ApiResult<CommentResponse>.Failure(result.ErrorMessage ?? "No se pudo obtener el comentario", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+            return ApiResult<CommentResponse>.Failure(result.ErrorMessage ?? "No se pudo obtener el comentario", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
         public async Task<ApiResult<bool>> DeleteCommentAsync(string commentId)
@@ -64,7 +64,7 @@ namespace Services.Communication.RESTful.Services
             if (result.IsSuccess)
                 return ApiResult<bool>.Success(true, "Comentario eliminado", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
 
-            return ApiResult<bool>.Failure(result.ErrorMessage ?? "No se pudo eliminar el comentario", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+            return ApiResult<bool>.Failure(result.ErrorMessage ?? "No se pudo eliminar el comentario", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
     }
 }

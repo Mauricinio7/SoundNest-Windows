@@ -48,23 +48,22 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async Task LoadNotifications()
         {
-            Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
-            var result = await notificationService.GetNotificationsByUserIdAsync(currentUser.Id.ToString());
-            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+                var result = await ExecuteRESTfulApiCall(() => notificationService.GetNotificationsByUserIdAsync(currentUser.Id.ToString()));
 
-            if (result.IsSuccess && result.Data is not null)
-            {
-                Notifications.Clear();
 
-                foreach (var notification in result.Data)
+                if (result.IsSuccess && result.Data is not null)
                 {
-                    Notifications.Add(new Notification(notification.Relevance.ToString(), notification.Sender, notification.Notification, notification.Relevance.Value, notification.Id));
+                    Notifications.Clear();
+
+                    foreach (var notification in result.Data)
+                    {
+                        Notifications.Add(new Notification(notification.Relevance.ToString(), notification.Sender, notification.Notification, notification.Relevance.Value, notification.Id));
+                    }
                 }
-            }
-            else
-            {
-                MessageBox.Show(result.ErrorMessage ?? "Error al cargar las notificaciones", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+                else
+                {
+                    MessageBox.Show(result.Message ?? "Error al cargar las notificaciones", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
         }
 
         private void OnNotificationClick(object parameter)
@@ -84,27 +83,25 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             if (parameter is Notification notification)
             {
-                MessageBoxResult result = MessageBox.Show(
+                MessageBoxResult resultMessage = MessageBox.Show(
                     $"¿Estás seguro de que deseas eliminar la notificación: {notification.Title}?",
                     "Eliminar Notificación", MessageBoxButton.YesNo, MessageBoxImage.Warning
                 );
 
-                if (result != MessageBoxResult.Yes)
+                if (resultMessage != MessageBoxResult.Yes)
                     return;
 
-                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
-                var resultDelete = await notificationService.DeleteNotificationAsync(notification.Id);
-                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+                    var resultDelete = await ExecuteRESTfulApiCall(() => notificationService.DeleteNotificationAsync(notification.Id));
 
-                if (resultDelete.IsSuccess)
-                {
-                    MessageBox.Show("Notificación eliminada exitosamente", "Eliminar Notificación", MessageBoxButton.OK, MessageBoxImage.Information);
-                    Notifications.Remove(notification);
-                }
-                else
-                {
-                    MessageBox.Show(resultDelete.ErrorMessage ?? "Error al eliminar la notificación", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                    if (resultDelete.IsSuccess)
+                    {
+                        MessageBox.Show("Notificación eliminada exitosamente", "Eliminar Notificación", MessageBoxButton.OK, MessageBoxImage.Information);
+                        Notifications.Remove(notification);
+                    }
+                    else
+                    {
+                        MessageBox.Show(resultDelete.Message ?? "Error al eliminar la notificación", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
             }
         }
     }

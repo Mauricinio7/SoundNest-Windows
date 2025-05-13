@@ -32,7 +32,7 @@ namespace Services.Communication.RESTful.Services
             if (result.IsSuccess)
                 return ApiResult<bool>.Success(true, "Notificación creada exitosamente", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
 
-            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al crear la notificación", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)) ;
+            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al crear la notificación", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)) ;
         }
 
         public async Task<ApiResult<NotificationResponse>> GetNotificationByIdAsync(string notificationId)
@@ -41,9 +41,9 @@ namespace Services.Communication.RESTful.Services
             var result = await _apiClient.GetAsync<NotificationResponse>(url);
 
             if (result.IsSuccess && result.Data is not null)
-                return ApiResult<NotificationResponse>.Success(result.Data, "Succes", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+                return ApiResult<NotificationResponse>.Success(result.Data, result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
 
-            return ApiResult<NotificationResponse>.Failure(result.ErrorMessage ?? "No se encontró la notificación", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+            return ApiResult<NotificationResponse>.Failure(result.ErrorMessage ?? "No se encontró la notificación", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
         public async Task<ApiResult<List<NotificationResponse>>> GetNotificationsByUserIdAsync(string userId)
@@ -52,9 +52,9 @@ namespace Services.Communication.RESTful.Services
             var result = await _apiClient.GetAsync<List<NotificationResponse>>(url);
 
             if (result.IsSuccess && result.Data is not null)
-                return ApiResult<List<NotificationResponse>>.Success(result.Data, "Succes", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+                return ApiResult<List<NotificationResponse>>.Success(result.Data, result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
 
-            return ApiResult<List<NotificationResponse>>.Failure(result.ErrorMessage ?? "No se pudieron obtener las notificaciones", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+            return ApiResult<List<NotificationResponse>>.Failure(result.ErrorMessage ?? "No se pudieron obtener las notificaciones", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
         public async Task<ApiResult<bool>> DeleteNotificationAsync(string notificationId)
@@ -65,7 +65,7 @@ namespace Services.Communication.RESTful.Services
             if (result.IsSuccess)
                 return ApiResult<bool>.Success(true, "Notificación eliminada", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
 
-            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al eliminar la notificación", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al eliminar la notificación", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
         public async Task<ApiResult<bool>> MarkNotificationAsReadAsync(string notificationId)
@@ -76,7 +76,7 @@ namespace Services.Communication.RESTful.Services
             if (result.IsSuccess)
                 return ApiResult<bool>.Success(true, "Notificación marcada como leída", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
 
-            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al marcar como leída", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al marcar como leída", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
     }
 }

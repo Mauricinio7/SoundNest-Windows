@@ -6,11 +6,11 @@ namespace Services.Communication.RESTful.Models
     {
         public bool IsSuccess { get; set; }
         public T? Data { get; set; }
-        public string? ErrorMessage { get; set; } 
-        public string? Message { get; set; }     
+        public string? ErrorMessage { get; set; }
+        public string? Message { get; set; }
         public HttpStatusCode? StatusCode { get; set; }
 
-        public static ApiResult<T> Success(T data, string? message = null, HttpStatusCode code = HttpStatusCode.OK) => new()
+        public static ApiResult<T> Success(T data, string? message, HttpStatusCode code = HttpStatusCode.OK) => new()
         {
             IsSuccess = true,
             Data = data,
@@ -18,7 +18,7 @@ namespace Services.Communication.RESTful.Models
             StatusCode = code
         };
 
-        public static ApiResult<T> Failure(string error, string? userMessage = null, HttpStatusCode? code = null) => new()
+        public static ApiResult<T> Failure(string error, string? userMessage, HttpStatusCode? code = null) => new()
         {
             IsSuccess = false,
             ErrorMessage = error,

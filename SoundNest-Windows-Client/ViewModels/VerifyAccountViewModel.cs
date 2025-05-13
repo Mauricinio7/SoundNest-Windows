@@ -33,7 +33,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-        private readonly IUserService _userService;
+        private readonly IUserService userService;
         private EditUserRequest _account;
 
         public RelayCommand CancelCommand { get; set; }
@@ -42,7 +42,7 @@ namespace SoundNest_Windows_Client.ViewModels
         public VerifyAccountViewModel(INavigationService navigationService, IUserService userService)
         {
             Navigation = navigationService;
-            _userService = userService;
+            this.userService = userService;
 
             CancelCommand = new RelayCommand(ExecuteCancelCommand);
             VerifyCodeCommand = new AsyncRelayCommand(async () => await ExecuteVerifyCodeCommand());
@@ -81,21 +81,18 @@ namespace SoundNest_Windows_Client.ViewModels
                 Code = VerificationCode
             };
 
-            Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
-            var response = await _userService.CreateUserAsync(newUser);
-            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+                var response = await ExecuteRESTfulApiCall(() => userService.CreateUserAsync(newUser));
 
-            MessageBox.Show(response.ErrorMessage);
-
-            if (response.IsSuccess)
-            {
-                MessageBox.Show("¡Cuenta creada exitosamente!", "Código de verificación", MessageBoxButton.OK, MessageBoxImage.Information);
-                Navigation.NavigateTo<LoginViewModel>();
-            }
-            else
-            {
-                MessageBox.Show("Hubo un error al crear la cuenta, intente nuevamente más tarde");
-            }
+                if (response.IsSuccess)
+                {
+                    MessageBox.Show("¡Cuenta creada exitosamente!", "Código de verificación", MessageBoxButton.OK, MessageBoxImage.Information);
+                    Navigation.NavigateTo<LoginViewModel>();
+                }
+                else
+                {
+                    MessageBox.Show(response.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            
         }
     }
 }

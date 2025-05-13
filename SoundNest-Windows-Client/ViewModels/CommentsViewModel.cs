@@ -91,15 +91,10 @@ namespace SoundNest_Windows_Client.ViewModels
         private async void LoadComments()
         {
             Comments.Clear();
-            try
-            {
-                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
 
-                var result = await commentService.GetCommentsBySongIdAsync(SongId);
+            var result = await ExecuteRESTfulApiCall(() => commentService.GetCommentsBySongIdAsync(SongId));
 
-                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
-
-                if (result.IsSuccess && result.Data != null)
+            if (result.IsSuccess && result.Data != null)
                 {
                     foreach (var comment in result.Data)
                     {
@@ -110,20 +105,16 @@ namespace SoundNest_Windows_Client.ViewModels
                             Username = comment.User,
                             Text = comment.Message,
                             Timestamp = parsedTimestamp,
-                            IsMine = comment.User == CurrentUsername,
+                            IsMine = comment.User == CurrentUsername, //OR is a moderator
                             CommentId = comment.Id
                         });
                     }
                 }
                 else
                 {
-                    MessageBox.Show($"Failed to load comments: {result.ErrorMessage ?? "Unknown error"}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show($"Hubo un error al cargar los comentarios"  ?? "Error", result.Message ,MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Unexpected error loading comments:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            
         }
 
         public void ReceiveParameter(object parameter)
@@ -196,11 +187,8 @@ namespace SoundNest_Windows_Client.ViewModels
             if (confirm != MessageBoxResult.Yes)
                 return;
 
-            try
-            {
-                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
-                var resultDelete = await commentService.DeleteCommentAsync(comment.CommentId);
-                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+
+            var resultDelete = await ExecuteRESTfulApiCall(() => commentService.DeleteCommentAsync(comment.CommentId));
 
                 if (resultDelete.IsSuccess)
                 {
@@ -209,14 +197,10 @@ namespace SoundNest_Windows_Client.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show($"No se pudo eliminar el comentario: {resultDelete.ErrorMessage ?? "Error desconocido."}",
-                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"No se pudo eliminar el comentario:" ?? "Error desconocido.",
+                                    resultDelete.Message, MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ocurrió un error inesperado: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+
         }
 
         private async Task SendComment()
@@ -227,17 +211,14 @@ namespace SoundNest_Windows_Client.ViewModels
                 return;
             }
 
-            try
-            {
                 var commentRequest = new CreateCommentRequest
                 {
                     Message = CommentText,
                     User = CurrentUsername,
                     SongId = int.Parse(SongId),
                 };
-                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
-                var result = await commentService.CreateCommentAsync(commentRequest);
-                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+
+                var result = await ExecuteRESTfulApiCall(() => commentService.CreateCommentAsync(commentRequest));
 
                 if (result.IsSuccess)
                 {
@@ -246,14 +227,10 @@ namespace SoundNest_Windows_Client.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show($"No se pudo enviar el comentario: {result.ErrorMessage ?? "Error desconocido"}",
+                    MessageBox.Show($"No se pudo enviar el comentario" ?? "Error desconocido",
                                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ocurrió un error inesperado: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            
         }
     }
 }

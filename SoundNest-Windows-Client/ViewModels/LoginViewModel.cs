@@ -8,6 +8,7 @@ using SoundNest_Windows_Client.Models;
 using SoundNest_Windows_Client.Utilities;
 using System;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -30,7 +31,7 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand BackCommand { get; set; }
         public RelayCommand ForgottenPasswordCommand { get; set; }
 
-        private readonly IAuthService _authService;
+        private readonly IAuthService authService;
         private readonly IAccountService user;
 
         private string username;
@@ -50,7 +51,7 @@ namespace SoundNest_Windows_Client.ViewModels
         public LoginViewModel(INavigationService navigationService, IAuthService authService, IAccountService newUser)
         {
             Navigation = navigationService;
-            _authService = authService;
+            this.authService = authService;
             user = newUser;
 
             LoginCommand = new AsyncRelayCommand(async () => await ExecuteLoginCommand());
@@ -60,25 +61,18 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async Task ExecuteLoginCommand()
         {
-            try
-            {
                 LoginRequest loginRequest = new LoginRequest
                 {
                     Username = this.Username,
                     Password = this.Password
                 };
 
-                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
-
-                var result = await _authService.LoginAsync(loginRequest);
-
+                var result = await ExecuteRESTfulApiCall(() => authService.LoginAsync(loginRequest));
+            
                 string? token = result.Data;
-
-                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
 
                 if (result.IsSuccess)
                 {
-                    MessageBox.Show(result.StatusCode.ToString() + result.Message);
                     TokenStorageHelper.SaveToken(token);
                     SaveUserToMemory(token);
 
@@ -86,14 +80,13 @@ namespace SoundNest_Windows_Client.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show(result.StatusCode.ToString() + result.ErrorMessage);
-                    MessageBox.Show("No se pudo iniciar sesión");
+                    if(result.StatusCode== HttpStatusCode.Unauthorized)
+                    {
+                        result.Message = "Se ha ingresado un correo o una contraseña no valida";
+                    }
+
+                    MessageBox.Show(result.Message ?? "No se pudo iniciar sesión", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Unexpected error during login: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
         }
 
         private void SaveUserToMemory(string token)

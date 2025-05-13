@@ -28,7 +28,7 @@ namespace Services.Communication.RESTful.Services
             if (result.IsSuccess)
                 return ApiResult<bool>.Success(true, "Usuario creado exitosamente", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
 
-            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al crear usuario", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al crear usuario", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
         public async Task<ApiResult<bool>> EditUserAsync(EditUserRequest request)
@@ -38,7 +38,7 @@ namespace Services.Communication.RESTful.Services
             if (result.IsSuccess)
                 return ApiResult<bool>.Success(true, "Usuario editado correctamente", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
 
-            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al editar usuario", "Error", result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al editar usuario", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
     }
 }

@@ -40,7 +40,7 @@ namespace SoundNest_Windows_Client.ViewModels
             set { password = value; OnPropertyChanged(); }
         }
 
-        private IAuthService _authServic;
+        private IAuthService authService;
 
         public AsyncRelayCommand CreateAccountCommand { get; set; }
         public RelayCommand CancelCommand { get; set; }
@@ -48,7 +48,7 @@ namespace SoundNest_Windows_Client.ViewModels
         public CreateAccountViewModel(INavigationService navigationService, IAuthService authService)
         {
             Navigation = navigationService;
-            _authServic = authService;
+            this.authService = authService;
 
             CancelCommand = new RelayCommand(ExecuteCancelCommand);
             CreateAccountCommand = new AsyncRelayCommand(async () => await ExecuteCreateAccountCommand());
@@ -56,26 +56,25 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async Task ExecuteCreateAccountCommand()
         {
-            try
+
+            EditUserRequest requestAccount = CreateRequest();
+
+            SendCodeRequest requestCode = new SendCodeRequest
             {
-                EditUserRequest requestAccount = CreateRequest();
+                Email = requestAccount.Email,
+            };
 
-                SendCodeRequest requestCode = new SendCodeRequest
-                {
-                    Email = requestAccount.Email,
-                };
+            var response = await ExecuteRESTfulApiCall(() => authService.SendCodeEmailAsync(requestCode));
 
-                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
-                var response = await _authServic.SendCodeEmailAsync(requestCode);
-                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
-
-                MessageBox.Show(response.Message, "Código de verificación", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (response.IsSuccess)
+            {
+                MessageBox.Show("Se ha enviado un código de verficaición a tu correo electrónico", "Código de verificación", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 Navigation.NavigateTo<VerifyAccountViewModel>(requestAccount);
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show($"Ocurrió un error al crear la cuenta: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(response.Message, "Hubo un error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
