@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace Services.Communication.gRPC.Constants
 {
-    public class ApiRoute
+    public class GrpcApiRoute
     {
         public const string PORT = "50051";
-        public const string BaseUrl = $"https://localhost:{PORT}";
+        //https://localhost
+        public const string BaseUrl = $"http://localhost:{PORT}";
 
     }
 }

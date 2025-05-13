@@ -10,16 +10,17 @@ using Services.Communication.RESTful.Constants;
 using Services.Communication.RESTful.Http;
 using Services.Communication.RESTful.Services;
 using SoundNest_Windows_Client.Utilities;
+using Services.Communication.gRPC.Http;
+using Services.Communication.gRPC.Services;
+using Services.Communication.gRPC.Constants;
+using Services.Communication.gRPC.Managers;
 
 namespace SoundNest_Windows_Client;
 
-/// <summary>
-/// Interaction logic for App.xaml
-/// </summary>
 public partial class App : Application
 {
     public static ServiceProvider ServiceProvider { get; private set; }
-
+    public CancellationTokenSource CancellationTokenEventStreaming { get; private set; }
     public App()
     {
         IServiceCollection service = new ServiceCollection();
@@ -28,6 +29,11 @@ public partial class App : Application
         {
             DataContext = provider.GetRequiredService<MainWindowViewModel>()
         });
+        //GRPC
+        service.AddSingleton<EventGrpcClient>(sp => new EventGrpcClient(GrpcApiRoute.BaseUrl));
+        service.AddSingleton<IEventStreamService, EventStreamService>();
+        service.AddSingleton<IEventStreamManager, EventStreamManager>();
+
 
         service.AddTransient<MainWindowViewModel>();
         service.AddTransient<InitViewModel>();
@@ -73,12 +79,58 @@ public partial class App : Application
         ServiceProvider = service.BuildServiceProvider();
 
 
-}
-    protected override void OnStartup(StartupEventArgs e)
+        //ONLY FOR DEBUG
+        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+        {
+            if (e.ExceptionObject is Exception ex)
+                MessageBox.Show($"Error inesperado: {ex.Message}", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        };
+
+        DispatcherUnhandledException += (s, e) =>
+        {
+            MessageBox.Show($"Error no manejado: {e.Exception.Message}", "App Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            e.Handled = true;
+        };
+
+
+    }
+    protected override async void OnStartup(StartupEventArgs e)
     {
         var logInWindow = ServiceProvider.GetRequiredService<MainWindowView>();
         logInWindow.Show();
         base.OnStartup(e);
+
+
+        //TODO: VALIDAR CON MAU
+        // Iniciar la línea de vida gRPC
+        var manager = ServiceProvider.GetRequiredService<IEventStreamManager>();
+        CancellationTokenEventStreaming = new CancellationTokenSource();
+        await manager.StartAsync(CancellationTokenEventStreaming.Token);
+
+        // Suscripción de ejemplo para logs globales
+        //manager.Subscribe(async msg =>
+        //{
+        //    Console.WriteLine($"[GLOBAL STREAM] {msg.CustomEventType}: {msg.Message}");
+        //});
+    }
+
+    protected override async void OnExit(ExitEventArgs e)
+    {
+        CancellationTokenEventStreaming?.Cancel();
+
+        var manager = ServiceProvider.GetService<IEventStreamManager>();
+        if (manager is not null)
+        {
+            try
+            {
+                await manager.StopAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OnExit] Error al detener EventStreamManager: {ex.Message}");
+            }
+        }
+        base.OnExit(e);
     }
 
 }

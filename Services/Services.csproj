@@ -5,12 +5,15 @@
 	</PropertyGroup>
 	<ItemGroup>
 	  <None Remove="Communication\Certificates\server.crt" />
+	  <None Remove="Communication\gRPC\ProtoFiles\event.proto" />
 	  <None Remove="Communication\gRPC\ProtoFiles\song.proto" />
+	  <None Remove="Communication\gRPC\ProtoFiles\user_image.proto" />
 	</ItemGroup>
 	<ItemGroup>
 	  <EmbeddedResource Include="Communication\Certificates\server.crt" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Folder Include="Communication\gRPC\Utils\" />
 	  <Folder Include="Communication\RESTful\Exceptions\" />
 	</ItemGroup>
 	<ItemGroup>
@@ -22,6 +25,8 @@
 	  </PackageReference>
 	</ItemGroup>
 	<ItemGroup>
+	  <Protobuf Include="Communication\gRPC\ProtoFiles\event.proto" GrpcServices="Client" />
 	  <Protobuf Include="Communication\gRPC\ProtoFiles\song.proto" GrpcServices="Client" />
+	  <Protobuf Include="Communication\gRPC\ProtoFiles\user_image.proto" GrpcServices="Client" />
 	</ItemGroup>
 </Project>

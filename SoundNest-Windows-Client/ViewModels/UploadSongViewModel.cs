@@ -96,7 +96,7 @@ namespace SoundNest_Windows_Client.ViewModels
                 "Publicar Cancion",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
-            var grpcClient = new SongGrpcClient(ApiRoute.BaseUrl);
+            var grpcClient = new SongGrpcClient(GrpcApiRoute.BaseUrl);
             //grpcClient.SetAuthorizationToken(miTokenJWT);
             var upload = new SongUploader(grpcClient);
             byte[] fileBytes = File.ReadAllBytes(SelectedFileName);
@@ -110,5 +110,12 @@ namespace SoundNest_Windows_Client.ViewModels
 
 
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
     }
 }

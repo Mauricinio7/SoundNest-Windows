@@ -48,7 +48,7 @@ namespace Services.Infrestructure
         {
             return canExecute == null ? true : canExecute(parameter);
         }
-
+        [DebuggerStepThrough]
         public void Execute(object? parameter)
         {
             execute(parameter);
