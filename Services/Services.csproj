@@ -13,7 +13,6 @@
 	  <EmbeddedResource Include="Communication\Certificates\server.crt" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="Communication\gRPC\Utils\" />
 	  <Folder Include="Communication\RESTful\Exceptions\" />
 	</ItemGroup>
 	<ItemGroup>
@@ -23,6 +22,8 @@
 	    <PrivateAssets>all</PrivateAssets>
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
+	  <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.5" />
+	  <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.5" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Protobuf Include="Communication\gRPC\ProtoFiles\event.proto" GrpcServices="Client" />
