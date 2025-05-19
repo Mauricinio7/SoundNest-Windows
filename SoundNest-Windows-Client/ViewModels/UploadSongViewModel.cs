@@ -100,17 +100,17 @@ namespace SoundNest_Windows_Client.ViewModels
             //grpcClient.SetAuthorizationToken(miTokenJWT);
             var upload = new SongUploader(grpcClient);
             byte[] fileBytes = File.ReadAllBytes(SelectedFileName);
-            bool result = await upload.UploadFullAsync(PlaylistName, fileBytes, 1, AdditionalInfo);
+            //bool result = await upload.UploadFullAsync(PlaylistName, fileBytes, 1, AdditionalInfo);
 
             //TODO: Errase the line below  or above
              using var fs = File.OpenRead(SelectedFileName);
-                bool okStream = await upload.UploadStreamAsync(PlaylistName, genreId: 5, description: "Demo", fileStream: fs);
-
+                //bool okStream = await upload.UploadStreamAsync(PlaylistName, genreId: 5, description: "Demo", fileStream: fs);
+                
 
 
 
         }
-
+        
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {
