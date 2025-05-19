@@ -12,9 +12,6 @@ namespace Services.Communication.RESTful.Models.Comment
         [JsonPropertyName("song_id")]
         public int SongId { get; set; }
 
-        [JsonPropertyName("user")]
-        public string User { get; set; }
-
         [JsonPropertyName("message")]
         public string Message { get; set; }
     }

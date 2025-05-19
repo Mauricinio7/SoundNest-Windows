@@ -1,14 +1,13 @@
 ﻿using Services.Infrestructure;
 using Services.Navigation;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SoundNest_Windows_Client.Utilities;
+using System.IO;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using SoundNest_Windows_Client.Models;
+using SoundNest_Windows_Client.Utilities;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -24,8 +23,9 @@ namespace SoundNest_Windows_Client.ViewModels
                 OnPropertyChanged();
             }
         }
-        private string profilePhoto;
-        public string ProfilePhoto
+
+        private ImageSource profilePhoto;
+        public ImageSource ProfilePhoto
         {
             get => profilePhoto;
             set { profilePhoto = value; OnPropertyChanged(); }
@@ -57,7 +57,26 @@ namespace SoundNest_Windows_Client.ViewModels
                     App.Current.Dispatcher.Invoke(() => Playlists.Add(newPlaylist));
             });
 
-            ProfilePhoto = user.CurrentUser.ProfileImagePath;
+            LoadProfileImage(user.CurrentUser.ProfileImagePath);
+        }
+
+        private void LoadProfileImage(string imagePath)
+        {
+            if (!string.IsNullOrEmpty(imagePath))
+            {
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.UriSource = new Uri(imagePath, UriKind.Absolute);
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.EndInit();
+                ProfilePhoto = image;
+            }
+            else
+            {
+                // Opcional: asignar imagen por defecto si no hay archivo
+                MessageBox.Show("Error, no se pudo cargar la foto");
+                ProfilePhoto = null;
+            }
         }
 
         private void ExecuteUploadSongCommand(object parameter)
@@ -99,7 +118,5 @@ namespace SoundNest_Windows_Client.ViewModels
             Mediator.Notify(MediatorKeys.HIDE_SEARCH_BAR, null);
             Navigation.NavigateTo<CreatePlaylistViewModel>();
         }
-
-
     }
 }

@@ -32,7 +32,7 @@ namespace Services.Communication.gRPC.Managers
             _eventStreamService = eventStreamService;
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken) //Implements subscription from methods on events
         {
             await _eventStreamService.StartAsync(async msg =>
             {

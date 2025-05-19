@@ -108,6 +108,29 @@
                     Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"
                     Canvas.Left="1428" Canvas.Top="359"
                     Width="358" Height="110" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+            <Button Content="&#xE70F;"
+                FontSize="35"
+                FontWeight="Bold"
+                FontFamily="Segoe MDL2 Assets"
+                Style="{StaticResource PositiveButtonStyle}"
+                Command="{Binding EditImageCommand}"
+                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibilityConverter}}"
+                Width="110" Height="110"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Canvas.Left="523" Canvas.Top="235" RenderTransformOrigin="0.649,0.707">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="55"
+                            Width="70" Height="70">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
 
             <Button Content="Cancelar"
                     FontSize="35"

@@ -116,16 +116,16 @@
                 ClickCommand="{Binding UploadSongCommand}" 
                 Margin="364,111,41,672"/>
 
-          
-                <ScrollViewer 
+
+            <ScrollViewer 
                     VerticalScrollBarVisibility="Auto" 
                     HorizontalScrollBarVisibility="Disabled" 
                     Margin="40,260,3,188"
                     Padding="0">
-                    <ScrollViewer.Style>
+                <ScrollViewer.Style>
                     <Style TargetType="ScrollViewer">
                         <Setter Property="Template">
-                                <Setter.Value>
+                            <Setter.Value>
                                 <ControlTemplate TargetType="ScrollViewer">
                                     <Grid>
                                         <Grid>
@@ -142,22 +142,22 @@
                                     </Grid>
 
 
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ScrollViewer.Style>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ScrollViewer.Style>
 
-                    <ItemsControl ItemsSource="{Binding Playlists}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Margin="0,0" Height="100">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="150" />
-                                    </Grid.ColumnDefinitions>
+                <ItemsControl ItemsSource="{Binding Playlists}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,0" Height="100">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="150" />
+                                </Grid.ColumnDefinitions>
 
-                                    <controls:AnimatedLabelButton LabelText="{Binding Name}"
+                                <controls:AnimatedLabelButton LabelText="{Binding Name}"
                                                                   Grid.Column="0"
                                                                   VerticalAlignment="Center"
                                                                   HorizontalAlignment="Left"
@@ -168,15 +168,15 @@
                                                                     RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                   CommandParameter="{Binding}"/>
 
-                                    <Border Width="70" Height="70"
+                                <Border Width="70" Height="70"
                                             Grid.Column="1" 
                                             BorderBrush="Transparent" 
                                             BorderThickness="0"
                                             Background="{StaticResource PrimaryColor2}">
-                                        <Border.Clip>
-                                            <RectangleGeometry RadiusX="15" RadiusY="15" Rect="0,0,70,70" />
-                                        </Border.Clip>
-                                        <controls:AnimatedImageButton ImageSource="{Binding Image}"
+                                    <Border.Clip>
+                                        <RectangleGeometry RadiusX="15" RadiusY="15" Rect="0,0,70,70" />
+                                    </Border.Clip>
+                                    <controls:AnimatedImageButton ImageSource="{Binding Image}"
                                                                       Width="70"
                                                                       Height="70"
                                                                       VerticalAlignment="Center"
@@ -185,14 +185,12 @@
                                                                       ClickCommand="{Binding DataContext.OpenPlaylistCommand, 
                                                                         RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                       CommandParameter="{Binding}"/>
-                                    </Border>
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-
-
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
 
         </Grid>
     </Viewbox>

@@ -11,6 +11,7 @@ namespace Services.Communication.RESTful.Services
     {
         Task<ApiResult<bool>> CreateUserAsync(NewUserRequest request);
         Task<ApiResult<bool>> EditUserAsync(EditUserRequest request);
+        Task<ApiResult<ValidatedUserResponse>> ValidateJwtAsync();
     }
     public class UserService : IUserService
     {
@@ -40,5 +41,26 @@ namespace Services.Communication.RESTful.Services
 
             return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al editar usuario", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
+
+        public async Task<ApiResult<ValidatedUserResponse>> ValidateJwtAsync()
+        {
+            var result = await _apiClient.GetAsync<ValidatedUserResponse>(ApiRoutes.UserValidateJWT);
+
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return ApiResult<ValidatedUserResponse>.Success(
+                    result.Data,
+                    "Token validado correctamente",
+                    result.StatusCode.GetValueOrDefault(HttpStatusCode.OK)
+                );
+            }
+
+            return ApiResult<ValidatedUserResponse>.Failure(
+                result.ErrorMessage ?? "Token inválido",
+                result.Message,
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.Unauthorized)
+            );
+        }
+
     }
 }

@@ -57,8 +57,8 @@ namespace SoundNest_Windows_Client.ViewModels
             set { comments = value; OnPropertyChanged(); }
         }
 
-        public string CurrentUsername { get; set; } = "1"; // TODO: obtener desde token/session
-        public string SongId { get; set; } = "123";        // TODO: obtener desde el objeto canción
+        public string CurrentUsername { get; set; } // TODO: obtener desde token/session
+        public string SongId { get; set; } = "4";        // TODO: obtener desde el objeto canción
 
         private string Song; 
         private string SongPath;
@@ -75,7 +75,7 @@ namespace SoundNest_Windows_Client.ViewModels
             set { commentText = value; OnPropertyChanged(); }
         }
 
-        public CommentsViewModel(INavigationService navigationService, ICommentService commentService)
+        public CommentsViewModel(INavigationService navigationService, ICommentService commentService, IAccountService accountService)
         {
             Navigation = navigationService;
             this.commentService = commentService;
@@ -84,6 +84,8 @@ namespace SoundNest_Windows_Client.ViewModels
             SendCommentCommand = new AsyncRelayCommand(async () => await SendComment());
 
             Comments = new ObservableCollection<Comment>();
+
+            CurrentUsername = accountService.CurrentUser.Name;
 
             LoadComments();
         }
@@ -214,7 +216,6 @@ namespace SoundNest_Windows_Client.ViewModels
                 var commentRequest = new CreateCommentRequest
                 {
                     Message = CommentText,
-                    User = CurrentUsername,
                     SongId = int.Parse(SongId),
                 };
 

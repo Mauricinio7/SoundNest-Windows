@@ -20,7 +20,7 @@ namespace SoundNest_Windows_Client;
 public partial class App : Application
 {
     public static ServiceProvider ServiceProvider { get; private set; }
-    public CancellationTokenSource CancellationTokenEventStreaming { get; private set; }
+    public CancellationTokenSource CancellationTokenEventStreaming { get; private set; }  //Delete its a example
     public App()
     {
         IServiceCollection service = new ServiceCollection();
@@ -75,6 +75,7 @@ public partial class App : Application
         service.AddTransient<IUserService, UserService>();
         service.AddTransient<INotificationService, NotificationService>();
         service.AddTransient<ICommentService, CommentService>();
+        service.AddTransient<IGrpcClientManager, GrpcClientManager>();
 
         ServiceProvider = service.BuildServiceProvider();
 
