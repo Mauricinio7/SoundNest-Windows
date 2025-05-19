@@ -1,15 +1,11 @@
 ﻿using Services.Communication.gRPC.Http;
 using Song;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
-using Services.Communication.gRPC;
-using Song;
-using System.Threading;
+using Google.Protobuf;
 
 namespace Services.Communication.gRPC.Services
 {
@@ -32,22 +28,30 @@ namespace Services.Communication.gRPC.Services
             string outputFilePath,
             CancellationToken cancellationToken = default)
         {
-            var request = new DownloadSongRequest { IdSong = songId };
+            var request = new DownloadSongRequest { IdSong = int.Parse(songId) };
             using var call = _grpcClient.Client.DownloadSongStream(request, cancellationToken: cancellationToken);
+
+            DownloadSongMetadata? metadata = null;
             await using var fs = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write);
+
             await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
             {
-                if (response.Metadata != null)
+                switch (response.PayloadCase)
                 {
-                    Console.WriteLine(
-                        $"[STREAM] Metadata recibida: “{response.Metadata.SongName}” " +
-                        $"(Género {response.Metadata.IdSongGenre}) – {response.Metadata.Description}");
-                }
-                else if (response.Chunk != null)
-                {
-                    var bytes = response.Chunk.ChunkData.ToByteArray();
-                    await fs.WriteAsync(bytes, 0, bytes.Length, cancellationToken);
-                    Console.WriteLine($"[STREAM] Escritos {bytes.Length} bytes...");
+                    case DownloadSongResponse.PayloadOneofCase.Metadata:
+                        metadata = response.Metadata;
+                        Console.WriteLine($"[STREAM] Metadata recibida: “{metadata.SongName}” (Género {metadata.IdSongGenre}) – {metadata.Description}");
+                        break;
+
+                    case DownloadSongResponse.PayloadOneofCase.Chunk:
+                        var bytes = response.Chunk.ChunkData.ToByteArray();
+                        await fs.WriteAsync(bytes, 0, bytes.Length, cancellationToken);
+                        Console.WriteLine($"[STREAM] Escritos {bytes.Length} bytes...");
+                        break;
+
+                    default:
+                        Console.WriteLine("[STREAM] Parte del mensaje no reconocida.");
+                        break;
                 }
             }
 
@@ -64,11 +68,11 @@ namespace Services.Communication.gRPC.Services
             string outputFilePath,
             CancellationToken cancellationToken = default)
         {
-            var request = new DownloadSongRequest { IdSong = songId };
+            var request = new DownloadSongRequest { IdSong = int.Parse(songId) };
             var call = _grpcClient.Client.DownloadSongAsync(request, cancellationToken: cancellationToken);
             var data = await call.ResponseAsync;
 
-            Console.WriteLine( $"[FULL] Recibida “{data.SongName}” (Género {data.IdSongGenre}) – {data.Description}");
+            Console.WriteLine($"[FULL] Recibida “{data.SongName}” (Género {data.IdSongGenre}) – {data.Description}");
 
             var bytes = data.File.ToByteArray();
             await File.WriteAllBytesAsync(outputFilePath, bytes, cancellationToken);
