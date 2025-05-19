@@ -115,7 +115,7 @@ namespace SoundNest_Windows_Client.ViewModels
             Username = currentUser.Name;
             AdditionalInfo = currentUser.AditionalInformation;
             Email = currentUser.Email;
-            Role = (currentUser.Role == 1) ? "Moderador" : "Escucha";
+            Role = (currentUser.Role == 1) ? "Escucha" : "Moderador";
 
             LoadImageFromFile(currentUser.ProfileImagePath);
         }

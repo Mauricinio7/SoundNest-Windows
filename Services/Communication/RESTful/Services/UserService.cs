@@ -44,7 +44,7 @@ namespace Services.Communication.RESTful.Services
 
         public async Task<ApiResult<ValidatedUserResponse>> ValidateJwtAsync()
         {
-            var result = await _apiClient.GetAsync<ValidatedUserResponse>(ApiRoutes.UserValidateJWT);
+            var result = await _apiClient.GetAsync<ValidatedUserResponse>(ApiRoutes.AuthValidateJWT);
 
             if (result.IsSuccess && result.Data is not null)
             {

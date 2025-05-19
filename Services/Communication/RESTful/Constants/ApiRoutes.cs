@@ -11,7 +11,8 @@ namespace Services.Communication.RESTful.Constants
         public const string BaseUrl = "http://100.65.158.22/restful/";
         //public const string BaseUrl = "https://allowing-walrus-classic.ngrok-free.app/restful/";
 
-        // Auth endpointshttps:
+        // Auth endpoints:
+        public const string AuthValidateJWT = "api/auth/validateJWT";
         public const string AuthLogin = "api/auth/login";
         public const string AuthSendCodeEmail = "api/auth/sendCodeEmail";
         public const string AuthVerifyCode = "api/auth/verifiCode";
@@ -19,15 +20,13 @@ namespace Services.Communication.RESTful.Constants
         // User endpoints
         public const string UserNewUser = "api/user/newUser";
         public const string UserEditUser = "api/user/editUser";
-
-        public const string UserValidateJWT = "api/auth/validateJWT";
+        public const string UserEditPassword = "api/user/editUserPassword";
 
         // Comment endpoints
+        public const string CommentRespondComment = "api/comment/{commentId}/respondComment";
         public const string CommentCreate = "api/comment/createComment";
         public const string CommentGetBySongId = "api/comment/getComment/{song_id}/song";
-
-        //public const string CommentGetBySongId = "api/comment/getComment/{song_id}/comments";
-        public const string CommentGetById = "api/comment/getComment/comment/{id}";
+        public const string CommentGetById = "api/comment/{id}/all";
         public const string CommentDelete = "api/comment/delete/{id}";
 
         // Notification endpoints
@@ -38,13 +37,23 @@ namespace Services.Communication.RESTful.Constants
         public const string NotificationMarkAsRead = "api/notifications/notification/{id}/read";
 
         //Songs endpoints
-        public const string SongsGetMostPopulars = "api/songs/{amount}/popular/:year/:month";
+        public const string SongsDeleteSong = "api/songs/{idsong}/delete";
+        public const string SongsPatchSongImage = "api/songs/{idsong}/image";
+        public const string SongsGetLatestSongsByUserId = "api/songs/user/{idAppUser}/lastest";
+        public const string SongsGetByUserId = "api/songs/user/{idAppUser}";
+        public const string SongSearchBase = "api/songs/search";
+        public const string SongsGetMostPopulars = "api/songs/{amount}/popular/{year}/{month}";
         public const string SongsGetMostRecent = "api/songs/{amount}/recent";
         public const string SongsGetRandom = "api/songs/{amount}/random";
         public const string SongGetById = "api/songs/{idsong}/song";
         public const string SongGetGenres = "api/songs/genres";
         public const string SongGetExtensions = "songs/extensions";
-        public const string SongSearchBase = "api/songs/search?";
 
+        //Playlist endpoints
+        public const string PlaylistGetByUserId = "api/playlist/{iduser}/user";
+        public const string PlaylistPatchRemoveSong = "api/playlist/{idsong}/{idPlaylist}/remove";
+        public const string PlaylistPatchAddSong = "api/playlist/{idsong}/{idPlaylist}/add";
+        public const string PlaylistDelete = "api/playlist/{idPlaylist}/delete/";
+        public const string PlaylistPutNewPlaylist = "api/playlist/upload";
     }
 }
