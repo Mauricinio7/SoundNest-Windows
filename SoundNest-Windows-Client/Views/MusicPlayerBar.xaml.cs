@@ -20,9 +20,14 @@ namespace SoundNest_Windows_Client.Views
         public MusicPlayerBar()
         {
             InitializeComponent();
-            DataContext = App.ServiceProvider.GetRequiredService<MusicPlayerBarViewModel>();
-            Loaded += (_, _) => CompositionTarget.Rendering += (_, _) => { if (!isDraggingThumb) UpdateThumb(); };
-            this.Unloaded += MusicPlayerBar_Unloaded;
+            Loaded += (_, _) =>
+            {
+                if (DataContext is MusicPlayerBarViewModel vm)
+                {
+                    CompositionTarget.Rendering += (_, _) => { if (!isDraggingThumb) UpdateThumb(); };
+                }
+            };
+            Unloaded += MusicPlayerBar_Unloaded;
         }
 
         private void MusicPlayerBar_Unloaded(object sender, RoutedEventArgs e)

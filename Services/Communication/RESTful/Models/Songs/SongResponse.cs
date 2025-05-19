@@ -43,6 +43,8 @@ namespace Services.Communication.RESTful.Models.Songs
         public string? PathImageUrl { get; set; }
          
         [JsonPropertyName("visualizations")]
-        public List<object> Visualizations { get; set; } = new(); // tODO get a real list
+        public List<object> Visualizations { get; set; } = new(); // TODO get a real list
+
+        public string SongPath { get; set; }
     }
 }

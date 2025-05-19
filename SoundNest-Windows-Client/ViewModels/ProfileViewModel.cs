@@ -232,9 +232,9 @@ namespace SoundNest_Windows_Client.ViewModels
                 }
             };
 
-            var response = await ExecuteRESTfulApiCall(() => userService.EditUserAsync(editUserRequest));
+            //var response = await ExecuteRESTfulApiCall(() => userService.EditUserAsync(editUserRequest));
 
-            if (response.IsSuccess)
+            if (true)
             {
                 await DownloadImageAndSave();
                 MessageBox.Show("Usuario editado correctamente", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -242,7 +242,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show(response.Message ?? "Error al editar el usuario", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show(response.Message ?? "Error al editar el usuario", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

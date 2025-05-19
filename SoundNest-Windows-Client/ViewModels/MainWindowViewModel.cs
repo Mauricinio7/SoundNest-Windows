@@ -8,6 +8,7 @@ using Services.Infrestructure;
 using Services.Navigation;
 using SoundNest_Windows_Client.Views;
 using SoundNest_Windows_Client.Resources.Controls;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -100,7 +101,7 @@ namespace SoundNest_Windows_Client.ViewModels
         private void RegisterMediator()
         {
             Services.Infrestructure.Mediator.Register(MediatorKeys.SHOW_SIDE_BAR, ActivatingKeyTipEventArgs => ShowSideBarCommand.Execute(null));
-            Services.Infrestructure.Mediator.Register(MediatorKeys.SHOW_MUSIC_PLAYER, ActivatingKeyTipEventArgs => ShowMusicPlayerBarCommand.Execute(null));
+            Services.Infrestructure.Mediator.Register(MediatorKeys.SHOW_MUSIC_PLAYER, parameter => ShowMusicPlayerBarCommand.Execute(parameter));
             Services.Infrestructure.Mediator.Register(MediatorKeys.HIDE_SIDE_BAR, ActivatingKeyTipEventArgs => HideSideBarCommand.Execute(null));
             Services.Infrestructure.Mediator.Register(MediatorKeys.HIDE_MUSIC_PLAYER, ActivatingKeyTipEventArgs => HideMusicPlayerBarCommand.Execute(null));
             Services.Infrestructure.Mediator.Register(MediatorKeys.SHOW_SEARCH_BAR, ActivatingKeyTipEventArgs => ShowSearchBarCommand.Execute(null));
@@ -109,10 +110,21 @@ namespace SoundNest_Windows_Client.ViewModels
             Services.Infrestructure.Mediator.Register(MediatorKeys.HIDE_LOADING_SCREEN, ActivatingKeyTipEventArgs => HideLoadingScreenCommand.Execute(null));
         }
 
-        private void ExecuteShowMusicPlayerBar()
+        private void ExecuteShowMusicPlayerBar(object parameter)
         {
-            MusicPlayerBar = new MusicPlayerBar();
+            var vm = App.ServiceProvider.GetRequiredService<MusicPlayerBarViewModel>();
+
+            vm.ReceiveParameter(parameter); 
+
+            var bar = new MusicPlayerBar
+            {
+                DataContext = vm
+            };
+
+            MusicPlayerBar = bar;
         }
+
+
         private void ExecuteShowSideBar()
         {
             SideBar = new SideBarView();

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using Services.Communication.RESTful.Models.Songs;
 using Services.Infrestructure;
 using Services.Navigation;
 using System;
@@ -16,7 +17,7 @@ using System.Windows.Threading;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
-    class MusicPlayerBarViewModel : Services.Navigation.ViewModel
+    class MusicPlayerBarViewModel : Services.Navigation.ViewModel, IParameterReceiver
     {
         public ICommand OpenCommentsCommand { get; }
         public ICommand PlayPauseCommand { get; }
@@ -29,11 +30,10 @@ namespace SoundNest_Windows_Client.ViewModels
         private readonly MediaPlayer _mediaPlayer;
         private readonly DispatcherTimer _timer;
 
-        private List<string> _playlist = new();
-        private int _currentIndex = -1;
+        private List<SongResponse> playlist = new();
+        private int currentIndex = -1;
 
         private bool isPlaying;
-        private string currentSongPath;
 
         private string currentTime = "0:00";
         public string CurrentTime
@@ -48,7 +48,7 @@ namespace SoundNest_Windows_Client.ViewModels
             get => totalTime;
             set { totalTime = value; OnPropertyChanged(); }
         }
-        
+
         private double progress;
         public double Progress
         {
@@ -76,7 +76,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-        private string volumeIcon = "\uE995"; 
+        private string volumeIcon = "\uE995";
         public string VolumeIcon
         {
             get => volumeIcon;
@@ -111,23 +111,25 @@ namespace SoundNest_Windows_Client.ViewModels
             set { songImage = value; OnPropertyChanged(); }
         }
 
-
-
         public MusicPlayerBarViewModel(INavigationService navigation)
         {
             _navigation = navigation;
             _mediaPlayer = new MediaPlayer();
+            _mediaPlayer.Volume = volume;
+
             _mediaPlayer.MediaOpened += (s, e) =>
             {
                 MaxProgress = _mediaPlayer.NaturalDuration.TimeSpan.TotalSeconds;
                 TotalTime = _mediaPlayer.NaturalDuration.TimeSpan.ToString(@"m\:ss");
             };
-            _mediaPlayer.Volume = volume;
+
             _mediaPlayer.MediaEnded += (s, e) => PlayNextSong();
 
+            _timer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
 
-            _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromSeconds(1);
             _timer.Tick += (s, e) =>
             {
                 if (_mediaPlayer.Source != null && _mediaPlayer.NaturalDuration.HasTimeSpan)
@@ -143,36 +145,81 @@ namespace SoundNest_Windows_Client.ViewModels
             NextSongCommand = new RelayCommand(PlayNextSong);
             DownloadSongCommand = new RelayCommand(DownloadSong);
             CommentsViewCommand = new RelayCommand(ExecuteCommentsViewCommand);
+        }
 
-            SetPlaylist(new List<string>
+        public void ReceiveParameter(object parameter)
+        {
+            if (parameter is List<SongResponse> SongsList && SongsList.Count > 0)
             {
-                "C:\\Users\\mauricio\\source\\repos\\SounNest-Windows\\SoundNest-Windows-Client\\Resources\\TestMusic\\Leat'eq - Tokyo.mp3",
-                "C:\\Users\\mauricio\\source\\repos\\SounNest-Windows\\SoundNest-Windows-Client\\Resources\\TestMusic\\Throttle - Japan [Monstercat Release].mp3",
-                "C:\\Users\\mauricio\\source\\repos\\SounNest-Windows\\SoundNest-Windows-Client\\Resources\\TestMusic\\[House] - Throttle - French Kiss [Monstercat FREE Release] (1).mp3",
-                "C:\\Users\\mauricio\\source\\repos\\SounNest-Windows\\SoundNest-Windows-Client\\Resources\\TestMusic\\Virtual Riot - Idols (EDM Mashup) (Official Video).mp3"
-            });
+                playlist = SongsList;
+                currentIndex = 0;
+                
+                LoadAndPlayCurrentSong();
+            }
+            else if (parameter is SongResponse singleSong)
+            {
+                playlist = new List<SongResponse> { singleSong };
+                currentIndex = 0;
+                MessageBox.Show("Canción: " + singleSong.SongName);
+                LoadAndPlayCurrentSong();
+                
+            }
+            else
+            {
+                MessageBox.Show("Error al cargar la canción.");
+            }
+        }
 
+        private void SaveSongOnCache(string sourcePath, string fileNameWithoutExtension)
+        {
+            try
+            {
+                if (!File.Exists(sourcePath))
+                {
+                    MessageBox.Show("El archivo de canción no existe en la ruta proporcionada.", "Archivo no encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                string songsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Songs");
+                if (!Directory.Exists(songsFolder))
+                {
+                    Directory.CreateDirectory(songsFolder);
+                }
+
+                string destPath = Path.Combine(songsFolder, $"{fileNameWithoutExtension}.mp3");
+
+                if (!File.Exists(destPath))
+                {
+                    File.Copy(sourcePath, destPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al guardar la canción en caché:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void ExecuteCommentsViewCommand(object obj)
         {
-            _navigation.NavigateTo<CommentsViewModel>(_playlist[_currentIndex]);
+            if (currentIndex >= 0 && currentIndex < playlist.Count)
+                _navigation.NavigateTo<CommentsViewModel>(playlist[currentIndex]);
         }
 
         private void DownloadSong(object obj)
         {
-            if (_currentIndex < 0 || _currentIndex >= _playlist.Count)
+            if (currentIndex < 0 || currentIndex >= playlist.Count)
             {
                 MessageBox.Show("No hay ninguna canción seleccionada para descargar.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            string sourcePath = _playlist[_currentIndex];
-            string defaultFileName = Path.GetFileName(sourcePath);
+            var song = playlist[currentIndex];
+            string fileName = $"{song.SongName}.mp3";
+            string sourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Songs", $"{song.FileName}.mp3");
 
             var dialog = new SaveFileDialog
             {
-                FileName = defaultFileName,
+                FileName = fileName,
                 Filter = "Audio files (*.mp3)|*.mp3|All files (*.*)|*.*",
                 Title = "Guardar canción como"
             };
@@ -182,7 +229,6 @@ namespace SoundNest_Windows_Client.ViewModels
                 try
                 {
                     File.Copy(sourcePath, dialog.FileName, overwrite: true);
-
                     MessageBox.Show("Canción descargada correctamente.", "Descarga exitosa", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
@@ -192,46 +238,41 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-
-        public void SetPlaylist(List<string> songPaths)
+        public void SetPlaylist(List<SongResponse> songs)
         {
-            _playlist = songPaths;
-            if (_playlist.Count > 0)
-            {
-                _currentIndex = 0;
-                LoadAndPlayCurrentSong();
-            }
+            playlist = songs;
+            currentIndex = 0;
+            LoadAndPlayCurrentSong();
         }
 
         private void PlayNextSong()
         {
-            if (_playlist.Count == 0) return;
+            if (playlist.Count == 0) return;
 
-            if (_currentIndex + 1 >= _playlist.Count)
+            if (currentIndex + 1 >= playlist.Count)
             {
                 _mediaPlayer.Pause();
                 _timer.Stop();
                 PlayPauseIcon = "\uf5b0";
-                isPlaying = !isPlaying;
+                isPlaying = false;
                 SetProgress(_mediaPlayer.NaturalDuration.TimeSpan.TotalSeconds);
             }
             else
             {
                 SetProgress(0);
-                _currentIndex++;
+                currentIndex++;
                 LoadAndPlayCurrentSong();
             }
         }
 
-
         private void PlayPreviousSong()
         {
-            if (_playlist.Count == 0) return;
+            if (playlist.Count == 0) return;
 
-            if(_mediaPlayer.Position.TotalSeconds < 3)
+            if (_mediaPlayer.Position.TotalSeconds < 3)
             {
                 SetProgress(0);
-                _currentIndex = Math.Max(0, _currentIndex - 1);
+                currentIndex = Math.Max(0, currentIndex - 1);
                 LoadAndPlayCurrentSong();
             }
             else
@@ -240,50 +281,46 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-
         private void UpdateVolumeIcon()
         {
             VolumeIcon = volume switch
             {
-                <= 0 => "\uE198",      
-                <= 0.3 => "\uE993",    
-                <= 0.7 => "\uE994",    
-                _ => "\uE995"         
+                <= 0 => "\uE198",
+                <= 0.3 => "\uE993",
+                <= 0.7 => "\uE994",
+                _ => "\uE995"
             };
         }
 
-        private void OpenComments()
-        {
-            _navigation.NavigateTo<CommentsViewModel>();
-        }
         private void LoadAndPlayCurrentSong()
         {
-            if (_currentIndex < 0 || _currentIndex >= _playlist.Count)
+            if (currentIndex < 0 || currentIndex >= playlist.Count)
                 return;
 
-            string path = _playlist[_currentIndex];
+            SaveSongOnCache(playlist[currentIndex].SongPath, playlist[currentIndex].FileName);
+
+            var song = playlist[currentIndex];
+            string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Songs", $"{song.FileName}.mp3");
+
+            
 
             try
             {
-                var file = TagLib.File.Create(path);
-
-                SongTittle = file.Tag.Title ?? "Título desconocido";
-                SongArtist = !string.IsNullOrWhiteSpace(file.Tag.JoinedPerformers) ? file.Tag.JoinedPerformers : "Artista desconocido";
-
+                var file = TagLib.File.Create(fullPath);
+                SongTittle = file.Tag.Title ?? song.SongName;
+                SongArtist = !string.IsNullOrWhiteSpace(file.Tag.JoinedPerformers) ? file.Tag.JoinedPerformers : song.UserName ?? "Artista desconocido";
 
                 if (file.Tag.Pictures.Length > 0)
                 {
                     var picData = file.Tag.Pictures[0].Data.Data;
-                    using (var ms = new MemoryStream(picData))
-                    {
-                        var img = new System.Windows.Media.Imaging.BitmapImage();
-                        img.BeginInit();
-                        img.StreamSource = ms;
-                        img.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                        img.EndInit();
-                        img.Freeze();
-                        SongImage = img;
-                    }
+                    using var ms = new MemoryStream(picData);
+                    var img = new System.Windows.Media.Imaging.BitmapImage();
+                    img.BeginInit();
+                    img.StreamSource = ms;
+                    img.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                    img.EndInit();
+                    img.Freeze();
+                    SongImage = img;
                 }
                 else
                 {
@@ -292,14 +329,14 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             catch
             {
-                SongTittle = "Título desconocido";
-                SongArtist = "Artista desconocido";
+                SongTittle = song.SongName;
+                SongArtist = song.UserName ?? "Artista desconocido";
                 SongImage = null;
             }
 
-            _mediaPlayer.Open(new Uri(path));
+            _mediaPlayer.Open(new Uri(fullPath));
             isPlaying = false;
-            //TogglePlayPause();
+            TogglePlayPause();
         }
 
         private void TogglePlayPause()
@@ -324,6 +361,7 @@ namespace SoundNest_Windows_Client.ViewModels
             _mediaPlayer.Position = TimeSpan.FromSeconds(seconds);
             Progress = seconds;
         }
+
         public void Cleanup()
         {
             _mediaPlayer.Stop();
@@ -331,13 +369,12 @@ namespace SoundNest_Windows_Client.ViewModels
             _timer.Stop();
 
             isPlaying = false;
-            currentSongPath = null;
 
             CurrentTime = "0:00";
             TotalTime = "0:00";
             Progress = 0;
             MaxProgress = 0;
-            PlayPauseIcon = "\uf5b0"; 
+            PlayPauseIcon = "\uf5b0";
         }
     }
 }

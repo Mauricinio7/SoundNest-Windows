@@ -87,6 +87,7 @@ public partial class App : Application
 
         service.AddTransient<IAuthService, AuthService>(); 
         service.AddTransient<IUserService, UserService>();
+        service.AddTransient<ISongService, SongService>();
         service.AddTransient<INotificationService, NotificationService>();
         service.AddTransient<ICommentService, CommentService>();
         service.AddTransient<IGrpcClientManager, GrpcClientManager>();

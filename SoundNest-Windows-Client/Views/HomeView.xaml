@@ -5,11 +5,138 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:SoundNest_Windows_Client.Views"
              xmlns:controls="clr-namespace:SoundNest_Windows_Client.Resources.Controls"
+             xmlns:converters="clr-namespace:SoundNest_Windows_Client.Resources.Converters"
              mc:Ignorable="d" 
              Background="{StaticResource BackgroundyColor1}"
              d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </UserControl.Resources>
+
     <Viewbox Stretch="Uniform">
         <Canvas Width="1920" Height="1080">
+
+            <Label Content="Canciones recientes: "
+       FontSize="45"
+       FontWeight="Bold"
+       Foreground="{StaticResource ForegroundWhiteColor}"
+       HorizontalAlignment="Left"
+       VerticalAlignment="Top" Canvas.Left="244" Canvas.Top="201"/>
+
+            <StackPanel Orientation="Horizontal" Canvas.Left="220" Canvas.Top="290" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <Button Style="{StaticResource CarouselArrowButtonStyle}"
+                    Content="&#xE76B;"  
+                    Command="{Binding ScrollLeftCommand}"
+        Visibility="{Binding CanScrollLeft, Converter={StaticResource BoolToVisibilityConverter}}" />
+                <ScrollViewer x:Name="CarouselRecentSongsScrollViewer" Width="650" Height="250" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding PopularSongs}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Width="200" Height="250" Margin="10" Background="#1e1e1e" CornerRadius="10">
+                                    <StackPanel>
+                                        <Grid Height="160">
+                                            <Image Source="{Binding PathImageUrl}" Stretch="UniformToFill" />
+                                            <Button Style="{StaticResource PlayButtonStyle}"
+                                                Command="{Binding DataContext.PlaySongCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" 
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Bottom"
+                                                Margin="0,0,10,10"/>
+                                        </Grid>
+                                        <TextBlock Text="{Binding SongName}"
+                                       FontWeight="Bold"
+                                       FontSize="14"
+                                       Foreground="White"
+                                       Margin="5,10,5,0"
+                                       TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding UserName, TargetNullValue='Artista desconocido'}"
+                                       FontSize="12"
+                                       Foreground="Gray"
+                                       Margin="5,0,5,0"
+                                       TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <Button Style="{StaticResource CarouselArrowButtonStyle}"
+                    Content="&#xE76C;"  
+                    Command="{Binding ScrollRightCommand}"
+        Visibility="{Binding CanScrollRight, Converter={StaticResource BoolToVisibilityConverter}}" />
+            </StackPanel>
+
+            <Label Content="Canciones populares: "
+       FontSize="45"
+       FontWeight="Bold"
+       Foreground="{StaticResource ForegroundWhiteColor}"
+       HorizontalAlignment="Left"
+       VerticalAlignment="Top" Canvas.Left="244" Canvas.Top="580"/>
+
+            <StackPanel Orientation="Horizontal" Canvas.Left="220" Canvas.Top="670" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <Button Style="{StaticResource CarouselArrowButtonStyle}"
+                    Content="&#xE76B;"
+                    Command="{Binding ScrollLeftPopularCommand}"
+                    Visibility="{Binding CanScrollLeftPopular, Converter={StaticResource BoolToVisibilityConverter}}" />    
+
+
+                <ScrollViewer x:Name="CarouselPopularSongsScrollViewer"
+              Width="650"
+              Height="250"
+              HorizontalScrollBarVisibility="Hidden"
+              VerticalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding PopularSongs}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Width="200" Height="250" Margin="10" Background="#1e1e1e" CornerRadius="10">
+                                    <StackPanel>
+                                        <Grid Height="160">
+                                            <Image Source="{Binding PathImageUrl}" Stretch="UniformToFill" />
+                                            <Button Style="{StaticResource PlayButtonStyle}"
+                                                Command="{Binding DataContext.PlaySongCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" 
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Bottom"
+                                                Margin="0,0,10,10"/>
+                                        </Grid>
+                                        <TextBlock Text="{Binding SongName}"
+                                       FontWeight="Bold"
+                                       FontSize="14"
+                                       Foreground="White"
+                                       Margin="5,10,5,0"
+                                       TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding UserName, TargetNullValue='Artista desconocido'}"
+                                       FontSize="12"
+                                       Foreground="Gray"
+                                       Margin="5,0,5,0"
+                                       TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <Button Style="{StaticResource CarouselArrowButtonStyle}"
+                        Content="&#xE76C;"
+                        Command="{Binding ScrollRightPopularCommand}"
+                        Visibility="{Binding CanScrollRightPopular, Converter={StaticResource BoolToVisibilityConverter}}" />   
+            </StackPanel>
+
 
         </Canvas>
     </Viewbox>

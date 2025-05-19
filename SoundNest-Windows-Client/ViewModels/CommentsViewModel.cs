@@ -1,4 +1,5 @@
 ﻿using Services.Communication.RESTful.Models.Comment;
+using Services.Communication.RESTful.Models.Songs;
 using Services.Communication.RESTful.Services;
 using Services.Infrestructure;
 using Services.Navigation;
@@ -57,14 +58,12 @@ namespace SoundNest_Windows_Client.ViewModels
             set { comments = value; OnPropertyChanged(); }
         }
 
-        public string CurrentUsername { get; set; } // TODO: obtener desde token/session
-        public string SongId { get; set; } = "4";        // TODO: obtener desde el objeto canción
-
-        private string Song; 
-        private string SongPath;
+        public string CurrentUsername { get; set; }
+        public string SongId { get; set; } 
 
         public AsyncRelayCommand DeleteCommentCommand { get; set; }
         public AsyncRelayCommand SendCommentCommand { get; set; }
+        private SongResponse CurrentSong;
 
         private ICommentService commentService;
 
@@ -74,6 +73,8 @@ namespace SoundNest_Windows_Client.ViewModels
             get => commentText;
             set { commentText = value; OnPropertyChanged(); }
         }
+
+        private int userRole;
 
         public CommentsViewModel(INavigationService navigationService, ICommentService commentService, IAccountService accountService)
         {
@@ -86,8 +87,7 @@ namespace SoundNest_Windows_Client.ViewModels
             Comments = new ObservableCollection<Comment>();
 
             CurrentUsername = accountService.CurrentUser.Name;
-
-            LoadComments();
+            userRole = accountService.CurrentUser.Role;
         }
 
         private async void LoadComments()
@@ -107,7 +107,7 @@ namespace SoundNest_Windows_Client.ViewModels
                             Username = comment.User,
                             Text = comment.Message,
                             Timestamp = parsedTimestamp,
-                            IsMine = comment.User == CurrentUsername, //OR is a moderator
+                            IsMine = comment.User == CurrentUsername || userRole == 2, 
                             CommentId = comment.Id
                         });
                     }
@@ -121,10 +121,12 @@ namespace SoundNest_Windows_Client.ViewModels
 
         public void ReceiveParameter(object parameter)
         {
-            if (parameter is string song)
+            if (parameter is SongResponse song)
             {
-                Song = song;
+                CurrentSong = song;
+                SongId = song.IdSong.ToString();
                 InitProperties();
+                LoadComments();
             }
             else
             {
@@ -132,17 +134,19 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
+
         private void InitProperties()
         {
-            SongPath = Song;
-
             try
             {
-                var file = TagLib.File.Create(SongPath);
+                string songFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Songs", $"{CurrentSong.FileName}.mp3");
 
-                SongTittle = file.Tag.Title ?? "Título desconocido";
-                SongArtist = !string.IsNullOrWhiteSpace(file.Tag.JoinedPerformers) ? file.Tag.JoinedPerformers : "Artista desconocido";
+                var file = TagLib.File.Create(songFilePath);
+
+                SongTittle = file.Tag.Title ?? CurrentSong.SongName;
+                SongArtist = !string.IsNullOrWhiteSpace(file.Tag.JoinedPerformers) ? file.Tag.JoinedPerformers : CurrentSong.UserName ?? "Artista desconocido";
                 SongDuration = file.Properties.Duration.ToString(@"m\:ss");
+                SongId = CurrentSong.IdSong.ToString();
 
                 if (file.Tag.Pictures.Length > 0)
                 {
@@ -163,11 +167,12 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             catch
             {
-                SongTittle = "Título desconocido";
-                SongArtist = "Artista desconocido";
+                SongTittle = CurrentSong.SongName;
+                SongArtist = CurrentSong.UserName ?? "Artista desconocido";
                 SongImage = null;
             }
         }
+
 
         private async Task DeleteComment(object parameter)
         {

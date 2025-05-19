@@ -24,7 +24,7 @@ namespace Services.Communication.RESTful.Constants
 
         // Comment endpoints
         public const string CommentCreate = "api/comment/createComment";
-        public const string CommentGetBySongId = "getComment/{song_id}/comments";
+        public const string CommentGetBySongId = "api/comment/getComment/{song_id}/song";
 
         //public const string CommentGetBySongId = "api/comment/getComment/{song_id}/comments";
         public const string CommentGetById = "api/comment/getComment/comment/{id}";
@@ -39,7 +39,7 @@ namespace Services.Communication.RESTful.Constants
 
         //Songs endpoints
         public const string SongsGetMostPopulars = "api/songs/{amount}/popular/:year/:month";
-        public const string SongsGetMostRecent = "/api/songs/{amount}/recent";
+        public const string SongsGetMostRecent = "api/songs/{amount}/recent";
         public const string SongsGetRandom = "api/songs/{amount}/random";
         public const string SongGetById = "api/songs/{idsong}/song";
         public const string SongGetGenres = "api/songs/genres";

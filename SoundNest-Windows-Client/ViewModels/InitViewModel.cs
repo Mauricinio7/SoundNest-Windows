@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using Services.Communication.RESTful.Http;
+using Services.Communication.RESTful.Models.Songs;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -164,7 +165,27 @@ namespace SoundNest_Windows_Client.ViewModels
         private void GoHome()
         {
             Mediator.Notify(MediatorKeys.SHOW_SIDE_BAR, null);
-            Mediator.Notify(MediatorKeys.SHOW_MUSIC_PLAYER, null);
+            //TODO jus a test
+            SongResponse song = new SongResponse();
+            song.IdSong = 1;
+            song.SongName = "Tokyo";
+            song.UserName= "Leat'eq";
+            song.FileName = "Tokyo";
+            song.SongPath = "C:\\Users\\mauricio\\source\\repos\\SounNest-Windows\\SoundNest-Windows-Client\\Resources\\TestMusic\\Leat'eq - Tokyo.mp3";
+
+            SongResponse song2 = new SongResponse();
+            song2.IdSong = 2;
+            song2.SongName = "Japan";
+            song2.UserName = "Throttle";
+            song2.FileName = "JapanThrottle";
+            song2.SongPath = "C:\\Users\\mauricio\\source\\repos\\SounNest-Windows\\SoundNest-Windows-Client\\Resources\\TestMusic\\Throttle - Japan [Monstercat Release].mp3";
+
+            List<SongResponse> songList = new List<SongResponse>();
+            songList.Add(song);
+            songList.Add(song2);
+
+            Mediator.Notify(MediatorKeys.SHOW_MUSIC_PLAYER, songList);
+
             Mediator.Notify(MediatorKeys.SHOW_SEARCH_BAR, null);
             Navigation.NavigateTo<HomeViewModel>();
         }
