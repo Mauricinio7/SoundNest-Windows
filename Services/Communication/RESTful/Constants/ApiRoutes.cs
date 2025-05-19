@@ -20,7 +20,7 @@ namespace Services.Communication.RESTful.Constants
         public const string UserNewUser = "api/user/newUser";
         public const string UserEditUser = "api/user/editUser";
 
-        public const string UserValidateJWT = "api/user/validateJWT";
+        public const string UserValidateJWT = "api/auth/validateJWT";
 
         // Comment endpoints
         public const string CommentCreate = "api/comment/createComment";
