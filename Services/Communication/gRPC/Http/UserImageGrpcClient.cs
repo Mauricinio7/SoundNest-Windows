@@ -1,4 +1,5 @@
-﻿using Song;
+﻿using Grpc.Net.Client;
+using Song;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,13 +11,38 @@ using UserImage;
 
 namespace Services.Communication.gRPC.Http
 {
-    public class UserImageGrpcClient : GrpcClientBase
+    public class UserImageGrpcClient
     {
-        public UserImageService.UserImageServiceClient Client {  get; }
+        private HttpClientHandler _handler;
+        private HttpClient _httpClient;
+        private GrpcChannel _channel;
+        private string _grpcEndpoint;
 
-        public UserImageGrpcClient(string baseUrl) : base(baseUrl)
+        public UserImageService.UserImageServiceClient Client { get; private set; }
+
+        public UserImageGrpcClient(string grpcEndpoint)
         {
-            Client = new UserImageService.UserImageServiceClient(Channel);
+            _grpcEndpoint = grpcEndpoint;
+            _handler = new HttpClientHandler();
+            _httpClient = new HttpClient(_handler);
+
+            CreateChannelAndClient();
+        }
+
+        private void CreateChannelAndClient()
+        {
+            _channel = GrpcChannel.ForAddress(_grpcEndpoint, new GrpcChannelOptions
+            {
+                HttpClient = _httpClient
+            });
+
+            Client = new UserImageService.UserImageServiceClient(_channel);
+        }
+
+        public void SetAuthorizationToken(string token)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            CreateChannelAndClient();
         }
 
     }
