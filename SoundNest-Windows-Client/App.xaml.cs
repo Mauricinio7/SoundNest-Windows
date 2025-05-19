@@ -14,6 +14,8 @@ using Services.Communication.gRPC.Http;
 using Services.Communication.gRPC.Services;
 using Services.Communication.gRPC.Constants;
 using Services.Communication.gRPC.Managers;
+using Microsoft.Extensions.Logging;
+using Services.Communication.gRPC.Utils;
 
 namespace SoundNest_Windows_Client;
 
@@ -24,13 +26,25 @@ public partial class App : Application
     public App()
     {
         IServiceCollection service = new ServiceCollection();
-
+        service.AddLogging(builder =>
+        {
+            builder.ClearProviders();
+            #if DEBUG
+            builder.AddDebug();                           
+            #endif
+            builder.AddConsole();                       
+            builder.SetMinimumLevel(LogLevel.Information); 
+        });
         service.AddSingleton<MainWindowView>(provider => new MainWindowView
         {
             DataContext = provider.GetRequiredService<MainWindowViewModel>()
         });
         //GRPC
-        service.AddSingleton<EventGrpcClient>(sp => new EventGrpcClient(GrpcApiRoute.BaseUrl));
+        service.AddSingleton<EventGrpcClient>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<GrpcChannelMonitor>>();
+            return new EventGrpcClient(GrpcApiRoute.BaseUrl, logger);
+        });
         service.AddSingleton<IEventStreamService, EventStreamService>();
         service.AddSingleton<IEventStreamManager, EventStreamManager>();
 
@@ -100,19 +114,6 @@ public partial class App : Application
         var logInWindow = ServiceProvider.GetRequiredService<MainWindowView>();
         logInWindow.Show();
         base.OnStartup(e);
-
-
-        //TODO: VALIDAR CON MAU
-        // Iniciar la línea de vida gRPC
-        var manager = ServiceProvider.GetRequiredService<IEventStreamManager>();
-        CancellationTokenEventStreaming = new CancellationTokenSource();
-        await manager.StartAsync(CancellationTokenEventStreaming.Token);
-
-        // Suscripción de ejemplo para logs globales
-        //manager.Subscribe(async msg =>
-        //{
-        //    Console.WriteLine($"[GLOBAL STREAM] {msg.CustomEventType}: {msg.Message}");
-        //});
     }
 
     protected override async void OnExit(ExitEventArgs e)

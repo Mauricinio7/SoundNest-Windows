@@ -1,9 +1,13 @@
 ﻿using Event;
+using Microsoft.Extensions.Logging;
+using Services.Communication.gRPC.Models.Event;
 using Services.Communication.gRPC.Services;
+using Services.Communication.gRPC.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,62 +15,121 @@ namespace Services.Communication.gRPC.Managers
 {
     public interface IEventStreamManager
     {
-        void Subscribe(Func<EventMessageReturn, Task> handler);
-        void Unsubscribe(Func<EventMessageReturn, Task> handler);
-        Task SendAsync(EventType type, string customType, string payload);
+        bool IsConnectedManager { get; }
+        Task SendCommentReplyEventAsync(CommentReply commentReply);
         Task StartAsync(CancellationToken cancellationToken);
         Task StopAsync();
+        Task ReconnectAsync();
     }
     public class EventStreamManager : IEventStreamManager
     {
         private readonly IEventStreamService _eventStreamService;
-        //TODO: Only ideas NOT implemented yet
-        //private readonly List<WeakReference<Func<EventMessageReturn, Task>>> _subscribers = new();
-        private readonly List<Func<EventMessageReturn, Task>> _subscribers = new();
-        public delegate Task EventReceivedHandler(EventMessageReturn evt);
-        public event Action? OnConnected;
-        public event Action? OnDisconnected;
-        //
-        public EventStreamManager(IEventStreamService eventStreamService)
+        public event Action<StreamErrorEventArgs>? OnDisconnected;
+        public event Action? OnReconnection;
+        public bool IsConnectedManager => _eventStreamService.IsConnected;
+        private readonly ILogger<EventStreamManager> _logger;
+        public EventStreamManager(IEventStreamService eventStreamService, ILogger<EventStreamManager> logger)
         {
             _eventStreamService = eventStreamService;
+            _logger = logger;
+            _eventStreamService.OnError += HandleStreamError;
+        }
+        private void HandleStreamError(object? sender, StreamErrorEventArgs e)
+        {
+            OnDisconnected?.Invoke(e);
         }
 
         public async Task StartAsync(CancellationToken cancellationToken) //Implements subscription from methods on events
         {
-            await _eventStreamService.StartAsync(async msg =>
+            await _eventStreamService.StartAsync(OnMessageReceivedAsync, cancellationToken);
+            _eventStreamService.StartReaderLoop();
+        }
+        private async Task OnMessageReceivedAsync(EventMessageReturn msg)
+        {
+            switch (msg.EventTypeRespose)
             {
-                foreach (var subscriber in _subscribers.ToList())
+                case EventType.Unknown:
+                    _logger.LogInformation("[Stream] Unknown event received.");
+                    break;
+
+                case EventType.Custom:
+                    _logger.LogInformation("[Stream] Custom event received: {CustomType}", msg.CustomEventType);
+                    break;
+
+                case EventType.Notification:
+                    _logger.LogInformation("[Stream] Notification event received: {Message}", msg.Message);
+                    break;
+
+                case EventType.DataUpdate:
+                    _logger.LogInformation("[Stream] DataUpdate event received: payload={Payload}", msg.Message);
+                    break;
+
+                case EventType.HandshakeStart:
+                    _logger.LogInformation("[Stream] HandshakeStart event received.");
+                    break;
+
+                case EventType.HandshakeFinish:
+                    _logger.LogInformation("[Stream] HandshakeFinish event received.");
+                    break;
+                case EventType.CommentReplySend:
+                    _logger.LogInformation("[Stream] CommentReplySend received.");
+                    break;
+                case EventType.CommentReplyRecive:
+                    _logger.LogInformation("[Stream] CommentReplyRecive received.");
+                    break;
+                default:
+                    _logger.LogDebug(
+                          "[Stream] Evento {Type} / {Custom} / \"{Msg}\"",
+                          msg.EventTypeRespose, msg.CustomEventType, msg.Message);
+                    break;
+            }
+        }
+        public async Task ReconnectAsync()
+        {
+            _logger.LogWarning("[Reconnect] Intentando reiniciar la conexión...");
+
+            try
+            {
+                await _eventStreamService.RestartAsync();
+                _logger.LogInformation("[Reconnect] Reconexión exitosa.");
+                OnReconnection?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[Reconnect] Fallo en la reconexión.");
+                throw;
+            }
+        }
+
+        private async Task SendAsync(EventType type, string customType, string payload)
+        {
+            if (!IsConnectedManager)
+            {
+                _logger.LogWarning("[SendAsync] Conexión inactiva. Intentando reconectar...");
+
+                try
                 {
-                    try
-                    {
-                        await subscriber.Invoke(msg);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[EventStreamManager] Error notificando: {ex.Message}");
-                    }
+                    OnReconnection?.Invoke();
                 }
-            }, cancellationToken);
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "[Reconnection] Fallo al reconectar.");
+                }
+            }
+
+            await _eventStreamService.SendEventAsync(type, customType, payload);
+            _logger.LogInformation("[SendAsync] Evento enviado correctamente: {Type} - {CustomType}", type, customType);
+        }
+        public async Task SendCommentReplyEventAsync(CommentReply commentReply)
+        {
+            await SendAsync(EventType.CommentReplySend, "None", JsonSerializer.Serialize(commentReply));
         }
 
-        public Task SendAsync(EventType type, string customType, string payload)
+        public async Task StopAsync()
         {
-            return _eventStreamService.SendEventAsync(type, customType, payload);
+            _eventStreamService.OnError -= HandleStreamError;
+            await _eventStreamService.StopAsync();
         }
 
-        public Task StopAsync() => _eventStreamService.StopAsync();
-        //TODO: Not the best, try to use a better way to manage subscribers
-        public void Subscribe(Func<EventMessageReturn, Task> handler)
-        {
-            if (!_subscribers.Contains(handler))
-                _subscribers.Add(handler);
-        }
-
-        //TODO: Not the best, try to use a better way to manage subscribers
-        public void Unsubscribe(Func<EventMessageReturn, Task> handler)
-        {
-            _subscribers.Remove(handler);
-        }
     }
 }

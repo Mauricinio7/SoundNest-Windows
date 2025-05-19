@@ -11,31 +11,41 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Event;
+using System.Threading.Channels;
+using Grpc.Core.Interceptors;
+using Services.Communication.gRPC.Utils;
+using Grpc.Core;
 
 namespace Services.Communication.gRPC.Http
 {
     public abstract class GrpcClientBase
     {
-        protected readonly GrpcChannel Channel;
-        private readonly HttpClient _httpClient;
+        private string? _token;
+        public readonly GrpcChannel Channel;
+        private readonly SocketsHttpHandler _httpHandler;
 
         protected GrpcClientBase(string baseUrl)
         {
-            _httpClient = new HttpClient(new HttpClientHandler())
+            _httpHandler = new SocketsHttpHandler
             {
-                BaseAddress = new Uri(baseUrl)
+                EnableMultipleHttp2Connections = true
             };
 
             Channel = GrpcChannel.ForAddress(baseUrl, new GrpcChannelOptions
             {
-                HttpClient = _httpClient
+                HttpHandler = _httpHandler
             });
         }
-
         public void SetAuthorizationToken(string token)
         {
-            _httpClient.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
+            _token = token;
+        }
+        public CallInvoker CreateAuthenticatedCallInvoker()
+        {
+            if (string.IsNullOrEmpty(_token))
+                throw new InvalidOperationException("Authorization token has not been set.");
+
+            return Channel.Intercept(new AuthInterceptor(_token));
         }
     }
 }
