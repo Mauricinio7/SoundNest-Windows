@@ -92,8 +92,8 @@ namespace SoundNest_Windows_Client.ViewModels
         private void SaveUserToMemory(string token)
         {
             //TODO get a real image Grpc
-            byte[] imageBytes = File.ReadAllBytes("C:\\Users\\mauricio\\source\\repos\\SounNest-Windows\\SoundNest-Windows-Client\\Resources\\Images\\1c79fcd0-90d7-480c-bcc0-afd72078ded3.jpg"); //Just for testing
-            byte[] imageBytes2 = File.ReadAllBytes("\"C:\\Users\\unaay\\Downloads\\error.png\""); //Just for testing
+            //byte[] imageBytes = File.ReadAllBytes("C:\\Users\\mauricio\\source\\repos\\SounNest-Windows\\SoundNest-Windows-Client\\Resources\\Images\\1c79fcd0-90d7-480c-bcc0-afd72078ded3.jpg"); //Just for testing
+            byte[] imageBytes2 = File.ReadAllBytes("C:\\Users\\unaay\\Downloads\\error.png");
 
             string? username = JwtHelper.GetUsernameFromToken(token);
             string? email = JwtHelper.GetEmailFromToken(token);
