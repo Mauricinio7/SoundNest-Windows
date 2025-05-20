@@ -1,11 +1,12 @@
-﻿using Services.Communication.gRPC.Http;
+﻿using Google.Protobuf;
+using Grpc.Core;
+using Services.Communication.gRPC.Http;
+using Services.Communication.gRPC.Models;
 using Song;
 using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Grpc.Core;
-using Google.Protobuf;
 
 namespace Services.Communication.gRPC.Services
 {
@@ -19,65 +20,131 @@ namespace Services.Communication.gRPC.Services
         }
 
         /// <summary>
-        /// Descarga una canción mediante server-streaming (chunks) y la escribe en disco.
+        /// Descarga una canción completa en una sola llamada y la guarda en disco.
         /// </summary>
         /// <param name="songId">ID de la canción a descargar.</param>
-        /// <param name="outputFilePath">Ruta donde escribir el archivo resultado.</param>
-        public async Task DownloadStreamToFileAsync(
+        /// <param name="outputFilePathWithoutExtension">Ruta destino sin extensión (se agregará automáticamente).</param>
+        /// <param name="cancellationToken">Token opcional de cancelación.</param>
+        public async Task<DownloadResult> DownloadFullToFileAsync(
             string songId,
-            string outputFilePath,
+            string outputFilePathWithoutExtension,
             CancellationToken cancellationToken = default)
         {
-            var request = new DownloadSongRequest { IdSong = int.Parse(songId) };
-            using var call = _grpcClient.Client.DownloadSongStream(request, cancellationToken: cancellationToken);
-
-            DownloadSongMetadata? metadata = null;
-            await using var fs = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write);
-
-            await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
+            try
             {
-                switch (response.PayloadCase)
+                var request = new DownloadSongRequest { IdSong = int.Parse(songId) };
+                var response = await _grpcClient.Client.DownloadSongAsync(request, cancellationToken: cancellationToken);
+
+                var bytes = response.File.ToByteArray();
+                var finalPath = outputFilePathWithoutExtension;
+
+                await File.WriteAllBytesAsync(finalPath, bytes, cancellationToken);
+
+                return new DownloadResult
                 {
-                    case DownloadSongResponse.PayloadOneofCase.Metadata:
-                        metadata = response.Metadata;
-                        Console.WriteLine($"[STREAM] Metadata recibida: “{metadata.SongName}” (Género {metadata.IdSongGenre}) – {metadata.Description}");
-                        break;
-
-                    case DownloadSongResponse.PayloadOneofCase.Chunk:
-                        var bytes = response.Chunk.ChunkData.ToByteArray();
-                        await fs.WriteAsync(bytes, 0, bytes.Length, cancellationToken);
-                        Console.WriteLine($"[STREAM] Escritos {bytes.Length} bytes...");
-                        break;
-
-                    default:
-                        Console.WriteLine("[STREAM] Parte del mensaje no reconocida.");
-                        break;
-                }
+                    Success = true,
+                    Message = $"Canción descargada exitosamente como “{Path.GetFileName(finalPath)}”."
+                };
             }
-
-            Console.WriteLine("[STREAM] Descarga por chunks completada.");
+            catch (RpcException ex)
+            {
+                return new DownloadResult
+                {
+                    Success = false,
+                    Message = $"Error de gRPC: {ex.Status.Detail}"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new DownloadResult
+                {
+                    Success = false,
+                    Message = $"Error inesperado: {ex.Message}"
+                };
+            }
         }
 
         /// <summary>
-        /// Descarga una canción completa en una sola llamada y la escribe en disco.
+        /// Descarga una canción mediante streaming por chunks y la guarda en disco.
         /// </summary>
         /// <param name="songId">ID de la canción a descargar.</param>
-        /// <param name="outputFilePath">Ruta donde escribir el archivo resultado.</param>
-        public async Task DownloadFullToFileAsync(
+        /// <param name="outputFilePathWithoutExtension">Ruta destino sin extensión (se agregará automáticamente).</param>
+        /// <param name="cancellationToken">Token de cancelación opcional.</param>
+        public async Task<DownloadResult> DownloadStreamToFileAsync(
             string songId,
-            string outputFilePath,
+            string outputFilePathWithoutExtension,
             CancellationToken cancellationToken = default)
         {
-            var request = new DownloadSongRequest { IdSong = int.Parse(songId) };
-            var call = _grpcClient.Client.DownloadSongAsync(request, cancellationToken: cancellationToken);
-            var data = await call.ResponseAsync;
+            try
+            {
+                var request = new DownloadSongRequest { IdSong = int.Parse(songId) };
+                using var call = _grpcClient.Client.DownloadSongStream(request, cancellationToken: cancellationToken);
 
-            Console.WriteLine($"[FULL] Recibida “{data.SongName}” (Género {data.IdSongGenre}) – {data.Description}");
+                DownloadSongMetadata? metadata = null;
+                string tempPath = outputFilePathWithoutExtension + ".tmp";
+                await using var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write);
 
-            var bytes = data.File.ToByteArray();
-            await File.WriteAllBytesAsync(outputFilePath, bytes, cancellationToken);
+                await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
+                {
+                    switch (response.PayloadCase)
+                    {
+                        case DownloadSongResponse.PayloadOneofCase.Metadata:
+                            metadata = response.Metadata;
+                            break;
 
-            Console.WriteLine($"[FULL] Descarga completa ({bytes.Length} bytes) escrita en \"{outputFilePath}\".");
+                        case DownloadSongResponse.PayloadOneofCase.Chunk:
+                            var bytes = response.Chunk.ChunkData.ToByteArray();
+                            await fs.WriteAsync(bytes, 0, bytes.Length, cancellationToken);
+                            break;
+
+                        default:
+                            return new DownloadResult
+                            {
+                                Success = false,
+                                Message = "Respuesta desconocida del servidor."
+                            };
+                    }
+                }
+
+                if (metadata == null)
+                {
+                    return new DownloadResult
+                    {
+                        Success = false,
+                        Message = "No se recibió metadata de la canción."
+                    };
+                }
+
+                var extension = metadata.Extension.TrimStart('.');
+                var finalPath = $"{outputFilePathWithoutExtension}.{extension}";
+
+                if (File.Exists(finalPath))
+                    File.Delete(finalPath);
+
+                File.Move(tempPath, finalPath);
+
+                return new DownloadResult
+                {
+                    Success = true,
+                    Message = $"Canción descargada exitosamente como “{Path.GetFileName(finalPath)}”."
+                };
+            }
+            catch (RpcException ex)
+            {
+                return new DownloadResult
+                {
+                    Success = false,
+                    Message = $"Error de gRPC (stream): {ex.Status.Detail}"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new DownloadResult
+                {
+                    Success = false,
+                    Message = $"Error inesperado (stream): {ex.Message}"
+                };
+            }
         }
     }
 }

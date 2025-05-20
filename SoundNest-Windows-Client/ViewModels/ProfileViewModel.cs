@@ -215,8 +215,6 @@ namespace SoundNest_Windows_Client.ViewModels
                     MessageBox.Show("No se pudo subir la imagen de perfil", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
-
-                Console.WriteLine("[DEBUG] Imagen subida correctamente.");
                 SelectedImagePath = null;
  
             }

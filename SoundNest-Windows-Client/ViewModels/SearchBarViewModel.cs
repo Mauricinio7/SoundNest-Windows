@@ -80,15 +80,11 @@ namespace SoundNest_Windows_Client.ViewModels
 
             SaveHistoryToFile();
 
-            Console.WriteLine($"Buscando: {SearchText}");
-
             IsRecentVisible = false;
         }
 
         private void LoadHistoryFromFile()
         {
-            try
-            {
                 if (File.Exists(historyFilePath))
                 {
                     var json = File.ReadAllText(historyFilePath);
@@ -102,28 +98,16 @@ namespace SoundNest_Windows_Client.ViewModels
                 }
 
                 OnPropertyChanged(nameof(RecentSearches));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error al cargar historial: {ex.Message}");
-            }
         }
 
         private void SaveHistoryToFile()
         {
-            try
-            {
                 var dir = Path.GetDirectoryName(historyFilePath);
                 if (!Directory.Exists(dir))
                     Directory.CreateDirectory(dir);
 
                 var json = JsonSerializer.Serialize(RecentSearches.ToList());
-                File.WriteAllText(historyFilePath, json);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error al guardar historial: {ex.Message}");
-            }
+                File.WriteAllText(historyFilePath, json);  
         }
     }
 }

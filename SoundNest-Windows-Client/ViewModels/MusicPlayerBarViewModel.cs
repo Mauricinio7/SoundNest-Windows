@@ -1,7 +1,12 @@
-﻿using Microsoft.Win32;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Win32;
+using Services.Communication.gRPC.Http;
+using Services.Communication.gRPC.Services;
 using Services.Communication.RESTful.Models.Songs;
+using Services.Communication.RESTful.Services;
 using Services.Infrestructure;
 using Services.Navigation;
+using SoundNest_Windows_Client.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,6 +32,7 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand CommentsViewCommand { get; set; }
 
         private readonly INavigationService _navigation;
+        private readonly SongDownloader _songService;
         private readonly MediaPlayer _mediaPlayer;
         private readonly DispatcherTimer _timer;
 
@@ -111,9 +117,12 @@ namespace SoundNest_Windows_Client.ViewModels
             set { songImage = value; OnPropertyChanged(); }
         }
 
-        public MusicPlayerBarViewModel(INavigationService navigation)
+        public MusicPlayerBarViewModel(INavigationService navigation, ISongService songService, IGrpcClientManager grpcClient)
         {
             _navigation = navigation;
+            var token = TokenStorageHelper.LoadToken();
+            grpcClient.SetAuthorizationToken(token);
+            _songService = new SongDownloader(grpcClient.Songs);
             _mediaPlayer = new MediaPlayer();
             _mediaPlayer.Volume = volume;
 
@@ -147,21 +156,19 @@ namespace SoundNest_Windows_Client.ViewModels
             CommentsViewCommand = new RelayCommand(ExecuteCommentsViewCommand);
         }
 
-        public void ReceiveParameter(object parameter)
+        public async void ReceiveParameter(object parameter)
         {
             if (parameter is List<SongResponse> SongsList && SongsList.Count > 0)
             {
                 playlist = SongsList;
                 currentIndex = 0;
-                
-                LoadAndPlayCurrentSong();
+                await LoadAndPlayCurrentSongAsync();
             }
             else if (parameter is SongResponse singleSong)
             {
                 playlist = new List<SongResponse> { singleSong };
                 currentIndex = 0;
-                MessageBox.Show("Canción: " + singleSong.SongName);
-                LoadAndPlayCurrentSong();
+                await LoadAndPlayCurrentSongAsync();
                 
             }
             else
@@ -170,16 +177,12 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-        private void SaveSongOnCache(string sourcePath, string fileNameWithoutExtension)
+        private async Task<bool> SaveSongOnCacheAsync(int idSong, string fileNameWithoutExtension)
         {
+            bool flag = false;
+
             try
             {
-                if (!File.Exists(sourcePath))
-                {
-                    MessageBox.Show("El archivo de canción no existe en la ruta proporcionada.", "Archivo no encontrado", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
                 string songsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Songs");
                 if (!Directory.Exists(songsFolder))
                 {
@@ -188,16 +191,43 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 string destPath = Path.Combine(songsFolder, $"{fileNameWithoutExtension}.mp3");
 
-                if (!File.Exists(destPath))
+                if (File.Exists(destPath))
                 {
-                    File.Copy(sourcePath, destPath);
+                    MessageBox.Show("La canción ya existe en la caché.", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return true;
                 }
+
+                 
+                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
+                var response = await _songService.DownloadFullToFileAsync(idSong.ToString(), destPath);
+                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+
+                if (response.Success)
+                {
+                    if (File.Exists(destPath))
+                    {
+                        MessageBox.Show("La canción se descargó correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                        flag = true;
+                    }
+                    else
+                    {
+                        MessageBox.Show("La canción no se descargó correctamente, intente más tarde.", "Error de descarga", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("La canción no se descargó correctamente, intente más tarde.", "Error de descarga", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+
+               
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al guardar la canción en caché:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error al descargar y guardar la canción:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            return flag;
         }
+
 
         private void ExecuteCommentsViewCommand(object obj)
         {
@@ -238,14 +268,14 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-        public void SetPlaylist(List<SongResponse> songs)
+        public async Task SetPlaylist(List<SongResponse> songs)
         {
             playlist = songs;
             currentIndex = 0;
-            LoadAndPlayCurrentSong();
+            await LoadAndPlayCurrentSongAsync();
         }
 
-        private void PlayNextSong()
+        private async void PlayNextSong()
         {
             if (playlist.Count == 0) return;
 
@@ -261,11 +291,11 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 SetProgress(0);
                 currentIndex++;
-                LoadAndPlayCurrentSong();
+                await LoadAndPlayCurrentSongAsync();
             }
         }
 
-        private void PlayPreviousSong()
+        private async void PlayPreviousSong()
         {
             if (playlist.Count == 0) return;
 
@@ -273,7 +303,7 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 SetProgress(0);
                 currentIndex = Math.Max(0, currentIndex - 1);
-                LoadAndPlayCurrentSong();
+                await LoadAndPlayCurrentSongAsync();
             }
             else
             {
@@ -281,28 +311,23 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-        private void UpdateVolumeIcon()
-        {
-            VolumeIcon = volume switch
-            {
-                <= 0 => "\uE198",
-                <= 0.3 => "\uE993",
-                <= 0.7 => "\uE994",
-                _ => "\uE995"
-            };
-        }
-
-        private void LoadAndPlayCurrentSong()
+        private async Task LoadAndPlayCurrentSongAsync()
         {
             if (currentIndex < 0 || currentIndex >= playlist.Count)
                 return;
 
-            SaveSongOnCache(playlist[currentIndex].SongPath, playlist[currentIndex].FileName);
-
             var song = playlist[currentIndex];
-            string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Songs", $"{song.FileName}.mp3");
+            string fileName = song.FileName;
+            bool result = await SaveSongOnCacheAsync(song.IdSong, fileName);
 
-            
+            if(!result)
+            {
+                MessageBox.Show("Error al descargar la canción, intente más tarde.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
+                return;
+            }
+
+            string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Songs", $"{fileName}.mp3");
 
             try
             {
@@ -337,6 +362,18 @@ namespace SoundNest_Windows_Client.ViewModels
             _mediaPlayer.Open(new Uri(fullPath));
             isPlaying = false;
             TogglePlayPause();
+        }
+
+
+        private void UpdateVolumeIcon()
+        {
+            VolumeIcon = volume switch
+            {
+                <= 0 => "\uE198",
+                <= 0.3 => "\uE993",
+                <= 0.7 => "\uE994",
+                _ => "\uE995"
+            };
         }
 
         private void TogglePlayPause()

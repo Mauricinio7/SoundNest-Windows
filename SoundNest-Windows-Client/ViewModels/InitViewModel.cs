@@ -184,7 +184,7 @@ namespace SoundNest_Windows_Client.ViewModels
             songList.Add(song);
             songList.Add(song2);
 
-            Mediator.Notify(MediatorKeys.SHOW_MUSIC_PLAYER, songList);
+            //Mediator.Notify(MediatorKeys.SHOW_MUSIC_PLAYER, songList);
 
             Mediator.Notify(MediatorKeys.SHOW_SEARCH_BAR, null);
             Navigation.NavigateTo<HomeViewModel>();

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SoundNest_Windows_Client.Utilities
+namespace SoundNest_Windows_Client.Models
 {
     public class Notification
     {

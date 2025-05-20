@@ -37,8 +37,6 @@ namespace Services.Communication.gRPC.Services
 
             var response = await _grpcClient.Client
                 .UploadSongAsync(song, cancellationToken: cancellationToken);
-
-            Console.WriteLine($"[FULL] Resultado: {response.Result} – {response.Message}");
             return response.Result;
         }
 
@@ -83,18 +81,15 @@ namespace Services.Communication.gRPC.Services
                     }
 
                     await call.RequestStream.WriteAsync(request);
-                    Console.WriteLine($"[STREAM] Enviados {bytesRead} bytes...");
                 }
 
                 await call.RequestStream.CompleteAsync();
 
                 var response = await call.ResponseAsync;
-                Console.WriteLine($"[STREAM] Resultado: {response.Result} – {response.Message}");
                 return response.Result;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[STREAM] Error: {ex.Message}");
                 return false;
             }
         }

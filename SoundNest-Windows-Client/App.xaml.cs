@@ -29,9 +29,7 @@ public partial class App : Application
         service.AddLogging(builder =>
         {
             builder.ClearProviders();
-            #if DEBUG
             builder.AddDebug();                           
-            #endif
             builder.AddConsole();                       
             builder.SetMinimumLevel(LogLevel.Information); 
         });
@@ -39,7 +37,6 @@ public partial class App : Application
         {
             DataContext = provider.GetRequiredService<MainWindowViewModel>()
         });
-        //GRPC
         service.AddSingleton<EventGrpcClient>(sp =>
         {
             var logger = sp.GetRequiredService<ILogger<GrpcChannelMonitor>>();
@@ -93,21 +90,6 @@ public partial class App : Application
         service.AddTransient<IGrpcClientManager, GrpcClientManager>();
 
         ServiceProvider = service.BuildServiceProvider();
-
-
-        //ONLY FOR DEBUG
-        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-        {
-            if (e.ExceptionObject is Exception ex)
-                MessageBox.Show($"Error inesperado: {ex.Message}", "Fatal Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        };
-
-        DispatcherUnhandledException += (s, e) =>
-        {
-            MessageBox.Show($"Error no manejado: {e.Exception.Message}", "App Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            e.Handled = true;
-        };
-
 
     }
     protected override async void OnStartup(StartupEventArgs e)

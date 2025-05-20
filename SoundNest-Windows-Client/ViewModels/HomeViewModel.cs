@@ -90,7 +90,7 @@ namespace SoundNest_Windows_Client.ViewModels
             ScrollLeftPopularCommand = new RelayCommand(_ => _popularScrollViewer?.ScrollToHorizontalOffset(_popularScrollViewer.HorizontalOffset - 300));
             ScrollRightPopularCommand = new RelayCommand(_ => _popularScrollViewer?.ScrollToHorizontalOffset(_popularScrollViewer.HorizontalOffset + 300));
 
-            //PlaySongCommand = new RelayCommand();
+            PlaySongCommand = new RelayCommand(PlaySong);
 
         }
 
@@ -139,6 +139,20 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 MessageBox.Show(result.Message ?? "Error al obtener canciones recientes", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+
+        private void PlaySong(object parameter)
+        {
+            if(parameter is SongResponse song)
+            {
+                Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
+                Mediator.Notify(MediatorKeys.SHOW_MUSIC_PLAYER, song);
+            }
+            else
+            {
+                MessageBox.Show("Error al reproducir la canción", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }   
         }
 
         public void RegisterScrollViewer(ScrollViewer scrollViewer)

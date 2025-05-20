@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using SoundNest_Windows_Client.ViewModels;
-using SoundNest_Windows_Client.Utilities;
+using SoundNest_Windows_Client.Models;
 
 namespace SoundNest_Windows_Client.Views
 {

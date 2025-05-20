@@ -1,6 +1,6 @@
 ﻿using Services.Infrestructure;
 using Services.Navigation;
-using SoundNest_Windows_Client.Utilities;
+using SoundNest_Windows_Client.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

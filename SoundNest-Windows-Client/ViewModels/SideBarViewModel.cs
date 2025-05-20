@@ -73,7 +73,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                // Opcional: asignar imagen por defecto si no hay archivo
+                //TODO Opcional: asignar imagen por defecto si no hay archivo
                 MessageBox.Show("Error, no se pudo cargar la foto");
                 ProfilePhoto = null;
             }
