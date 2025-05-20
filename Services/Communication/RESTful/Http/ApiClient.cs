@@ -18,6 +18,7 @@ namespace Services.Communication.RESTful.Http
 
         Task<ApiResult<T>> GetAsync<T>(string url);
         Task<ApiResult<TResponse>> PostAsync<TRequest, TResponse>(string url, TRequest data);
+        Task<ApiResult<TResponse>> PutAsync<TRequest, TResponse>(string url, TRequest data);
         Task<ApiResult<bool>> PatchAsync<TRequest>(string url, TRequest data);
         Task<ApiResult<bool>> DeleteAsync(string url);
     }
@@ -121,6 +122,56 @@ namespace Services.Communication.RESTful.Http
                     userMessage: isNetworkError
                         ? "No se pudo conectar con el servidor. Verifica tu conexión a internet."
                         : "Error inesperado al registrar la información.",
+                    code: null
+                );
+            }
+        }
+
+        public async Task<ApiResult<TResponse>> PutAsync<TRequest, TResponse>(string url, TRequest data)
+        {
+            try
+            {
+                var json = JsonSerializer.Serialize(data);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync(url, content);
+                var result = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    if (string.IsNullOrWhiteSpace(result))
+                    {
+                        return ApiResult<TResponse>.Success(
+                            default,
+                            "Operación PUT exitosa (sin contenido).",
+                            response.StatusCode
+                        );
+                    }
+
+                    var deserialized = JsonSerializer.Deserialize<TResponse>(result);
+                    return ApiResult<TResponse>.Success(
+                        deserialized,
+                        "Operación PUT exitosa.",
+                        response.StatusCode
+                    );
+                }
+
+                return ApiResult<TResponse>.Failure(
+                    error: $"HTTP {(int)response.StatusCode} - {response.ReasonPhrase}: {result}",
+                    userMessage: MapFriendlyMessage(response.StatusCode),
+                    code: response.StatusCode
+                );
+            }
+            catch (Exception ex)
+            {
+                var isNetworkError = ex is HttpRequestException
+                                  || ex.InnerException is System.Net.Sockets.SocketException;
+
+                return ApiResult<TResponse>.Failure(
+                    error: $"Excepción: {ex.Message}",
+                    userMessage: isNetworkError
+                        ? "No se pudo conectar con el servidor. Verifica tu conexión a internet."
+                        : "Error inesperado al procesar la solicitud PUT.",
                     code: null
                 );
             }

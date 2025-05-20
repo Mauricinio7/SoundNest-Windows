@@ -16,7 +16,7 @@ namespace Services.Infrestructure
         public const string HIDE_SEARCH_BAR = "HideSearchBar";
         public const string SHOW_LOADING_SCREEN = "ShowLoadingScreen";
         public const string HIDE_LOADING_SCREEN = "HideLoadingScreen";
-
-        public const string ADD_PLAYLIST = "AddPlaylist"; //TODO Quit this
+        public const string ADD_PLAYLIST = "AddPlaylist";
+        public const string PLAY_SONG = "PlaySong";
     }
 }
