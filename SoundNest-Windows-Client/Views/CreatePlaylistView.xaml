@@ -7,71 +7,91 @@
              xmlns:controls="clr-namespace:SoundNest_Windows_Client.Resources.Controls"
              mc:Ignorable="d" 
              Background="{StaticResource BackgroundyColor1}"
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" 
+             d:DesignWidth="800">
 
     <Viewbox Stretch="Uniform">
-        <Canvas Width="1920" Height="1080">
+        <Canvas Width="1920" 
+                Height="1080">
 
-            <Label Content="Nombre de la plalist:"
-               FontSize="35" FontWeight="Bold"
-               Foreground="{StaticResource ForegroundWhiteColor}"
-               Canvas.Left="409" Canvas.Top="121"/>
+            <Label Content="Nombre de la playlist:"
+                   FontSize="35" 
+                   FontWeight="Bold"
+                   Foreground="{StaticResource ForegroundWhiteColor}"
+                   Canvas.Left="409" Canvas.Top="121"/>
 
             <controls:PlaceholderTextBoxControl
-            Text="{Binding PlaylistName, UpdateSourceTrigger=PropertyChanged}"
-            PlaceholderText=""
-            PaddingValue="30,5,0,0"
-            Style="{StaticResource PrimarySimpleTextBoxStyle}"
-            FontSizeValue="35"
-            BackgroundColorValue="{StaticResource BackgroundyColor2}"
-            Canvas.Left="386" Canvas.Top="191" Height="110" Width="928" />
+                Text="{Binding PlaylistName, UpdateSourceTrigger=PropertyChanged}"
+                PlaceholderText=""
+                PaddingValue="30,5,0,0"
+                Style="{StaticResource PrimarySimpleTextBoxStyle}"
+                FontSizeValue="35"
+                BackgroundColorValue="{StaticResource BackgroundyColor2}"
+                Canvas.Left="386" 
+                Canvas.Top="191" 
+                Height="110" 
+                Width="928" />
 
-            <Label Content="Descripción:"
+            <Label Content="Descripción de la playlist:"
                FontSize="35" FontWeight="Bold"
                Foreground="{StaticResource ForegroundWhiteColor}"
-               Canvas.Left="409" Canvas.Top="370"/>
+               Canvas.Left="409" 
+               Canvas.Top="370"/>
 
-            <TextBox Text="{Binding AdditionalInfo, UpdateSourceTrigger=PropertyChanged}"
-                 Background="{StaticResource BackgroundyColor2}"
-                 Foreground="White"
-                 AcceptsReturn="True"
-                 TextWrapping="Wrap"
-                 VerticalScrollBarVisibility="Auto"
-                 FontSize="25"
-                 Padding="10"
-                 BorderBrush="Transparent"
-                 Width="908" Height="134"
-                 Canvas.Left="396" Canvas.Top="450" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+            <controls:PlaceholderTextBoxControl
+                Text="{Binding AdditionalInfo, UpdateSourceTrigger=PropertyChanged}"
+                PlaceholderText=""
+                PaddingValue="30,5,0,0"
+                Style="{StaticResource PrimarySimpleTextBoxStyle}"
+                FontSizeValue="35"
+                BackgroundColorValue="{StaticResource BackgroundyColor2}"
+                Canvas.Left="386" 
+                Canvas.Top="448" 
+                Height="172" 
+                Width="928" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Top" />
+
 
             <Button Content="Subir imagen"
                 FontSize="30"
                 FontWeight="Bold"
                 Style="{StaticResource PrimaryButtonStyle}"
                 Command="{Binding UploadPhotoCommand}"
-                Canvas.Left="946" Canvas.Top="700"
-                Width="358" Height="110"/>
+                Canvas.Left="946" 
+                Canvas.Top="700"
+                Width="358" 
+                Height="110"/>
 
             <Image Source="{Binding PreviewImage}" 
-            Height="235"
-            VerticalAlignment="Top" 
-            Stretch="UniformToFill" Canvas.Left="510" Canvas.Top="637" Width="292" />
+                Height="235"
+                VerticalAlignment="Top" 
+                Stretch="UniformToFill" 
+                Canvas.Left="510" 
+                Canvas.Top="637"
+                Width="292" />
 
-            <Button Content="Crear plalist"
+            <Button Content="Crear playlist"
                 FontSize="35"
                 FontWeight="Bold"
                 Style="{StaticResource PositiveButtonStyle}"
                 Command="{Binding CreatePlaylistCommand}"
-                Canvas.Left="1467" Canvas.Top="191"
-                Width="358" Height="110" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                Canvas.Left="1467" 
+                Canvas.Top="191"
+                Width="358" 
+                Height="110" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Top"/>
 
             <Button Content="Cancelar"
                 FontSize="35"
                 FontWeight="Bold"
                 Style="{StaticResource NegativeButtonStyle}"
                 Command="{Binding CancelCommand}"
-                Canvas.Left="1467" Canvas.Top="450"
-                Width="358" Height="110"/>
-
+                Canvas.Left="1467" 
+                Canvas.Top="450"
+                Width="358" 
+                Height="110"/>
         </Canvas>
     </Viewbox>
 </UserControl>

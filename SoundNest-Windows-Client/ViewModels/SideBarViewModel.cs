@@ -94,10 +94,8 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private void ExecuteOpenPlaylistCommand(object parameter)
         {
-            if (parameter is Playlist playlist)
-            {
-                MessageBox.Show($"Abriendo la playlist: {playlist.Name}", "Abrir Playlist", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            Mediator.Notify(MediatorKeys.HIDE_SEARCH_BAR, null);
+            Navigation.NavigateTo<PlaylistDetailViewModel>();
         }
 
         private void ExecuteViewProfileCommand(object parameter)
