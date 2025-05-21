@@ -42,4 +42,10 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="Resources\Images\Icons\Default_Song_Icon.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
 </Project>

@@ -30,7 +30,7 @@
                     Command="{Binding ScrollLeftCommand}"
         Visibility="{Binding CanScrollLeft, Converter={StaticResource BoolToVisibilityConverter}}" />
                 <ScrollViewer x:Name="CarouselRecentSongsScrollViewer" Width="650" Height="250" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
-                    <ItemsControl ItemsSource="{Binding PopularSongs}">
+                    <ItemsControl ItemsSource="{Binding RecentSongs}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel Orientation="Horizontal" />
@@ -42,7 +42,7 @@
                                 <Border Width="200" Height="250" Margin="10" Background="#1e1e1e" CornerRadius="10">
                                     <StackPanel>
                                         <Grid Height="160">
-                                            <Image Source="{Binding PathImageUrl}" Stretch="UniformToFill" />
+                                            <Image Source="{Binding Image}" Stretch="UniformToFill" />
                                             <Button Style="{StaticResource PlayButtonStyle}"
                                                 Command="{Binding DataContext.PlaySongCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}" 
@@ -105,7 +105,7 @@
                                 <Border Width="200" Height="250" Margin="10" Background="#1e1e1e" CornerRadius="10">
                                     <StackPanel>
                                         <Grid Height="160">
-                                            <Image Source="{Binding PathImageUrl}" Stretch="UniformToFill" />
+                                            <Image Source="{Binding ImageSong}" Stretch="UniformToFill" />
                                             <Button Style="{StaticResource PlayButtonStyle}"
                                                 Command="{Binding DataContext.PlaySongCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}" 

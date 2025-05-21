@@ -1,13 +1,16 @@
-﻿using Services.Communication.RESTful.Models.Comment;
+﻿using Services.Communication.RESTful.Constants;
+using Services.Communication.RESTful.Models.Comment;
 using Services.Communication.RESTful.Models.Songs;
 using Services.Communication.RESTful.Services;
 using Services.Infrestructure;
 using Services.Navigation;
+using Song;
 using SoundNest_Windows_Client.Models;
 using SoundNest_Windows_Client.Utilities;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -63,7 +66,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
         public AsyncRelayCommand DeleteCommentCommand { get; set; }
         public AsyncRelayCommand SendCommentCommand { get; set; }
-        private SongResponse CurrentSong;
+        private Models.Song CurrentSong;
 
         private ICommentService commentService;
 
@@ -121,7 +124,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
         public void ReceiveParameter(object parameter)
         {
-            if (parameter is SongResponse song)
+            if (parameter is Models.Song song)
             {
                 CurrentSong = song;
                 SongId = song.IdSong.ToString();
@@ -135,13 +138,13 @@ namespace SoundNest_Windows_Client.ViewModels
         }
 
 
-        private void InitProperties()
+        private async void InitProperties()
         {
             try
             {
                 string songFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Songs", $"{CurrentSong.FileName}.mp3");
 
-                var file = TagLib.File.Create(songFilePath);
+                TagLib.File file = TagLib.File.Create(songFilePath);
 
                 SongTittle = file.Tag.Title ?? CurrentSong.SongName;
                 SongArtist = !string.IsNullOrWhiteSpace(file.Tag.JoinedPerformers) ? file.Tag.JoinedPerformers : CurrentSong.UserName ?? "Artista desconocido";
@@ -160,9 +163,13 @@ namespace SoundNest_Windows_Client.ViewModels
                     img.Freeze();
                     SongImage = img;
                 }
+                else if (!string.IsNullOrEmpty(CurrentSong.PathImageUrl) && CurrentSong.PathImageUrl.Length > 1)
+                {
+                    SongImage = await ImagesHelper.LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, CurrentSong.PathImageUrl.AsSpan(1)));
+                }
                 else
                 {
-                    SongImage = null;
+                    SongImage = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
                 }
             }
             catch
@@ -170,6 +177,32 @@ namespace SoundNest_Windows_Client.ViewModels
                 SongTittle = CurrentSong.SongName;
                 SongArtist = CurrentSong.UserName ?? "Artista desconocido";
                 SongImage = null;
+            }
+        }
+
+        private async Task<ImageSource?> LoadImageFromUrlAsync(string url)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                var imageData = await httpClient.GetByteArrayAsync(url);
+
+                return await Task.Run(() =>
+                {
+                    using var ms = new MemoryStream(imageData);
+                    var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = ms;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    return (ImageSource)bitmap;
+                });
+            }
+            catch
+            {
+                MessageBox.Show("Error al cargar la imagen de la canción", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return null;
             }
         }
 

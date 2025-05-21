@@ -8,6 +8,10 @@ using System.Collections.ObjectModel;
 using Services.Communication.RESTful.Models.Songs;
 using Services.Infrestructure;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.IO;
+using System.Net.Http;
+using Services.Communication.RESTful.Constants;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -27,7 +31,6 @@ namespace SoundNest_Windows_Client.ViewModels
                 OnPropertyChanged();
             }
         }
-
         public RelayCommand ScrollLeftCommand { get; set; }
         public RelayCommand ScrollRightCommand { get; set; }
         public RelayCommand PlaySongCommand { get; set; }
@@ -47,7 +50,8 @@ namespace SoundNest_Windows_Client.ViewModels
             set { canScrollRight = value; OnPropertyChanged(); }
         }
 
-        public ObservableCollection<SongResponse> PopularSongsList { get; set; } = new();
+        public ObservableCollection<Models.Song> RecentSongsList { get; set; } = new();
+        public ObservableCollection<Models.Song> PopulartSongsList { get; set; } = new();
 
         private ScrollViewer? _popularScrollViewer;
 
@@ -72,7 +76,8 @@ namespace SoundNest_Windows_Client.ViewModels
 
 
 
-        public ObservableCollection<SongResponse> PopularSongs { get; set; } = new();
+        public ObservableCollection<Models.Song> RecentSongs { get; set; } = new();
+        public ObservableCollection<Models.Song> PopularSongs { get; set; } = new ();
 
         public HomeViewModel(INavigationService navigationService, IAccountService user, IApiClient apiClient, ISongService songService)
         {
@@ -109,11 +114,35 @@ namespace SoundNest_Windows_Client.ViewModels
 
             if (result.IsSuccess && result.Data is not null)
             {
-                PopularSongs.Clear();
+                RecentSongs.Clear();
 
                 foreach (var song in result.Data)
                 {
-                    PopularSongs.Add(song);
+                    Models.Song realSong = new Models.Song();
+                    realSong.IdSong = song.IdSong;
+                    realSong.IdSongExtension = song.IdSongExtension;
+                    realSong.IdSongGenre = song.IdSongGenre;
+                    realSong.IsDeleted = song.IsDeleted;
+                    realSong.PathImageUrl = song.PathImageUrl;
+                    realSong.ReleaseDate = song.ReleaseDate;
+                    realSong.SongName = song.SongName;
+                    realSong.UserName = song.UserName;
+                    realSong.FileName = song.FileName;
+                    realSong.DurationSeconds = song.DurationSeconds;
+                    realSong.Description = song.Description;
+                    realSong.DurationSeconds = song.DurationSeconds;
+                    realSong.Visualizations = song.Visualizations;
+
+                    if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
+                    {
+                        realSong.Image = await ImagesHelper.LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, song.PathImageUrl.AsSpan(1)));
+                    }
+                    else
+                    {
+                        realSong.Image = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
+                    }
+
+                    RecentSongs.Add(realSong);
                 }
             }
             else
@@ -130,9 +159,18 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 PopularSongs.Clear();
 
-                foreach (var song in result.Data)
+                foreach (SongResponse? song in result.Data)
                 {
-                    PopularSongs.Add(song);
+                    //PopularSongs.Add(song);
+                    if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
+                    {
+                        //song.Image = await LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, song.PathImageUrl.AsSpan(1)));
+                    }
+                    else
+                    {
+                        //MessageBox.Show("Error al cargar la imagen de la canción", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        
+                    }
                 }
             }
             else
@@ -140,11 +178,13 @@ namespace SoundNest_Windows_Client.ViewModels
                 MessageBox.Show(result.Message ?? "Error al obtener canciones recientes", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        
+
 
 
         private void PlaySong(object parameter)
         {
-            if(parameter is SongResponse song)
+            if (parameter is Models.Song song)
             {
                 Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
                 Mediator.Notify(MediatorKeys.SHOW_MUSIC_PLAYER, song);
