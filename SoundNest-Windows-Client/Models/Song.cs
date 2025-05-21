@@ -22,6 +22,8 @@ namespace SoundNest_Windows_Client.Models
             public string? Description { get; set; }
             public string? PathImageUrl { get; set; }
             public ImageSource Image { get; set; }
+            public string DurationFormatted { get; set; }
+            public int Index { get; set; }
         public List<object> Visualizations { get; set; } = new(); // TODO get a real list
 
         

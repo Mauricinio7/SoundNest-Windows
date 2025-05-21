@@ -116,7 +116,6 @@ namespace SoundNest_Windows_Client.ViewModels
         private void ExecuteGoHomeCommand(object parameter)
         {
             Mediator.Notify(MediatorKeys.SHOW_SEARCH_BAR, null);
-            Mediator.Notify(MediatorKeys.SHOW_MUSIC_PLAYER, null);
             Navigation.NavigateTo<HomeViewModel>();
         }
 

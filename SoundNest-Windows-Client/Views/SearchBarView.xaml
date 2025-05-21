@@ -54,6 +54,7 @@
                                           Width="64"
                                           ClickCommand="{Binding SearchCommand}" HorizontalAlignment="Left" VerticalAlignment="Center" />
             <controls:AnimatedLabelButton 
+                               x:Name="FilterButton"
                                Canvas.Left="1596"
                                Canvas.Top="63"
                                LabelText="&#xE71C;"
@@ -63,7 +64,7 @@
                                LabelFontSize="54"
                                Height="63"
                                Width="64"
-                               ClickCommand="{Binding SearchCommand}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                               ClickCommand="{Binding FilterCommand}" HorizontalAlignment="Left" VerticalAlignment="Center" />
             <controls:AnimatedLabelButton 
                                Canvas.Left="1702"
                                Canvas.Top="63"
@@ -74,7 +75,7 @@
                                LabelFontSize="54"
                                Height="63"
                                Width="64"
-                               ClickCommand="{Binding SearchCommand}" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                               ClickCommand="{Binding RandomSearchCommand}" HorizontalAlignment="Left" VerticalAlignment="Center" />
 
             <Popup x:Name="RecentPopup"
                    IsOpen="{Binding IsRecentVisible}"
@@ -109,6 +110,55 @@
                     </StackPanel>
                 </Border>
             </Popup>
+            <Popup x:Name="FilterPopup"
+       IsOpen="{Binding IsFilterVisible}"
+       PlacementTarget="{Binding ElementName=FilterButton}"
+       Placement="Bottom"
+       AllowsTransparency="True"
+       PopupAnimation="Fade"
+       StaysOpen="True">
+
+                <Border Background="#2B2B3C"
+            CornerRadius="12"
+            Padding="20"
+            Width="400"
+            BorderBrush="#444"
+            BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="Filtrar búsqueda" 
+                       FontSize="22" 
+                       Foreground="White" 
+                       FontWeight="Bold"
+                       Margin="0,0,0,10"/>
+
+                        <TextBlock Text="Artista"
+                       Foreground="White"
+                       FontSize="18"
+                       Margin="0,5,0,2"/>
+                        <TextBox Text="{Binding ArtistFilter, UpdateSourceTrigger=PropertyChanged}"
+                     Height="55"
+                     FontSize="18"
+                     Style="{StaticResource FilterTextBoxStyle}"/>
+
+                        <TextBlock Text="Género"
+                       Foreground="White"
+                       FontSize="18"
+                       Margin="10,10,0,2"/>
+                        <ComboBox ItemsSource="{Binding GenreOptions}"
+                          SelectedItem="{Binding GenreFilter, UpdateSourceTrigger=PropertyChanged}"
+                          Height="55"
+                          FontSize="18"
+                          Style="{StaticResource FilterComboBoxStyle}"/>
+
+                        <Button Content="Aplicar"
+                    Margin="0,65,0,0"
+                    Command="{Binding ApplyFilterCommand}"
+                    Style="{StaticResource PrimaryButtonStyle}"/>
+                    </StackPanel>
+                </Border>
+            </Popup>
+
+
 
         </Canvas>
     </Viewbox>

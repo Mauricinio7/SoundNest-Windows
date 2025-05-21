@@ -92,8 +92,8 @@ namespace SoundNest_Windows_Client.ViewModels
         private void SaveUserToMemory(string token)
         {
             //TODO get a real image Grpc
-            //byte[] imageBytes = File.ReadAllBytes("C:\\Users\\mauricio\\source\\repos\\SounNest-Windows\\SoundNest-Windows-Client\\Resources\\Images\\1c79fcd0-90d7-480c-bcc0-afd72078ded3.jpg"); //Just for testing
-            byte[] imageBytes2 = File.ReadAllBytes("C:\\Users\\unaay\\Downloads\\error.png");
+            byte[] imageBytes = File.ReadAllBytes("C:\\Users\\mauricio\\source\\repos\\SounNest-Windows\\SoundNest-Windows-Client\\Resources\\Images\\1c79fcd0-90d7-480c-bcc0-afd72078ded3.jpg"); //Just for testing
+            //byte[] imageBytes2 = File.ReadAllBytes("C:\\Users\\unaay\\Downloads\\error.png");
 
             string? username = JwtHelper.GetUsernameFromToken(token);
             string? email = JwtHelper.GetEmailFromToken(token);
@@ -108,7 +108,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
 
             string filePath = Path.Combine(directoryPath, $"{username}_profile.jpg");
-            File.WriteAllBytes(filePath, imageBytes2);
+            File.WriteAllBytes(filePath, imageBytes);
 
             //TODO just for test, delete it
             MessageBox.Show($"¡Bienvenido {username}! Has iniciado sesión con el correo: {email}", "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);

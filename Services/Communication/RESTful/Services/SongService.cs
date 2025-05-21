@@ -1,6 +1,7 @@
 ﻿using Services.Communication.RESTful.Constants;
 using Services.Communication.RESTful.Http;
 using Services.Communication.RESTful.Models.Songs;
+using Services.Communication.RESTful.Models.Search;
 using Services.Communication.RESTful.Models;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,11 @@ namespace Services.Communication.RESTful.Services
     public interface ISongService
     {
         Task<ApiResult<List<SongResponse>>> GetRecentSongsAsync(int amount);
+        Task<ApiResult<List<GenreResponse>>> GetGenresAsync();
+        Task<ApiResult<List<SongResponse>>> SearchSongsAsync(Search search);
+        Task<ApiResult<List<SongResponse>>> GetRandomSongsAsync(int amount);
+
+
     }
 
     public class SongService : ISongService
@@ -40,5 +46,71 @@ namespace Services.Communication.RESTful.Services
                 result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)
             );
         }
+
+        public async Task<ApiResult<List<GenreResponse>>> GetGenresAsync()
+        {
+            var result = await _apiClient.GetAsync<List<GenreResponse>>(ApiRoutes.SongGetGenres);
+
+            if (result.IsSuccess && result.Data is not null)
+                return ApiResult<List<GenreResponse>>.Success(result.Data, result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<List<GenreResponse>>.Failure(
+                result.ErrorMessage ?? "No se pudieron obtener los géneros de canciones",
+                result.Message,
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)
+            );
+        }
+
+        public async Task<ApiResult<List<SongResponse>>> SearchSongsAsync(Search search)
+        {
+            var queryParams = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(search.ArtistName))
+                queryParams.Add($"artistName={Uri.EscapeDataString(search.ArtistName)}");
+
+            if (!string.IsNullOrWhiteSpace(search.SongName))
+                queryParams.Add($"songName={Uri.EscapeDataString(search.SongName)}");
+
+            if (search.IDGenre.HasValue)
+                queryParams.Add($"idGenre={search.IDGenre.Value}");
+
+            if (search.Limit.HasValue)
+                queryParams.Add($"limit={search.Limit.Value}");
+
+            if (search.Offset.HasValue)
+                queryParams.Add($"offset={search.Offset.Value}");
+
+            var queryString = string.Join("&", queryParams);
+            var url = $"{ApiRoutes.SongSearchBase}?{queryString}";
+
+            var result = await _apiClient.GetAsync<List<SongResponse>>(url);
+
+            if (result.IsSuccess && result.Data is not null)
+                return ApiResult<List<SongResponse>>.Success(result.Data, result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<List<SongResponse>>.Failure(
+                result.ErrorMessage ?? "No se pudieron obtener las canciones",
+                result.Message,
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)
+            );
+        }
+
+        public async Task<ApiResult<List<SongResponse>>> GetRandomSongsAsync(int amount)
+        {
+            var url = ApiRoutes.SongsGetRandom.Replace("{amount}", amount.ToString());
+
+            var result = await _apiClient.GetAsync<List<SongResponse>>(url);
+
+            if (result.IsSuccess && result.Data is not null)
+                return ApiResult<List<SongResponse>>.Success(result.Data, result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<List<SongResponse>>.Failure(
+                result.ErrorMessage ?? "No se pudieron obtener canciones aleatorias",
+                result.Message,
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)
+            );
+        }
+
+
     }
 }

@@ -51,7 +51,7 @@ public partial class App : Application
         service.AddTransient<HomeViewModel>();
         service.AddSingleton<SideBarViewModel>();
         service.AddTransient<MusicPlayerBarViewModel>();
-        service.AddSingleton<SearchBarViewModel>();
+        service.AddTransient<SearchBarViewModel>();
         service.AddTransient<ProfileViewModel>();
         service.AddTransient<ChangePasswordViewModel>();
         service.AddTransient<ConfirmCodeViewModel>();
@@ -64,6 +64,7 @@ public partial class App : Application
         service.AddTransient<NotificationViewModel>();
         service.AddTransient<UploadSongViewModel>();
         service.AddTransient<PlaylistDetailViewModel>();
+        service.AddTransient<SearchResultsViewModel>();
 
         service.AddSingleton<IAccountService, AccountService>();
 
