@@ -8,7 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using SoundNest_Windows_Client.Utilities;   
+using SoundNest_Windows_Client.Utilities;
+using Services.Communication.RESTful.Services;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -24,6 +25,8 @@ namespace SoundNest_Windows_Client.ViewModels
                 OnPropertyChanged();
             }
         }
+
+        private readonly IPlaylistService _playlistService;
 
         private BitmapImage? previewImage;
         public BitmapImage? PreviewImage
@@ -47,30 +50,55 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand UploadPhotoCommand { get; set; }
         public RelayCommand CancelCommand { get; set; }
 
-        public CreatePlaylistViewModel(INavigationService navigationService)
+        public CreatePlaylistViewModel(INavigationService navigationService, IPlaylistService playlistService)
         {
             Navigation = navigationService;
+            _playlistService = playlistService;
 
             UploadPhotoCommand = new RelayCommand(UploadPlaylistPhoto);
-            CreatePlaylistCommand = new RelayCommand(ExecuteCreatePlaylistCommand);
+            CreatePlaylistCommand = new RelayCommand(async _ => await ExecuteCreatePlaylistAsync());
             CancelCommand = new RelayCommand(ExecuteCancelCommand);
 
 
         }
 
-        private void ExecuteCreatePlaylistCommand(object parameter)
+        private async Task ExecuteCreatePlaylistAsync()
         {
-            if (!string.IsNullOrWhiteSpace(PlaylistName) && PreviewImage != null)
+            if (string.IsNullOrWhiteSpace(PlaylistName) || PreviewImage == null)
             {
-                var newPlaylist = new Playlist
-                {
-                    Name = PlaylistName,
-                    Image = PreviewImage
-                };
+                MessageBox.Show("Por favor, completa todos los campos.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
-                Mediator.Notify(MediatorKeys.ADD_PLAYLIST, newPlaylist);
+            byte[] imageBytes;
+            string fileName = "cover.png";
+            string contentType = "image/png";
+
+            using (var ms = new MemoryStream())
+            {
+                var encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(PreviewImage));
+                encoder.Save(ms);
+                imageBytes = ms.ToArray();
+            }
+
+            var response = await _playlistService.CreatePlaylistAsync(PlaylistName,"",imageBytes,fileName,contentType);
+
+            if (response.IsSuccess)
+            {
+                Mediator.Notify(MediatorKeys.ADD_PLAYLIST, new Playlist
+                {
+                    //Image = response.NewId,
+                    //Name = PlaylistName
+                });
+
+                Mediator.Notify(MediatorKeys.REFRESH_PLAYLISTS, null);
 
                 Navigation.NavigateTo<HomeViewModel>();
+            }
+            else
+            {
+                MessageBox.Show($"Error: {response.ErrorMessage}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

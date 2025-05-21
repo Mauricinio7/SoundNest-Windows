@@ -88,6 +88,7 @@ public partial class App : Application
         service.AddTransient<ISongService, SongService>();
         service.AddTransient<INotificationService, NotificationService>();
         service.AddTransient<ICommentService, CommentService>();
+        service.AddTransient<IPlaylistService, PlaylistService>();
         service.AddTransient<IGrpcClientManager, GrpcClientManager>();
 
         ServiceProvider = service.BuildServiceProvider();
