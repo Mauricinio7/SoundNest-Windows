@@ -14,6 +14,7 @@ using Services.Communication.RESTful.Models.User;
 using Services.Communication.gRPC.Services;
 using Services.Communication.gRPC.Http;
 using Services.Communication.gRPC.Constants;
+using UserImage;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -85,16 +86,14 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private readonly IAccountService accountService;
         private readonly IUserService userService;
-        private readonly UserImageServiceClient imageServiceClient;
+        private readonly IUserImageServiceClient userImageService;
         private readonly Account currentUser;
 
-        public ProfileViewModel(INavigationService navigationService, IAccountService user, IUserService userService, IGrpcClientManager clientService)
+        public ProfileViewModel(INavigationService navigationService, IAccountService user, IUserService userService, IGrpcClientManager clientService, IUserImageServiceClient userImageService)
         {
             Navigation = navigationService;
             accountService = user;
-            var token = TokenStorageHelper.LoadToken();
-            clientService.SetAuthorizationToken(token);
-            imageServiceClient = new UserImageServiceClient(clientService.UserImages);
+            this.userImageService = userImageService;
 
             currentUser = user.CurrentUser;
             this.userService = userService;
@@ -108,6 +107,7 @@ namespace SoundNest_Windows_Client.ViewModels
             EditImageCommand = new RelayCommand(ExecuteEditImageCommand);
 
             InitProfile();
+            this.userImageService = userImageService;
         }
 
         private void InitProfile()
@@ -117,7 +117,7 @@ namespace SoundNest_Windows_Client.ViewModels
             Email = currentUser.Email;
             Role = (currentUser.Role == 1) ? "Escucha" : "Moderador";
 
-            LoadImageFromFile(currentUser.ProfileImagePath);
+            _ = LoadProfileImage();
         }
 
         private void LoadImageFromFile(string imagePath)
@@ -194,7 +194,7 @@ namespace SoundNest_Windows_Client.ViewModels
             IsEditing = false;
             Username = currentUser.Name;
             AdditionalInfo = currentUser.AditionalInformation;
-            LoadImageFromFile(currentUser.ProfileImagePath);
+            _ = LoadProfileImage();
         }
 
         private void ExecuteViewProfileCommand(object parameter)
@@ -208,7 +208,7 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             if (!string.IsNullOrWhiteSpace(SelectedImagePath))
             {
-                var success = await imageServiceClient.UploadImageAsync(currentUser.Id, SelectedImagePath);
+                var success = await userImageService.UploadImageAsync(currentUser.Id, SelectedImagePath);
 
                 if (!success)
                 {
@@ -234,8 +234,8 @@ namespace SoundNest_Windows_Client.ViewModels
 
             if (true)
             {
-                await DownloadImageAndSave();
                 MessageBox.Show("Usuario editado correctamente", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                _ = LoadProfileImage();
                 IsEditing = false;
             }
             else
@@ -244,53 +244,31 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-        private async Task DownloadImageAndSave()
+        private async Task LoadProfileImage()
         {
             try
             {
-                string directoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundNest", "UserImages");
+                var response = await userImageService.DownloadImageAsync(accountService.CurrentUser.Id);
 
-                if (!Directory.Exists(directoryPath))
-                    Directory.CreateDirectory(directoryPath);
+                byte[] imageBytes = response.ImageData.ToByteArray();
 
-                string baseFilePath = Path.Combine(directoryPath, $"{currentUser.Name}_profile");
-                var extensions = new[] { ".jpg", ".png", ".jpeg" };
-                foreach (var ext in extensions)
-                {
-                    var file = baseFilePath + ext;
-                    if (File.Exists(file))
-                        File.Delete(file);
-                }
+                using var stream = new MemoryStream(imageBytes);
 
-                var success = await imageServiceClient.DownloadImageToFileAsync(currentUser.Id, baseFilePath);
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.StreamSource = stream;
+                image.EndInit();
+                image.Freeze();
 
-                if (success)
-                {
-                    string finalPath = null;
-                    if (File.Exists(baseFilePath + ".jpg")) finalPath = baseFilePath + ".jpg";
-                    else if (File.Exists(baseFilePath + ".png")) finalPath = baseFilePath + ".png";
-                    else if (File.Exists(baseFilePath + ".jpeg")) finalPath = baseFilePath + ".jpeg";
-
-                    if (finalPath != null)
-                    {
-                        currentUser.ProfileImagePath = finalPath;
-                        accountService.CurrentUser.ProfileImagePath = finalPath;
-                        LoadImageFromFile(finalPath);
-                    }
-                    else
-                    {
-                        MessageBox.Show("La imagen se descargó pero no se encontró en disco.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("No se pudo descargar la imagen de perfil", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
+                ProfilePhoto = image;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al descargar la imagen: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"No se pudo cargar la imagen de perfil: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+
     }
 }

@@ -9,7 +9,41 @@ using Grpc.Core;
 
 namespace Services.Communication.gRPC.Services
 {
-    public class SongUploader
+    using global::Services.Communication.gRPC.Services.Services.Communication.gRPC.Services;
+    using System.IO;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    namespace Services.Communication.gRPC.Services
+    {
+        public interface ISongUploader
+        {
+            /// <summary>
+            /// Sube una canción completa (archivo en memoria).
+            /// </summary>
+            Task<bool> UploadFullAsync(
+                string songName,
+                byte[] fileBytes,
+                int genreId,
+                string description,
+                string extension,
+                CancellationToken cancellationToken = default);
+
+            /// <summary>
+            /// Sube una canción usando stream por chunks.
+            /// </summary>
+            Task<bool> UploadStreamAsync(
+                string songName,
+                int genreId,
+                string description,
+                string extension,
+                Stream fileStream,
+                int chunkSize = 64 * 1024,
+                CancellationToken cancellationToken = default);
+        }
+    }
+
+    public class SongUploader : ISongUploader
     {
         private readonly SongGrpcClient _grpcClient;
 

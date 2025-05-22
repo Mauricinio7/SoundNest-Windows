@@ -8,7 +8,7 @@ namespace Services.Communication.RESTful.Constants
 {
     public class ApiRoutes
     {
-        public const string BaseUrl = "http://100.65.158.22/restful/";
+        public const string BaseUrl = "http://100.65.158.22/";
         //public const string BaseUrl = "https://allowing-walrus-classic.ngrok-free.app/restful/";
 
         // Auth endpoints:

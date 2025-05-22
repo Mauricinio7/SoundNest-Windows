@@ -91,35 +91,20 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private void SaveUserToMemory(string token)
         {
-            //TODO get a real image Grpc
-            byte[] imageBytes = File.ReadAllBytes("C:\\Users\\mauricio\\source\\repos\\SounNest-Windows\\SoundNest-Windows-Client\\Resources\\Images\\1c79fcd0-90d7-480c-bcc0-afd72078ded3.jpg"); //Just for testing
-            //byte[] imageBytes2 = File.ReadAllBytes("C:\\Users\\unaay\\Downloads\\error.png");
-
             string? username = JwtHelper.GetUsernameFromToken(token);
             string? email = JwtHelper.GetEmailFromToken(token);
             int? userId = JwtHelper.GetUserIdFromToken(token);
             int? role = JwtHelper.GetRoleFromToken(token);
 
-            string directoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SoundNest", "UserImages");
-
-            if (!Directory.Exists(directoryPath))
-            {
-                Directory.CreateDirectory(directoryPath);
-            }
-
-            string filePath = Path.Combine(directoryPath, $"{username}_profile.jpg");
-            File.WriteAllBytes(filePath, imageBytes);
-
             //TODO just for test, delete it
             MessageBox.Show($"¡Bienvenido {username}! Has iniciado sesión con el correo: {email}", "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
 
-            user.SaveUser(username, email, role.Value, userId.Value, "Hola a todos esta es mi cuenta", filePath); //TODO : Get the role from the token
+            user.SaveUser(username, email, role.Value, userId.Value, "Hola a todos esta es mi cuenta"); //TODO : Get the role from the token
         }
 
         private void GoHome()
         {
             Mediator.Notify(MediatorKeys.SHOW_SIDE_BAR, null);
-            Mediator.Notify(MediatorKeys.SHOW_MUSIC_PLAYER, null);
             Mediator.Notify(MediatorKeys.SHOW_SEARCH_BAR, null);
             Navigation.NavigateTo<HomeViewModel>();
         }

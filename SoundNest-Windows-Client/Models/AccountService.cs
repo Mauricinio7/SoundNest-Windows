@@ -10,7 +10,7 @@ namespace SoundNest_Windows_Client.Models
     {
         Account CurrentUser { get; }
         bool IsAuthenticated { get; }
-        void SaveUser(string name, string email, int role, int id, string aditionalInformation, string profileImagePath);
+        void SaveUser(string name, string email, int role, int id, string aditionalInformation);
         void CloseSesion();
     }
 
@@ -22,9 +22,9 @@ namespace SoundNest_Windows_Client.Models
 
         public bool IsAuthenticated => currentUser != null;
 
-        public void SaveUser(string name, string email, int role, int id, string aditionalInformation, string profileImagePath)
+        public void SaveUser(string name, string email, int role, int id, string aditionalInformation)
         {
-            currentUser = new Account(name, email, role, id, aditionalInformation, profileImagePath);
+            currentUser = new Account(name, email, role, id, aditionalInformation);
         }
 
         public void CloseSesion()

@@ -16,6 +16,7 @@ using Services.Communication.gRPC.Constants;
 using Services.Communication.gRPC.Managers;
 using Microsoft.Extensions.Logging;
 using Services.Communication.gRPC.Utils;
+using Services.Communication.gRPC.Services.Services.Communication.gRPC.Services;
 
 namespace SoundNest_Windows_Client;
 
@@ -84,13 +85,38 @@ public partial class App : Application
             return client;
         });
 
+        service.AddSingleton<IUserImageServiceClient>(sp =>
+        {
+            var manager = sp.GetRequiredService<IGrpcClientManager>();
+            var token = TokenStorageHelper.LoadToken();
+
+            if (!string.IsNullOrWhiteSpace(token))
+                manager.SetAuthorizationToken(token);
+
+            return new UserImageServiceClient(manager.UserImages);
+        });
+
+        service.AddSingleton<ISongUploader>(sp =>
+        {
+            var manager = sp.GetRequiredService<IGrpcClientManager>();
+            var token = TokenStorageHelper.LoadToken();
+
+            if (!string.IsNullOrWhiteSpace(token))
+                manager.SetAuthorizationToken(token);
+
+            return new SongUploader(manager.Songs);
+        });
+
+
+
         service.AddTransient<IAuthService, AuthService>(); 
         service.AddTransient<IUserService, UserService>();
         service.AddTransient<ISongService, SongService>();
         service.AddTransient<INotificationService, NotificationService>();
         service.AddTransient<ICommentService, CommentService>();
         service.AddTransient<IPlaylistService, PlaylistService>();
-        service.AddTransient<IGrpcClientManager, GrpcClientManager>();
+
+        service.AddSingleton<IGrpcClientManager, GrpcClientManager>();
 
         ServiceProvider = service.BuildServiceProvider();
 

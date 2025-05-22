@@ -10,6 +10,9 @@ using SoundNest_Windows_Client.Models;
 using SoundNest_Windows_Client.Utilities;
 using Services.Communication.RESTful.Services;
 using Services.Communication.RESTful.Models.Playlist;
+using UserImage;
+using Services.Communication.gRPC.Http;
+using Services.Communication.gRPC.Services;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -47,10 +50,17 @@ namespace SoundNest_Windows_Client.ViewModels
 
         public ObservableCollection<PlaylistResponse> Playlists { get; set; } = new();
 
-        public SideBarViewModel(INavigationService navigationService, IAccountService user, IPlaylistService playlistService)
+        private readonly IGrpcClientManager clientManager;
+        private readonly IUserImageServiceClient userImageService;
+
+        public SideBarViewModel(INavigationService navigationService, IAccountService user, IPlaylistService playlistService, IGrpcClientManager clientService, IUserImageServiceClient userImageService)
         {
             Navigation = navigationService;
             _playlistService = playlistService;
+            _accountService = user; 
+            this.userImageService = userImageService;
+            clientManager = clientService;
+            
 
             ViewProfileCommand = new RelayCommand(ExecuteViewProfileCommand);
             GoHomeCommand = new RelayCommand(ExecuteGoHomeCommand);
@@ -66,27 +76,44 @@ namespace SoundNest_Windows_Client.ViewModels
                     App.Current.Dispatcher.Invoke(() => Playlists.Add(newPlaylist));
             });
 
-            LoadProfileImage(user.CurrentUser.ProfileImagePath);
+            EnsureTokenIsConfigured();
+            _ = LoadProfileImage();
         }
 
-        private void LoadProfileImage(string imagePath)
+        private void EnsureTokenIsConfigured()
         {
-            if (!string.IsNullOrEmpty(imagePath))
+            var token = TokenStorageHelper.LoadToken();
+            if (!string.IsNullOrWhiteSpace(token))
             {
-                var image = new BitmapImage();
-                image.BeginInit();
-                image.UriSource = new Uri(imagePath, UriKind.Absolute);
-                image.CacheOption = BitmapCacheOption.OnLoad;
-                image.EndInit();
-                ProfilePhoto = image;
-            }
-            else
-            {
-                //TODO Opcional: asignar imagen por defecto si no hay archivo
-                MessageBox.Show("Error, no se pudo cargar la foto");
-                ProfilePhoto = null;
+                clientManager.SetAuthorizationToken(token);
             }
         }
+
+        private async Task LoadProfileImage()
+        {
+            try
+            {
+                var response = await userImageService.DownloadImageAsync(_accountService.CurrentUser.Id);
+
+                byte[] imageBytes = response.ImageData.ToByteArray();
+
+                using var stream = new MemoryStream(imageBytes);
+
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.StreamSource = stream;
+                image.EndInit();
+                image.Freeze(); 
+
+                ProfilePhoto = image;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"No se pudo cargar la imagen de perfil: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
 
         private void ExecuteUploadSongCommand(object parameter)
         {

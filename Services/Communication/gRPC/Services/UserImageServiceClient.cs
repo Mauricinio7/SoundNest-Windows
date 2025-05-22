@@ -8,7 +8,14 @@ using UserImage;
 
 namespace Services.Communication.gRPC.Services
 {
-    public class UserImageServiceClient
+    public interface IUserImageServiceClient
+    {
+        Task<bool> DownloadImageToFileAsync(int userId, string outputFilePath, CancellationToken cancellationToken = default);
+        Task<bool> UploadImageAsync(int userId, string filePath, CancellationToken cancellationToken = default);
+        Task<DownloadImageResponse> DownloadImageAsync(int userId, CancellationToken cancellationToken = default);
+    }
+
+    public class UserImageServiceClient : IUserImageServiceClient
     {
         private readonly UserImageGrpcClient _grpcClient;
 
@@ -82,5 +89,21 @@ namespace Services.Communication.gRPC.Services
                 return false;
             }
         }
+
+        public async Task<DownloadImageResponse?> DownloadImageAsync(int userId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var request = new DownloadImageRequest { UserId = userId };
+                return await _grpcClient.Client.DownloadImageAsync(request, cancellationToken: cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[IMAGE] Error al obtener respuesta cruda: {ex.Message}");
+                return null;
+            }
+        }
+
+
     }
 }

@@ -46,4 +46,10 @@ namespace Services.Communication.RESTful.Models.Songs
         public List<object> Visualizations { get; set; } = new(); // TODO get a real list
 
     }
+
+    public class Visual
+    {
+        [JsonPropertyName("visualizations")]
+        public List<object> Visualizations { get; set; } = new(); // TODO get a real list
+    }
 }

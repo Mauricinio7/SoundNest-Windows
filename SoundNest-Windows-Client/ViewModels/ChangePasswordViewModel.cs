@@ -32,7 +32,6 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private void ExecuteCancelCommand(object parameter)
         {
-            Mediator.Notify(MediatorKeys.SHOW_MUSIC_PLAYER, null);
             Mediator.Notify(MediatorKeys.SHOW_SIDE_BAR, null);
             Navigation.NavigateTo<ProfileViewModel>();
         }

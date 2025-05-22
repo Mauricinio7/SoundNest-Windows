@@ -98,46 +98,8 @@ namespace SoundNest_Windows_Client.ViewModels
                 int userId = userData.IdUser;
                 int role = userData.IdRole;
 
-                string directoryPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "SoundNest", "UserImages");
 
-                if (!Directory.Exists(directoryPath))
-                    Directory.CreateDirectory(directoryPath);
-
-                string baseFilePath = Path.Combine(directoryPath, $"{username}_profile");
-
-                var grpcImageClient = new UserImageGrpcClient(GrpcApiRoute.BaseUrl);
-                grpcImageClient.SetAuthorizationToken(token);
-
-                var imageDownloaded = new UserImageServiceClient(grpcImageClient);
-                bool success = await imageDownloaded.DownloadImageToFileAsync(userId, baseFilePath);
-
-                string finalPath;
-
-                if (success)
-                {
-                    string jpgPath = baseFilePath + ".jpg";
-                    string pngPath = baseFilePath + ".png";
-
-                    if (File.Exists(jpgPath))
-                        finalPath = jpgPath;
-                    else if (File.Exists(pngPath))
-                        finalPath = pngPath;
-                    else
-                        throw new FileNotFoundException("No se encontró la imagen descargada.");
-                }
-                else
-                {
-                    finalPath = Path.Combine(
-                        "C:\\Users\\mauricio\\source\\repos\\SounNest-Windows\\SoundNest-Windows-Client\\Resources\\Images\\1c79fcd0-90d7-480c-bcc0-afd72078ded3.jpg");
-
-                    File.Copy(finalPath, baseFilePath + ".jpg", overwrite: true);
-                }
-
-                accountService.SaveUser(username, email, role, userId, "Hola a todos esta es mi cuenta", finalPath);
-
-                ProfileImage = LoadImageFromDisk(finalPath);
+                accountService.SaveUser(username, email, role, userId, "Hola a todos esta es mi cuenta");
 
                 MessageBox.Show($"¡Bienvenido {username}! Has iniciado sesión con el correo: {email}",
                     "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -149,17 +111,6 @@ namespace SoundNest_Windows_Client.ViewModels
                 MessageBox.Show($"Error al guardar el usuario: {ex.Message}",
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-
-        private BitmapImage LoadImageFromDisk(string path)
-        {
-            var bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.UriSource = new Uri(path, UriKind.Absolute);
-            bitmap.EndInit();
-            bitmap.Freeze();
-            return bitmap;
         }
 
         private void GoHome()
