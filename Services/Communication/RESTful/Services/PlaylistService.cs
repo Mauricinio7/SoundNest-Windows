@@ -108,30 +108,36 @@ namespace Services.Communication.RESTful.Services
             );
         }
 
-        public async Task<ApiResult<bool>> CreatePlaylistAsync(string playlistName,
-                                                                string description,
-                                                                byte[] imageBytes,
-                                                                string imageFileName,
-                                                                string contentType)
+        public async Task<ApiResult<bool>> CreatePlaylistAsync(
+            string playlistName,
+            string description,
+            byte[] imageBytes,
+            string imageFileName,
+            string contentType)
         {
             var endpoint = ApiRoutes.PlaylistPutNewPlaylist;
 
-            var form = new MultipartFormDataContent();
+            using var form = new MultipartFormDataContent();
 
             var imgContent = new ByteArrayContent(imageBytes);
             imgContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-
-            form.Add(imgContent, "image", imageFileName);
+            form.Add(imgContent, name: "image", fileName: imageFileName);
 
             form.Add(new StringContent(playlistName), "playlistName");
-            form.Add(new StringContent(description ?? ""), "description");
+            form.Add(new StringContent(description ?? string.Empty), "description");
 
-            var result = await _apiClient.PutAsync<MultipartFormDataContent, object>(endpoint,form);
+            var result = await _apiClient.PutMultipartAsync<object>(endpoint, form);
 
             if (result.IsSuccess)
-                return ApiResult<bool>.Success(true,"Playlist creada exitosamente",result.StatusCode.GetValueOrDefault());
-            else
-                return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al crear la playlist",result.Message,result.StatusCode.GetValueOrDefault());
+                return ApiResult<bool>.Success(
+                    true,
+                    "Playlist creada exitosamente",
+                    result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<bool>.Failure(
+                result.ErrorMessage ?? "Error al crear la playlist",
+                result.Message,
+                result.StatusCode.GetValueOrDefault());
         }
 
     }

@@ -19,6 +19,7 @@ namespace Services.Communication.RESTful.Http
         Task<ApiResult<T>> GetAsync<T>(string url);
         Task<ApiResult<TResponse>> PostAsync<TRequest, TResponse>(string url, TRequest data);
         Task<ApiResult<TResponse>> PutAsync<TRequest, TResponse>(string url, TRequest data);
+        Task<ApiResult<TResponse>> PutMultipartAsync<TResponse>(string url,MultipartFormDataContent content);
         Task<ApiResult<bool>> PatchAsync<TRequest>(string url, TRequest data);
         Task<ApiResult<bool>> DeleteAsync(string url);
     }
@@ -242,6 +243,54 @@ namespace Services.Communication.RESTful.Http
                     userMessage: isNetworkError
                         ? "No se pudo conectar con el servidor. Verifica tu conexión a internet."
                         : "Error inesperado al eliminar.",
+                    code: null
+                );
+            }
+        }
+
+        public async Task<ApiResult<TResponse>> PutMultipartAsync<TResponse>(
+        string url,
+        MultipartFormDataContent content
+    )
+        {
+            try
+            {
+                var response = await _httpClient.PutAsync(url, content);
+                var payload = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    if (string.IsNullOrWhiteSpace(payload))
+                        return ApiResult<TResponse>.Success(
+                            default,
+                            "Operación PUT multipart exitosa (sin contenido).",
+                            response.StatusCode
+                        );
+
+                    var data = JsonSerializer.Deserialize<TResponse>(payload);
+                    return ApiResult<TResponse>.Success(
+                        data,
+                        "Operación PUT multipart exitosa.",
+                        response.StatusCode
+                    );
+                }
+
+                return ApiResult<TResponse>.Failure(
+                    error: $"HTTP {(int)response.StatusCode} - {response.ReasonPhrase}: {payload}",
+                    userMessage: MapFriendlyMessage(response.StatusCode),
+                    code: response.StatusCode
+                );
+            }
+            catch (Exception ex)
+            {
+                var isNetworkError = ex is HttpRequestException
+                                   || ex.InnerException is System.Net.Sockets.SocketException;
+
+                return ApiResult<TResponse>.Failure(
+                    error: $"Excepción: {ex.Message}",
+                    userMessage: isNetworkError
+                                  ? "No se pudo conectar con el servidor. Verifica tu conexión a internet."
+                                  : "Error inesperado al procesar el multipart PUT.",
                     code: null
                 );
             }
