@@ -249,9 +249,8 @@ namespace Services.Communication.RESTful.Http
         }
 
         public async Task<ApiResult<TResponse>> PutMultipartAsync<TResponse>(
-        string url,
-        MultipartFormDataContent content
-    )
+                                                string url,
+                                                MultipartFormDataContent content)
         {
             try
             {

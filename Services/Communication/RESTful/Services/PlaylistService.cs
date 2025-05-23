@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http;
+using System.IO;
 
 namespace Services.Communication.RESTful.Services
 {
@@ -16,7 +17,12 @@ namespace Services.Communication.RESTful.Services
         Task<ApiResult<bool>> AddSongToPlaylistAsync(string songId, string playlistId);
         Task<ApiResult<bool>> RemoveSongFromPlaylistAsync(string songId, string playlistId);
         Task<ApiResult<bool>> DeletePlaylistAsync(string playlistId);
-        Task<ApiResult<bool>> CreatePlaylistAsync(string playlistName,string description,byte[] imageBytes,string imageFileName,string contentType);
+        Task<ApiResult<bool>> CreatePlaylistAsync(
+                                string playlistName,
+                                string description,
+                                Stream imageStream,
+                                string imageFileName,
+                                string contentType);
     }
 
     public class PlaylistService : IPlaylistService
@@ -109,35 +115,33 @@ namespace Services.Communication.RESTful.Services
         }
 
         public async Task<ApiResult<bool>> CreatePlaylistAsync(
-            string playlistName,
-            string description,
-            byte[] imageBytes,
-            string imageFileName,
-            string contentType)
+                                            string playlistName,
+                                            string description,
+                                            Stream imageStream,
+                                            string imageFileName,
+                                            string contentType)
         {
-            var endpoint = ApiRoutes.PlaylistPutNewPlaylist;
-
             using var form = new MultipartFormDataContent();
-
-            var imgContent = new ByteArrayContent(imageBytes);
+            var imgContent = new StreamContent(imageStream);
             imgContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-            form.Add(imgContent, name: "image", fileName: imageFileName);
 
+            form.Add(imgContent, "image", imageFileName);
             form.Add(new StringContent(playlistName), "playlistName");
-            form.Add(new StringContent(description ?? string.Empty), "description");
+            form.Add(new StringContent(description ?? ""), "description");
 
-            var result = await _apiClient.PutMultipartAsync<object>(endpoint, form);
+            var result = await _apiClient.PutMultipartAsync<object>(
+                ApiRoutes.PlaylistPutNewPlaylist,
+                form
+            );
 
             if (result.IsSuccess)
-                return ApiResult<bool>.Success(
-                    true,
-                    "Playlist creada exitosamente",
-                    result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+                return ApiResult<bool>.Success(true, "Playlist creada exitosamente", result.StatusCode ?? HttpStatusCode.OK);
 
             return ApiResult<bool>.Failure(
                 result.ErrorMessage ?? "Error al crear la playlist",
                 result.Message,
-                result.StatusCode.GetValueOrDefault());
+                result.StatusCode
+            );
         }
 
     }

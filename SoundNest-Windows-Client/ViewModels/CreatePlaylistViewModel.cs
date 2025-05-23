@@ -2,8 +2,11 @@
 using Services.Infrestructure;
 using Services.Navigation;
 using SoundNest_Windows_Client.Models;
+using SoundNest_Windows_Client.Utilities;
 using System;
 using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -12,6 +15,7 @@ namespace SoundNest_Windows_Client.ViewModels
 {
     class CreatePlaylistViewModel : ViewModel
     {
+        private readonly IAccountService _accountService;
         private readonly INavigationService _navigation;
         private readonly IPlaylistService _playlistService;
 
@@ -19,10 +23,12 @@ namespace SoundNest_Windows_Client.ViewModels
 
         public CreatePlaylistViewModel(
             INavigationService navigationService,
-            IPlaylistService playlistService)
+            IPlaylistService playlistService,
+            IAccountService accountService)
         {
             _navigation = navigationService;
             _playlistService = playlistService;
+            _accountService = accountService;
 
             UploadPhotoCommand = new RelayCommand(_ => UploadPlaylistPhoto());
             CreatePlaylistCommand = new RelayCommand(async _ => await ExecuteCreatePlaylistAsync());
@@ -30,6 +36,7 @@ namespace SoundNest_Windows_Client.ViewModels
         }
 
         public string PlaylistName { get; set; } = "";
+        public string Description { get; set; } = "";
         public BitmapImage? PreviewImage { get; private set; }
 
         public RelayCommand UploadPhotoCommand { get; }
@@ -49,8 +56,7 @@ namespace SoundNest_Windows_Client.ViewModels
             _selectedImagePath = dlg.FileName;
             var fi = new FileInfo(_selectedImagePath);
 
-            const long MaxBytes = 20 * 1024 * 1024; // 20 MB servidor
-            if (fi.Length > MaxBytes)
+            if (fi.Length > 20 * 1024 * 1024)
             {
                 MessageBox.Show(
                     "La imagen supera los 20 MB permitidos por el servidor.",
@@ -63,7 +69,6 @@ namespace SoundNest_Windows_Client.ViewModels
 
             try
             {
-                // Sólo para previsualizar en la UI
                 var img = new BitmapImage();
                 using var fs = File.OpenRead(_selectedImagePath);
                 img.BeginInit();
@@ -77,7 +82,7 @@ namespace SoundNest_Windows_Client.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Error al cargar la imagen: {ex.Message}",
+                    ex.Message,
                     "Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -87,49 +92,58 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async Task ExecuteCreatePlaylistAsync()
         {
-            if (string.IsNullOrWhiteSpace(PlaylistName) || PreviewImage == null || string.IsNullOrEmpty(_selectedImagePath))
+            if (string.IsNullOrWhiteSpace(PlaylistName)
+                || PreviewImage == null
+                || string.IsNullOrEmpty(_selectedImagePath))
             {
-                MessageBox.Show(
-                    "Por favor, completa todos los campos.",
-                    "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                MessageBox.Show("Por favor, completa todos los campos.",
+                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            byte[] imageBytes = File.ReadAllBytes(_selectedImagePath);
             string fileName = Path.GetFileName(_selectedImagePath);
-
-            string contentType = Path.GetExtension(fileName).ToLower() switch
+            string extension = Path.GetExtension(fileName).ToLower();
+            string contentType = extension switch
             {
                 ".jpg" or ".jpeg" => "image/jpeg",
                 ".png" => "image/png",
                 _ => "application/octet-stream"
             };
 
-            var result = await _playlistService.CreatePlaylistAsync(
-                playlistName: PlaylistName,
-                description: "",          // si tienes descripción, pásala aquí
-                imageBytes: imageBytes,
-                imageFileName: fileName,
-                contentType: contentType);
-
-            if (result.IsSuccess)
+            try
             {
-                // Fuerza recarga completa en el sidebar
-                Mediator.Notify(MediatorKeys.REFRESH_PLAYLISTS, null);
+                using var fs = File.OpenRead(_selectedImagePath);
 
-                _navigation.NavigateTo<HomeViewModel>();
+                var result = await _playlistService.CreatePlaylistAsync(
+                    PlaylistName,
+                    Description,
+                    fs,
+                    fileName,
+                    contentType
+                );
+
+                if (result.IsSuccess)
+                {
+                    Mediator.Notify(MediatorKeys.REFRESH_PLAYLISTS, null);
+                    _navigation.NavigateTo<HomeViewModel>();
+                }
+                else
+                {
+                    MessageBox.Show(result.ErrorMessage,
+                                    "Error",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Error);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show(
-                    $"Error al crear la playlist:\n{result.ErrorMessage}",
-                    "Error",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                MessageBox.Show($"Error leyendo el fichero: {ex.Message}",
+                                "Error",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error);
             }
         }
+
 
         private void ExecuteCancelCommand()
         {
