@@ -39,7 +39,7 @@
                Canvas.Top="370"/>
 
             <controls:PlaceholderTextBoxControl
-                Text="{Binding AdditionalInfo, UpdateSourceTrigger=PropertyChanged}"
+                Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
                 PlaceholderText=""
                 PaddingValue="30,5,0,0"
                 Style="{StaticResource PrimarySimpleTextBoxStyle}"

@@ -92,35 +92,29 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async Task ExecuteCreatePlaylistAsync()
         {
-            if (string.IsNullOrWhiteSpace(PlaylistName)
-                || PreviewImage == null
-                || string.IsNullOrEmpty(_selectedImagePath))
+            if (string.IsNullOrWhiteSpace(PlaylistName) || PreviewImage == null || string.IsNullOrEmpty(_selectedImagePath))
             {
                 MessageBox.Show("Por favor, completa todos los campos.",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            string fileName = Path.GetFileName(_selectedImagePath);
-            string extension = Path.GetExtension(fileName).ToLower();
-            string contentType = extension switch
-            {
-                ".jpg" or ".jpeg" => "image/jpeg",
-                ".png" => "image/png",
-                _ => "application/octet-stream"
-            };
-
             try
             {
-                using var fs = File.OpenRead(_selectedImagePath);
+                var bytes = File.ReadAllBytes(_selectedImagePath);
+                var extension = Path.GetExtension(_selectedImagePath).ToLower();
+                var mime = extension switch
+                {
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".png" => "image/png",
+                    _ => throw new InvalidOperationException("Tipo de imagen no soportado")
+                };
+                var base64 = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
 
                 var result = await _playlistService.CreatePlaylistAsync(
                     PlaylistName,
                     Description,
-                    fs,
-                    fileName,
-                    contentType
-                );
+                    base64);
 
                 if (result.IsSuccess)
                 {
@@ -130,17 +124,13 @@ namespace SoundNest_Windows_Client.ViewModels
                 else
                 {
                     MessageBox.Show(result.ErrorMessage,
-                                    "Error",
-                                    MessageBoxButton.OK,
-                                    MessageBoxImage.Error);
+                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error leyendo el fichero: {ex.Message}",
-                                "Error",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error);
+                MessageBox.Show($"Error al procesar la imagen: {ex.Message}",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

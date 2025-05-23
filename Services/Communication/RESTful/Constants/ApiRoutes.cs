@@ -54,6 +54,6 @@ namespace Services.Communication.RESTful.Constants
         public const string PlaylistPatchRemoveSong = "api/playlist/{idsong}/{idPlaylist}/remove";
         public const string PlaylistPatchAddSong = "api/playlist/{idsong}/{idPlaylist}/add";
         public const string PlaylistDelete = "api/playlist/{idPlaylist}/delete/";
-        public const string PlaylistPutNewPlaylist = "api/playlist/upload";
+        public const string PlaylistPutNewPlaylist = "api/playlist/base64/upload";
     }
 }

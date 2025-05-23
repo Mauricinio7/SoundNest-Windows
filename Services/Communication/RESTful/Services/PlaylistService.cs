@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http;
 using System.IO;
+using System;
 
 namespace Services.Communication.RESTful.Services
 {
@@ -17,12 +18,7 @@ namespace Services.Communication.RESTful.Services
         Task<ApiResult<bool>> AddSongToPlaylistAsync(string songId, string playlistId);
         Task<ApiResult<bool>> RemoveSongFromPlaylistAsync(string songId, string playlistId);
         Task<ApiResult<bool>> DeletePlaylistAsync(string playlistId);
-        Task<ApiResult<bool>> CreatePlaylistAsync(
-                                string playlistName,
-                                string description,
-                                Stream imageStream,
-                                string imageFileName,
-                                string contentType);
+        Task<ApiResult<PlaylistResponse>> CreatePlaylistAsync(string playlistName,string description,string imageBase64);
     }
 
     public class PlaylistService : IPlaylistService
@@ -114,34 +110,32 @@ namespace Services.Communication.RESTful.Services
             );
         }
 
-        public async Task<ApiResult<bool>> CreatePlaylistAsync(
-                                            string playlistName,
-                                            string description,
-                                            Stream imageStream,
-                                            string imageFileName,
-                                            string contentType)
+        public async Task<ApiResult<PlaylistResponse>> CreatePlaylistAsync(string playlistName,string description,string imageBase64)
         {
-            using var form = new MultipartFormDataContent();
-            var imgContent = new StreamContent(imageStream);
-            imgContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+            var request = new CreatePlaylistRequest
+            {
+                PlaylistName = playlistName,
+                Description = description ?? "",
+                ImageBase64 = imageBase64
+            };
+            Console.WriteLine(request);
 
-            form.Add(imgContent, "image", imageFileName);
-            form.Add(new StringContent(playlistName), "playlistName");
-            form.Add(new StringContent(description ?? ""), "description");
-
-            var result = await _apiClient.PutMultipartAsync<object>(
+            var result = await _apiClient.PutAsync<CreatePlaylistRequest, CreatePlaylistResponse>(
                 ApiRoutes.PlaylistPutNewPlaylist,
-                form
-            );
+                request);
 
-            if (result.IsSuccess)
-                return ApiResult<bool>.Success(true, "Playlist creada exitosamente", result.StatusCode ?? HttpStatusCode.OK);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return ApiResult<PlaylistResponse>.Success(
+                    result.Data.Playlist,
+                    result.Data.Message,
+                    result.StatusCode.GetValueOrDefault(HttpStatusCode.Created));
+            }
 
-            return ApiResult<bool>.Failure(
+            return ApiResult<PlaylistResponse>.Failure(
                 result.ErrorMessage ?? "Error al crear la playlist",
                 result.Message,
-                result.StatusCode
-            );
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
     }
