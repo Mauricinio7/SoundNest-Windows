@@ -63,35 +63,24 @@
     Foreground="{StaticResource ForegroundWhiteColor}"
     Canvas.Left="409" Canvas.Top="758" HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
-            <Canvas Width="760" Height="115"
-     Canvas.Left="703"
-     Canvas.Top="745">
+            <Border Width="750" Height="105" Background="#D3D3D3"
+            Canvas.Left="790" Canvas.Top="734" CornerRadius="10"
+            BorderThickness="2" BorderBrush="Orange" Padding="10">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <Image Source="{Binding SongImage}" Width="80" Height="80" Margin="0,0,10,0"/>
+                    <StackPanel>
+                        <TextBlock Text="{Binding SongTitle, UpdateSourceTrigger=PropertyChanged}" FontWeight="Bold" FontSize="24" Foreground="Black"/>
+                        <TextBlock Text="{Binding SongArtist, UpdateSourceTrigger=PropertyChanged}" FontSize="18" Foreground="Gray"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
 
-                <Rectangle 
-         Width="750" Height="105"
-         Stroke="Orange"
-         StrokeThickness="2"
-         StrokeDashArray="4,2"
-         RadiusX="10" RadiusY="10"
-         Fill="#D3D3D3"/>
-
-                <TextBlock Text="{Binding DataContext.SelectedFileName, RelativeSource={RelativeSource AncestorType=UserControl}, TargetNullValue=Archivo, FallbackValue=Archivo, UpdateSourceTrigger=PropertyChanged}" 
-           FontSize="25"
-           FontWeight="SemiBold"
-           Foreground="Gray"
-           TextTrimming="CharacterEllipsis"
-           Width="752" Height="122"
-           VerticalAlignment="Top"
-           HorizontalAlignment="Left"
-           TextAlignment="Center"
-           Padding="10"/>
-            </Canvas>
             <Button Content="Subir archivo"
             FontSize="30"
             FontWeight="Bold"
             Style="{StaticResource PrimaryButtonStyle}"
             Command="{Binding UploadFileCommand}"
-            Canvas.Left="846" Canvas.Top="891"
+            Canvas.Left="1020" Canvas.Top="893"
             Width="358" Height="110"/>
 
 
@@ -103,7 +92,20 @@
             Canvas.Left="1455" Canvas.Top="891"
             Width="358" Height="110" HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
+            <Image Source="{Binding SongCustomImage}" 
+           Width="100" Height="100" 
+           Canvas.Left="1574" Canvas.Top="736"
+           Stretch="UniformToFill"
+           Margin="0"
+           />
 
+            <Button Content="Subir imagen"
+        FontSize="25"
+        FontWeight="Bold"
+        Style="{StaticResource PrimaryButtonStyle}"
+        Command="{Binding UploadImageCommand}"
+        Canvas.Left="396" Canvas.Top="910"
+        Width="250" Height="80"/>
 
         </Canvas>
     </Viewbox>

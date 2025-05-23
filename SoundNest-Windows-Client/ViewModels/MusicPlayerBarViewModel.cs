@@ -34,7 +34,7 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand CommentsViewCommand { get; set; }
 
         private readonly INavigationService _navigation;
-        private readonly SongDownloader _songService;
+        private readonly ISongDownloader _songService;
         private static readonly MediaPlayer _mediaPlayer = new MediaPlayer();
         private readonly DispatcherTimer _timer;
 
@@ -119,12 +119,10 @@ namespace SoundNest_Windows_Client.ViewModels
             set { songImage = value; OnPropertyChanged(); }
         }
 
-        public MusicPlayerBarViewModel(INavigationService navigation, ISongService songService, IGrpcClientManager grpcClient)
+        public MusicPlayerBarViewModel(INavigationService navigation, ISongDownloader songDownloaderService, IGrpcClientManager grpcClient)
         {
             _navigation = navigation;
-            var token = TokenStorageHelper.LoadToken();
-            grpcClient.SetAuthorizationToken(token);
-            _songService = new SongDownloader(grpcClient.Songs);
+            _songService = songDownloaderService;
             _mediaPlayer.Volume = volume;
 
             _mediaPlayer.MediaOpened += (s, e) =>
@@ -200,7 +198,7 @@ namespace SoundNest_Windows_Client.ViewModels
                     return true;
                 }
                 
-                var response = await _songService.DownloadFullToFileAsync(idSong.ToString(), destPath);
+                var response = await _songService.DownloadStreamToFileAsync(idSong.ToString(), destPath);
 
                 if (response.Success)
                 {

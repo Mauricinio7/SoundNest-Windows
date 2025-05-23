@@ -10,7 +10,19 @@ using System.Threading.Tasks;
 
 namespace Services.Communication.gRPC.Services
 {
-    public class SongDownloader
+    public interface ISongDownloader
+    {
+        Task<DownloadResult> DownloadFullToFileAsync(
+            string songId,
+            string outputFilePathWithoutExtension,
+            CancellationToken cancellationToken = default);
+
+        Task<DownloadResult> DownloadStreamToFileAsync(
+            string songId,
+            string outputFilePathWithoutExtension,
+            CancellationToken cancellationToken = default);
+    }
+    public class SongDownloader : ISongDownloader
     {
         private readonly SongGrpcClient _grpcClient;
 
@@ -71,9 +83,9 @@ namespace Services.Communication.gRPC.Services
         /// <param name="outputFilePathWithoutExtension">Ruta destino sin extensión (se agregará automáticamente).</param>
         /// <param name="cancellationToken">Token de cancelación opcional.</param>
         public async Task<DownloadResult> DownloadStreamToFileAsync(
-            string songId,
-            string outputFilePathWithoutExtension,
-            CancellationToken cancellationToken = default)
+    string songId,
+    string outputFilePathWithoutExtension,
+    CancellationToken cancellationToken = default)
         {
             try
             {
@@ -82,27 +94,30 @@ namespace Services.Communication.gRPC.Services
 
                 DownloadSongMetadata? metadata = null;
                 string tempPath = outputFilePathWithoutExtension + ".tmp";
-                await using var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write);
 
-                await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
+                // Escribir chunks en el archivo temporal
+                await using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
                 {
-                    switch (response.PayloadCase)
+                    await foreach (var response in call.ResponseStream.ReadAllAsync(cancellationToken))
                     {
-                        case DownloadSongResponse.PayloadOneofCase.Metadata:
-                            metadata = response.Metadata;
-                            break;
+                        switch (response.PayloadCase)
+                        {
+                            case DownloadSongResponse.PayloadOneofCase.Metadata:
+                                metadata = response.Metadata;
+                                break;
 
-                        case DownloadSongResponse.PayloadOneofCase.Chunk:
-                            var bytes = response.Chunk.ChunkData.ToByteArray();
-                            await fs.WriteAsync(bytes, 0, bytes.Length, cancellationToken);
-                            break;
+                            case DownloadSongResponse.PayloadOneofCase.Chunk:
+                                var bytes = response.Chunk.ChunkData.ToByteArray();
+                                await fs.WriteAsync(bytes, 0, bytes.Length, cancellationToken);
+                                break;
 
-                        default:
-                            return new DownloadResult
-                            {
-                                Success = false,
-                                Message = "Respuesta desconocida del servidor."
-                            };
+                            default:
+                                return new DownloadResult
+                                {
+                                    Success = false,
+                                    Message = "Respuesta desconocida del servidor."
+                                };
+                        }
                     }
                 }
 
@@ -116,7 +131,7 @@ namespace Services.Communication.gRPC.Services
                 }
 
                 var extension = metadata.Extension.TrimStart('.');
-                var finalPath = $"{outputFilePathWithoutExtension}.{extension}";
+                var finalPath = $"{outputFilePathWithoutExtension}";
 
                 if (File.Exists(finalPath))
                     File.Delete(finalPath);
@@ -146,5 +161,6 @@ namespace Services.Communication.gRPC.Services
                 };
             }
         }
+
     }
 }

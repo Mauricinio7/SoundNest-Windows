@@ -33,8 +33,13 @@ namespace Services.Communication.gRPC.Http
 
             Channel = GrpcChannel.ForAddress(baseUrl, new GrpcChannelOptions
             {
-                HttpHandler = _httpHandler
+                HttpHandler = _httpHandler,
+                MaxReceiveMessageSize = 100 * 1024 * 1024, 
+                MaxRetryBufferPerCallSize = 100 * 1024 * 1024,
+                MaxRetryBufferSize = 100 * 1024 * 1024, 
+                MaxSendMessageSize = 100 * 1024 * 1024    
             });
+
         }
         public void SetAuthorizationToken(string token)
         {

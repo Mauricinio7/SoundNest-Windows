@@ -17,6 +17,11 @@ using System.Windows.Input;
 using Services.Communication.gRPC.Http;
 using Services.Communication.gRPC.Constants;
 using Services.Communication.gRPC.Services;
+using Services.Communication.gRPC.Services.Services.Communication.gRPC.Services;
+using SoundNest_Windows_Client.Models;
+using Services.Communication.RESTful.Models.Songs;
+using Services.Communication.RESTful.Services;
+using System.Windows.Media;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -35,8 +40,11 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private string playlistName;
         private string additionalInfo;
-        private string selectedGenre;
+
         private string selectedFileName;
+        private readonly ISongUploader songUploaderService;
+        private readonly IAccountService user;
+        private readonly ISongService songService;
 
         public string PlaylistName
         {
@@ -50,12 +58,40 @@ namespace SoundNest_Windows_Client.ViewModels
             set { additionalInfo = value; OnPropertyChanged(); }
         }
 
-        public ObservableCollection<string> MuicalGenreList { get; set; } = new()
+        private string songTitle;
+        public string SongTitle
         {
-            "Pop", "Rock", "Jazz", "Clásica", "Electrónica", "Hip-Hop", "Reggaetón"
-        };
+            get => songTitle;
+            set { songTitle = value; OnPropertyChanged(); }
+        }
 
-        public string SelectedGenre
+        private string songArtist;
+        public string SongArtist
+        {
+            get => songArtist;
+            set { songArtist = value; OnPropertyChanged(); }
+        }
+
+        private ImageSource songImage;
+        public ImageSource SongImage
+        {
+            get => songImage;
+            set { songImage = value; OnPropertyChanged(); }
+        }
+
+        private ImageSource songCustomImage;
+        public ImageSource SongCustomImage
+        {
+            get => songCustomImage;
+            set { songCustomImage = value; OnPropertyChanged(); }
+        }
+
+
+
+        public ObservableCollection<GenreResponse> MuicalGenreList { get; set; } = new();
+
+        private GenreResponse selectedGenre;
+        public GenreResponse SelectedGenre
         {
             get => selectedGenre;
             set { selectedGenre = value; OnPropertyChanged(); }
@@ -68,53 +104,179 @@ namespace SoundNest_Windows_Client.ViewModels
         }
 
         public RelayCommand UploadFileCommand { get; set; }
+        public RelayCommand UploadImageCommand { get; }
         public RelayCommand UploadSonglistCommand { get; set; }
 
-        public UploadSongViewModel()
+
+        public UploadSongViewModel(INavigationService navigationService, IAccountService userService, ISongUploader songUploaderService, ISongService songService)
         {
+            Navigation = navigationService;
+            this.songUploaderService = songUploaderService;
+            this.user = userService;
+            this.songService = songService;
+
             UploadFileCommand = new RelayCommand(UploadFile);
             UploadSonglistCommand = new RelayCommand(UploadSong);
+            UploadImageCommand = new RelayCommand(UploadImage);
+
+            LoadGenresAsync();
+        }
+
+        private async void LoadGenresAsync()
+        {
+            var result = await songService.GetGenresAsync();
+
+            if (result.IsSuccess && result.Data is not null)
+            {
+                MuicalGenreList.Clear();
+                MuicalGenreList.Add(new GenreResponse
+                {
+                    IdSongGenre = -1,
+                    GenreName = "Ninguno"
+                });
+                foreach (GenreResponse? genre in result.Data)
+                {
+                    MuicalGenreList.Add(genre);
+                }
+
+                OnPropertyChanged(nameof(MuicalGenreList));
+            }
+            else
+            {
+                MessageBox.Show("No se pudieron cargar los géneros", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void UploadFile()
         {
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "Archivos de audio (*.mp3;*.wav;*.flac)|*.mp3;*.wav;*.flac";
+            ofd.Filter = "Archivos MP3 (*.mp3)|*.mp3";
             if (ofd.ShowDialog() == true)
             {
-                SelectedFileName = System.IO.Path.GetFullPath(ofd.FileName);
+                SelectedFileName = Path.GetFullPath(ofd.FileName);
+
+                try
+                {
+                    var file = TagLib.File.Create(SelectedFileName);
+                    SongTitle = file.Tag.Title ?? Path.GetFileNameWithoutExtension(SelectedFileName);
+                    SongArtist = string.IsNullOrWhiteSpace(file.Tag.JoinedPerformers) ? "Desconocido" : file.Tag.JoinedPerformers;
+
+                    if (file.Tag.Pictures.Length > 0)
+                    {
+                        var picData = file.Tag.Pictures[0].Data.Data;
+                        using var ms = new MemoryStream(picData);
+                        var bitmap = new BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.StreamSource = ms;
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.EndInit();
+                        bitmap.Freeze();
+                        SongImage = bitmap;
+                    }
+                    else
+                    {
+                        SongImage = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
+                    }
+                }
+                catch
+                {
+                    SongTitle = Path.GetFileNameWithoutExtension(SelectedFileName);
+                    SongArtist = "Desconocido";
+                    SongImage = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
+                }
             }
         }
 
+        private void UploadImage()
+        {
+            OpenFileDialog ofd = new OpenFileDialog
+            {
+                Filter = "Imágenes (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg"
+            };
+
+            if (ofd.ShowDialog() == true)
+            {
+                try
+                {
+                    using var stream = new FileStream(ofd.FileName, FileMode.Open, FileAccess.Read);
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = stream;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    SongCustomImage = bitmap;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("No se pudo cargar la imagen: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+
         private async void UploadSong()
         {
-            MessageBox.Show(
-                $"Nombre: {PlaylistName}\n" +
-                $"Género: {SelectedGenre}\n" +
-                $"Descripción: {AdditionalInfo}\n" +
-                $"Archivo: {SelectedFileName ?? "Ninguno"}",
-                "Publicar Cancion",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            var grpcClient = new SongGrpcClient(GrpcApiRoute.BaseUrl);
-            //grpcClient.SetAuthorizationToken(miTokenJWT);
-            var upload = new SongUploader(grpcClient);
-            byte[] fileBytes = File.ReadAllBytes(SelectedFileName);
-            //bool result = await upload.UploadFullAsync(PlaylistName, fileBytes, 1, AdditionalInfo);
+            if (string.IsNullOrWhiteSpace(PlaylistName) ||
+                string.IsNullOrWhiteSpace(SelectedFileName) ||
+                !File.Exists(SelectedFileName))
+            {
+                MessageBox.Show("Por favor completa todos los campos y selecciona un archivo válido.",
+                                "Campos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-            //TODO: Errase the line below  or above
-             using var fs = File.OpenRead(SelectedFileName);
-                //bool okStream = await upload.UploadStreamAsync(PlaylistName, genreId: 5, description: "Demo", fileStream: fs);
-                
+            if (SelectedGenre == null || SelectedGenre.IdSongGenre == -1)
+            {
+                MessageBox.Show("Selecciona un género válido.",
+                                "Error de género", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
+            try
+            {
+                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
+                var fileBytes = await File.ReadAllBytesAsync(SelectedFileName);
+                var extension = Path.GetExtension(SelectedFileName).TrimStart('.');
 
+                bool result = await songUploaderService.UploadFullAsync(
+                    songName: PlaylistName,
+                    fileBytes: fileBytes,
+                    genreId: SelectedGenre.IdSongGenre,
+                    description: AdditionalInfo ?? string.Empty,
+                    extension: extension
+                );
 
-        }
-        
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string name = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+                if (result)
+                {
+                    //TODO Try to upload the image
+
+                    MessageBox.Show("Canción publicada con éxito",
+                                    "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    Navigation.NavigateTo<HomeViewModel>();
+
+                    PlaylistName = string.Empty;
+                    AdditionalInfo = string.Empty;
+                    SelectedFileName = null;
+                    SelectedGenre = null;
+                }
+                else
+                {
+                    MessageBox.Show("Ocurrió un error al subir la canción.",
+                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error inesperado: {ex.Message}",
+                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+
+            }
         }
 
     }

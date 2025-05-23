@@ -107,6 +107,16 @@ public partial class App : Application
             return new SongUploader(manager.Songs);
         });
 
+        service.AddSingleton<ISongDownloader>(sp =>
+        {
+            var manager = sp.GetRequiredService<IGrpcClientManager>();
+            var token = TokenStorageHelper.LoadToken();
+
+            if (!string.IsNullOrWhiteSpace(token))
+                manager.SetAuthorizationToken(token);
+
+            return new SongDownloader(manager.Songs);
+        });
 
 
         service.AddTransient<IAuthService, AuthService>(); 
