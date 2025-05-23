@@ -60,7 +60,8 @@ namespace SoundNest_Windows_Client.ViewModels
             _accountService = user; 
             this.userImageService = userImageService;
             clientManager = clientService;
-            
+
+            _userId = _accountService.CurrentUser.Id.ToString();
 
             ViewProfileCommand = new RelayCommand(ExecuteViewProfileCommand);
             GoHomeCommand = new RelayCommand(ExecuteGoHomeCommand);
@@ -70,13 +71,14 @@ namespace SoundNest_Windows_Client.ViewModels
             ViewNotificationsCommand = new RelayCommand(ExecuteViewNotificationsCommand);
             UploadSongCommand = new RelayCommand(ExecuteUploadSongCommand);
 
-            Mediator.Register(MediatorKeys.ADD_PLAYLIST, (param) =>
+            Mediator.Register(MediatorKeys.ADD_PLAYLIST, param =>
             {
                 if (param is PlaylistResponse newPlaylist)
                     App.Current.Dispatcher.Invoke(() => Playlists.Add(newPlaylist));
             });
 
             EnsureTokenIsConfigured();
+            _ = LoadPlaylistsAsync();
             _ = LoadProfileImage();
         }
 
@@ -161,19 +163,16 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             var result = await _playlistService.GetPlaylistsByUserIdAsync(_userId);
             if (!result.IsSuccess || result.Data is null)
+                MessageBox.Show(result.ErrorMessage);
                 return;
 
             App.Current.Dispatcher.Invoke(() =>
             {
                 Playlists.Clear();
                 foreach (var dto in result.Data)
-                {
-                    Playlists.Add(new PlaylistResponse
-                    {
-                        //TODO mapear
-                    });
-                }
+                    Playlists.Add(dto);
             });
         }
+
     }
 }
