@@ -153,32 +153,53 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async Task LoadPopularSongsAsync()
         {
-            var result = await songService.GetRecentSongsAsync(10); //TODO Change to popularSongs
+            int currentYear = DateTime.Now.Year;
+            int currentMonth = DateTime.Now.Month;
+
+            var result = await songService.GetPopularSongsByMonthAsync(50, currentYear, currentMonth);
 
             if (result.IsSuccess && result.Data is not null)
             {
                 PopularSongs.Clear();
 
-                foreach (SongResponse? song in result.Data)
+                foreach (SongResponse song in result.Data)
                 {
-                    //PopularSongs.Add(song);
+                    var realSong = new Models.Song
+                    {
+                        IdSong = song.IdSong,
+                        IdSongExtension = song.IdSongExtension,
+                        IdSongGenre = song.IdSongGenre,
+                        IsDeleted = song.IsDeleted,
+                        PathImageUrl = song.PathImageUrl,
+                        ReleaseDate = song.ReleaseDate,
+                        SongName = song.SongName,
+                        UserName = song.UserName,
+                        FileName = song.FileName,
+                        DurationSeconds = song.DurationSeconds,
+                        Description = song.Description,
+                        Visualizations = song.Visualizations,
+                        DurationFormatted = TimeSpan.FromSeconds(song.DurationSeconds).ToString(@"m\:ss")
+                    };
+
                     if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
                     {
-                        //song.Image = await LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, song.PathImageUrl.AsSpan(1)));
+                        realSong.Image = await ImagesHelper.LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, song.PathImageUrl.AsSpan(1)));
                     }
                     else
                     {
-                        //MessageBox.Show("Error al cargar la imagen de la canción", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                        
+                        realSong.Image = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
                     }
+
+                    PopularSongs.Add(realSong);
                 }
             }
             else
             {
-                MessageBox.Show(result.Message ?? "Error al obtener canciones recientes", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(result.Message ?? "Error al obtener canciones populares", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        
+
+
 
 
 

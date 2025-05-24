@@ -18,6 +18,7 @@ namespace Services.Communication.RESTful.Services
         Task<ApiResult<List<GenreResponse>>> GetGenresAsync();
         Task<ApiResult<List<SongResponse>>> SearchSongsAsync(Search search);
         Task<ApiResult<List<SongResponse>>> GetRandomSongsAsync(int amount);
+        Task<ApiResult<List<SongResponse>>> GetPopularSongsByMonthAsync(int amount, int year, int month);
 
 
     }
@@ -46,6 +47,26 @@ namespace Services.Communication.RESTful.Services
                 result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)
             );
         }
+
+        public async Task<ApiResult<List<SongResponse>>> GetPopularSongsByMonthAsync(int amount, int year, int month)
+        {
+            var url = ApiRoutes.SongsGetMostPopulars
+                .Replace("{amount}", amount.ToString())
+                .Replace("{year}", year.ToString())
+                .Replace("{month}", month.ToString());
+
+            var result = await _apiClient.GetAsync<List<SongResponse>>(url);
+
+            if (result.IsSuccess && result.Data is not null)
+                return ApiResult<List<SongResponse>>.Success(result.Data, result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<List<SongResponse>>.Failure(
+                result.ErrorMessage ?? "No se pudieron obtener las canciones más populares",
+                result.Message,
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)
+            );
+        }
+
 
         public async Task<ApiResult<List<GenreResponse>>> GetGenresAsync()
         {

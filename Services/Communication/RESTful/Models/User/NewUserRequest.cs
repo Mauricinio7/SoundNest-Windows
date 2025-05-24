@@ -21,13 +21,11 @@ namespace Services.Communication.RESTful.Models.User
         [JsonPropertyName("code")]
         public string Code { get; set; }
 
-        //[JsonPropertyName("additionalInformation")]
-        //public AdditionalInformation AdditionalInformation { get; set; }
     }
 
     public class AdditionalInformation
     {
         [JsonPropertyName("info")]
-        public List<string> Info { get; set; }
+        public string Info { get; set; }
     }
 }

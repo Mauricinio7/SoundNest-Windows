@@ -90,6 +90,7 @@ namespace Services.Communication.gRPC.Services
             }
         }
 
+
         public async Task<DownloadImageResponse?> DownloadImageAsync(int userId, CancellationToken cancellationToken = default)
         {
             try

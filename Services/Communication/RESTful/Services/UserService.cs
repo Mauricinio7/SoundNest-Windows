@@ -12,6 +12,7 @@ namespace Services.Communication.RESTful.Services
         Task<ApiResult<bool>> CreateUserAsync(NewUserRequest request);
         Task<ApiResult<bool>> EditUserAsync(EditUserRequest request);
         Task<ApiResult<ValidatedUserResponse>> ValidateJwtAsync();
+        Task<ApiResult<AdditionalInformation>> GetAdditionalInformationAsync(string token);
     }
     public class UserService : IUserService
     {
@@ -41,6 +42,29 @@ namespace Services.Communication.RESTful.Services
 
             return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al editar usuario", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
+
+        public async Task<ApiResult<AdditionalInformation>> GetAdditionalInformationAsync(string token)
+        {
+            _apiClient.SetAuthorizationToken(token);
+
+            var result = await _apiClient.GetAsync<AdditionalInformation>(ApiRoutes.UserGetAditionalInformation);
+
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return ApiResult<AdditionalInformation>.Success(
+                    result.Data,
+                    "Información adicional obtenida correctamente",
+                    result.StatusCode.GetValueOrDefault(HttpStatusCode.OK)
+                );
+            }
+
+            return ApiResult<AdditionalInformation>.Failure(
+                result.ErrorMessage ?? "No se pudo obtener la información adicional",
+                result.Message,
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)
+            );
+        }
+
 
         public async Task<ApiResult<ValidatedUserResponse>> ValidateJwtAsync()
         {

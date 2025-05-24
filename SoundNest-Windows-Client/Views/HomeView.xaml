@@ -24,12 +24,12 @@
        HorizontalAlignment="Left"
        VerticalAlignment="Top" Canvas.Left="244" Canvas.Top="201"/>
 
-            <StackPanel Orientation="Horizontal" Canvas.Left="220" Canvas.Top="290" HorizontalAlignment="Left" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Canvas.Left="220" Canvas.Top="290" HorizontalAlignment="Left" VerticalAlignment="Center" Width="1608">
                 <Button Style="{StaticResource CarouselArrowButtonStyle}"
                     Content="&#xE76B;"  
                     Command="{Binding ScrollLeftCommand}"
         Visibility="{Binding CanScrollLeft, Converter={StaticResource BoolToVisibilityConverter}}" />
-                <ScrollViewer x:Name="CarouselRecentSongsScrollViewer" Width="650" Height="250" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                <ScrollViewer x:Name="CarouselRecentSongsScrollViewer" Width="1495" Height="250" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
                     <ItemsControl ItemsSource="{Binding RecentSongs}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -81,15 +81,15 @@
        HorizontalAlignment="Left"
        VerticalAlignment="Top" Canvas.Left="244" Canvas.Top="580"/>
 
-            <StackPanel Orientation="Horizontal" Canvas.Left="220" Canvas.Top="670" HorizontalAlignment="Left" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Canvas.Left="220" Canvas.Top="670" HorizontalAlignment="Left" VerticalAlignment="Center" Width="1608">
                 <Button Style="{StaticResource CarouselArrowButtonStyle}"
                     Content="&#xE76B;"
                     Command="{Binding ScrollLeftPopularCommand}"
-                    Visibility="{Binding CanScrollLeftPopular, Converter={StaticResource BoolToVisibilityConverter}}" />    
+                    Visibility="{Binding CanScrollLeftPopular, Converter={StaticResource BoolToVisibilityConverter}}" />
 
 
                 <ScrollViewer x:Name="CarouselPopularSongsScrollViewer"
-              Width="650"
+              Width="1502"
               Height="250"
               HorizontalScrollBarVisibility="Hidden"
               VerticalScrollBarVisibility="Disabled">
@@ -105,7 +105,7 @@
                                 <Border Width="200" Height="250" Margin="10" Background="#1e1e1e" CornerRadius="10">
                                     <StackPanel>
                                         <Grid Height="160">
-                                            <Image Source="{Binding ImageSong}" Stretch="UniformToFill" />
+                                            <Image Source="{Binding Image}" Stretch="UniformToFill" />
                                             <Button Style="{StaticResource PlayButtonStyle}"
                                                 Command="{Binding DataContext.PlaySongCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}" 
@@ -134,7 +134,7 @@
                 <Button Style="{StaticResource CarouselArrowButtonStyle}"
                         Content="&#xE76C;"
                         Command="{Binding ScrollRightPopularCommand}"
-                        Visibility="{Binding CanScrollRightPopular, Converter={StaticResource BoolToVisibilityConverter}}" />   
+                        Visibility="{Binding CanScrollRightPopular, Converter={StaticResource BoolToVisibilityConverter}}" />
             </StackPanel>
 
 

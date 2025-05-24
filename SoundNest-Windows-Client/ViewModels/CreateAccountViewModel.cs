@@ -61,7 +61,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
             SendCodeRequest requestCode = new SendCodeRequest
             {
-                Email = requestAccount.Email,
+                //Email = requestAccount.Email,
             };
 
             var response = await ExecuteRESTfulApiCall(() => authService.SendCodeEmailAsync(requestCode));
@@ -83,8 +83,8 @@ namespace SoundNest_Windows_Client.ViewModels
             return new EditUserRequest
             {
                 NameUser = Username,
-                Email = Email,
-                Password = Password,
+                //Email = Email,
+                //Password = Password,
             };
         }
 

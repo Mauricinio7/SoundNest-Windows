@@ -99,16 +99,29 @@ namespace SoundNest_Windows_Client.ViewModels
                 int role = userData.IdRole;
 
 
-                accountService.SaveUser(username, email, role, userId, "Hola a todos esta es mi cuenta");
 
-                MessageBox.Show($"¡Bienvenido {username}! Has iniciado sesión con el correo: {email}",
-                    "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
+                string aditionalInformation = "";
 
-                GoHome();
+                var aditionalInformationResult = await userService.GetAdditionalInformationAsync(token);
+
+                if (aditionalInformationResult.IsSuccess)
+                {
+                    aditionalInformation = aditionalInformationResult.Data.Info;
+
+                    MessageBox.Show($"¡Bienvenido {username}! Has iniciado sesión con el correo: {email}", "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    accountService.SaveUser(username, email, role, userId, aditionalInformation);
+
+                    GoHome();
+                }
+                else
+                {
+                    MessageBox.Show(aditionalInformationResult.Message ?? "Error al iniciar sesión, intentelo de nuevo más tarde", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al guardar el usuario: {ex.Message}",
+                MessageBox.Show($"Error al iniciar sesión, intente más tarde: {ex.Message}",
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

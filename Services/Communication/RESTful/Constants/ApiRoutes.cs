@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Google.Protobuf.WellKnownTypes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,6 +22,7 @@ namespace Services.Communication.RESTful.Constants
         public const string UserNewUser = "api/user/newUser";
         public const string UserEditUser = "api/user/editUser";
         public const string UserEditPassword = "api/user/editUserPassword";
+        public const string UserGetAditionalInformation = "api/user/get/aditionalInfo";
 
         // Comment endpoints
         public const string CommentRespondComment = "api/comment/{commentId}/respondComment";

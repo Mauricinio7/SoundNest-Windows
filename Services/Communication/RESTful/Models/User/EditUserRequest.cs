@@ -12,14 +12,8 @@ namespace Services.Communication.RESTful.Models.User
         [JsonPropertyName("nameUser")]
         public string NameUser { get; set; }
 
-        [JsonPropertyName("email")]
-        public string Email { get; set; }
-
-        [JsonPropertyName("password")]
-        public string Password { get; set; }
-
         [JsonPropertyName("additionalInformation")]
-        public AdditionalInformation AdditionalInformation { get; set; }
+        public string AdditionalInformation { get; set; }
     }
 }
 

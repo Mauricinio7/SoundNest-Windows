@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Images\Icons\Default_ProfileImage_Icon.png" />
     <None Remove="Resources\Images\Logos\SoundNestLogoWhite.png" />
     <None Remove="Resources\Images\Logos\SoundNestPureLogo.png" />
     <None Remove="Resources\Images\PartyBackground.jpg" />
@@ -43,6 +44,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Resources\Images\Icons\Default_ProfileImage_Icon.png" />
     <Resource Include="Resources\Images\Icons\Default_Song_Icon.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>

@@ -137,7 +137,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                ProfilePhoto = null;
+                ProfilePhoto = null; //TODO charge default image
             }
         }
 
@@ -222,25 +222,22 @@ namespace SoundNest_Windows_Client.ViewModels
             EditUserRequest editUserRequest = new EditUserRequest
             {
                 NameUser = Username,
-                Email = Email,
-                Password = "12", // Temporal
-                AdditionalInformation = new AdditionalInformation
-                {
-                    Info = new List<string> { AdditionalInfo }
-                }
+                AdditionalInformation = AdditionalInfo,
             };
 
-            //var response = await ExecuteRESTfulApiCall(() => userService.EditUserAsync(editUserRequest));
+            var response = await  userService.EditUserAsync(editUserRequest);
 
-            if (true)
+            if (response.IsSuccess)
             {
                 MessageBox.Show("Usuario editado correctamente", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 _ = LoadProfileImage();
                 IsEditing = false;
+                accountService.CurrentUser.Name = Username;
+                accountService.CurrentUser.AditionalInformation = AdditionalInfo;
             }
             else
             {
-                //MessageBox.Show(response.Message ?? "Error al editar el usuario", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(response.Message ?? "Error al editar el usuario", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

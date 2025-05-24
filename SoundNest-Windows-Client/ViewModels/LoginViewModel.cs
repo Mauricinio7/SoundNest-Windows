@@ -33,6 +33,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private readonly IAuthService authService;
         private readonly IAccountService user;
+        private readonly IUserService userService;
 
         private string username;
         public string Username
@@ -48,10 +49,11 @@ namespace SoundNest_Windows_Client.ViewModels
             set { password = value; OnPropertyChanged(); }
         }
 
-        public LoginViewModel(INavigationService navigationService, IAuthService authService, IAccountService newUser)
+        public LoginViewModel(INavigationService navigationService, IAuthService authService, IAccountService newUser, IUserService userService)
         {
             Navigation = navigationService;
             this.authService = authService;
+            this.userService = userService;
             user = newUser;
 
             LoginCommand = new AsyncRelayCommand(async () => await ExecuteLoginCommand());
@@ -74,9 +76,7 @@ namespace SoundNest_Windows_Client.ViewModels
                 if (result.IsSuccess)
                 {
                     TokenStorageHelper.SaveToken(token);
-                    SaveUserToMemory(token);
-
-                    GoHome();
+                    _ = SaveUserToMemory(token);
                 }
                 else
                 {
@@ -89,17 +89,31 @@ namespace SoundNest_Windows_Client.ViewModels
                 }
         }
 
-        private void SaveUserToMemory(string token)
+        private async Task SaveUserToMemory(string token)
         {
             string? username = JwtHelper.GetUsernameFromToken(token);
             string? email = JwtHelper.GetEmailFromToken(token);
             int? userId = JwtHelper.GetUserIdFromToken(token);
             int? role = JwtHelper.GetRoleFromToken(token);
 
-            //TODO just for test, delete it
-            MessageBox.Show($"¡Bienvenido {username}! Has iniciado sesión con el correo: {email}", "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
+            string aditionalInformation = "";
 
-            user.SaveUser(username, email, role.Value, userId.Value, "Hola a todos esta es mi cuenta"); //TODO : Get the role from the token
+            var aditionalInformationResult = await userService.GetAdditionalInformationAsync(token);
+
+            if (aditionalInformationResult.IsSuccess)
+            {
+                aditionalInformation = aditionalInformationResult.Data.Info;
+
+                MessageBox.Show($"¡Bienvenido {username}! Has iniciado sesión con el correo: {email}", "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                user.SaveUser(username, email, role.Value, userId.Value, aditionalInformation);
+
+                GoHome();
+            }
+            else
+            {
+                MessageBox.Show(aditionalInformationResult.Message ?? "Error al iniciar sesión, intentelo de nuevo más tarde", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }       
         }
 
         private void GoHome()

@@ -44,5 +44,19 @@ namespace SoundNest_Windows_Client.Utilities
                 return null;
             }
         }
+
+        public static byte[] LoadEmbeddedImageAsByteArray(string resourcePackUri)
+        {
+            var uri = new Uri(resourcePackUri, UriKind.Absolute);
+            var resourceStream = Application.GetResourceStream(uri)?.Stream;
+
+            if (resourceStream == null)
+                throw new FileNotFoundException("No se pudo encontrar el recurso embebido.");
+
+            using var ms = new MemoryStream();
+            resourceStream.CopyTo(ms);
+            return ms.ToArray();
+        }
+
     }
 }

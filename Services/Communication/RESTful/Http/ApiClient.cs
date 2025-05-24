@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.IO;
 using Services.Communication.RESTful.Models;
@@ -15,7 +16,6 @@ namespace Services.Communication.RESTful.Http
     public interface IApiClient
     {
         void SetAuthorizationToken(string token);
-
         Task<ApiResult<T>> GetAsync<T>(string url);
         Task<ApiResult<TResponse>> PostAsync<TRequest, TResponse>(string url, TRequest data);
         Task<ApiResult<TResponse>> PutAsync<TRequest, TResponse>(string url, TRequest data);
@@ -28,6 +28,12 @@ namespace Services.Communication.RESTful.Http
         private const string CERTIFICATE_RESOURCE_NAME = "Services.Communication.Certificates.server.crt";
         private readonly HttpClient _httpClient;
 
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
         public ApiClient(string baseUrl)
         {
             HttpClientHandler handler = new HttpClientHandler
@@ -39,15 +45,6 @@ namespace Services.Communication.RESTful.Http
             {
                 BaseAddress = new Uri(baseUrl)
             };
-        }
-
-        private X509Certificate2 LoadEmbeddedCertificate(string resourceName)
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-            using var stream = assembly.GetManifestResourceStream(resourceName);
-            using var memoryStream = new MemoryStream();
-            stream.CopyTo(memoryStream);
-            return new X509Certificate2(memoryStream.ToArray());
         }
 
         public void SetAuthorizationToken(string token)
@@ -64,7 +61,7 @@ namespace Services.Communication.RESTful.Http
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var data = JsonSerializer.Deserialize<T>(json);
+                    var data = JsonSerializer.Deserialize<T>(json, _jsonOptions);
                     return ApiResult<T>.Success(data, "Datos obtenidos correctamente.", response.StatusCode);
                 }
 
@@ -92,7 +89,7 @@ namespace Services.Communication.RESTful.Http
         {
             try
             {
-                var json = JsonSerializer.Serialize(data);
+                var json = JsonSerializer.Serialize(data, _jsonOptions);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 var response = await _httpClient.PostAsync(url, content);
@@ -103,7 +100,7 @@ namespace Services.Communication.RESTful.Http
                     if (string.IsNullOrWhiteSpace(result))
                         return ApiResult<TResponse>.Success(default, "Registro exitoso (sin contenido).", response.StatusCode);
 
-                    var deserialized = JsonSerializer.Deserialize<TResponse>(result);
+                    var deserialized = JsonSerializer.Deserialize<TResponse>(result, _jsonOptions);
                     return ApiResult<TResponse>.Success(deserialized, "Registro exitoso.", response.StatusCode);
                 }
 
@@ -131,7 +128,7 @@ namespace Services.Communication.RESTful.Http
         {
             try
             {
-                var json = JsonSerializer.Serialize(data);
+                var json = JsonSerializer.Serialize(data, _jsonOptions);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 var response = await _httpClient.PutAsync(url, content);
@@ -148,7 +145,7 @@ namespace Services.Communication.RESTful.Http
                         );
                     }
 
-                    var deserialized = JsonSerializer.Deserialize<TResponse>(result);
+                    var deserialized = JsonSerializer.Deserialize<TResponse>(result, _jsonOptions);
                     return ApiResult<TResponse>.Success(
                         deserialized,
                         "Operación PUT exitosa.",
@@ -164,8 +161,7 @@ namespace Services.Communication.RESTful.Http
             }
             catch (Exception ex)
             {
-                var isNetworkError = ex is HttpRequestException
-                                  || ex.InnerException is System.Net.Sockets.SocketException;
+                var isNetworkError = ex is HttpRequestException || ex.InnerException is System.Net.Sockets.SocketException;
 
                 return ApiResult<TResponse>.Failure(
                     error: $"Excepción: {ex.Message}",
@@ -181,7 +177,7 @@ namespace Services.Communication.RESTful.Http
         {
             try
             {
-                var json = JsonSerializer.Serialize(data);
+                var json = JsonSerializer.Serialize(data, _jsonOptions);
                 var request = new HttpRequestMessage(new HttpMethod("PATCH"), url)
                 {
                     Content = new StringContent(json, Encoding.UTF8, "application/json")
