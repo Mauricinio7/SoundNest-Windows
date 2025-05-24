@@ -32,15 +32,12 @@ namespace Services.Communication.RESTful.Services
 
         public async Task<ApiResult<List<PlaylistResponse>>> GetPlaylistsByUserIdAsync(string userId)
         {
-            var url = ApiRoutes.PlaylistGetByUserId.Replace("{userId}", userId);
-            var result = await _apiClient.GetAsync<List<PlaylistResponse>>(url);
+            var url = ApiRoutes.PlaylistGetByUserId.Replace("{idUser}", userId);
+            var result = await _apiClient.GetAsync<GetPlaylistsByUserIdResponse>(url);
 
             if (result.IsSuccess && result.Data is not null)
                 return ApiResult<List<PlaylistResponse>>.Success(
-                    result.Data,
-                    result.Message,
-                    result.StatusCode.GetValueOrDefault(HttpStatusCode.OK)
-                );
+                    result.Data.Playlists,null,result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
 
             return ApiResult<List<PlaylistResponse>>.Failure(
                 result.ErrorMessage ?? "No se pudieron obtener las playlists",

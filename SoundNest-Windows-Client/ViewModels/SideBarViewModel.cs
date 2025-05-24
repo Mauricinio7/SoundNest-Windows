@@ -77,6 +77,11 @@ namespace SoundNest_Windows_Client.ViewModels
                     App.Current.Dispatcher.Invoke(() => Playlists.Add(newPlaylist));
             });
 
+            Mediator.Register(MediatorKeys.REFRESH_PLAYLISTS, _ =>
+            {
+                _ = LoadPlaylistsAsync();
+            });
+
             EnsureTokenIsConfigured();
             _ = LoadPlaylistsAsync();
             _ = LoadProfileImage();
@@ -163,8 +168,10 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             var result = await _playlistService.GetPlaylistsByUserIdAsync(_userId);
             if (!result.IsSuccess || result.Data is null)
+            {
                 MessageBox.Show(result.ErrorMessage);
                 return;
+            }
 
             App.Current.Dispatcher.Invoke(() =>
             {
