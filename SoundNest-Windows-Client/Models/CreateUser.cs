@@ -5,17 +5,13 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Services.Communication.RESTful.Models.User
+namespace SoundNest_Windows_Client.Models
 {
-    public class EditUserRequest
+    public class CreateUser
     {
-        [JsonPropertyName("nameUser")]
         public string NameUser { get; set; }
-
-        [JsonPropertyName("additionalInformation")]
         public string AdditionalInformation { get; set; }
-
+        public string Email { get; set; }
+        public string Password { get; set; }
     }
 }
-
-

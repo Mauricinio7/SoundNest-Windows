@@ -15,6 +15,7 @@ using Services.Communication.gRPC.Services;
 using Services.Communication.gRPC.Http;
 using Services.Communication.gRPC.Constants;
 using UserImage;
+using Services.Communication.RESTful.Models.Auth;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -85,11 +86,12 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand EditImageCommand { get; set; }
 
         private readonly IAccountService accountService;
+        private readonly IAuthService authService;
         private readonly IUserService userService;
         private readonly IUserImageServiceClient userImageService;
         private readonly Account currentUser;
 
-        public ProfileViewModel(INavigationService navigationService, IAccountService user, IUserService userService, IGrpcClientManager clientService, IUserImageServiceClient userImageService)
+        public ProfileViewModel(INavigationService navigationService, IAccountService user, IUserService userService, IGrpcClientManager clientService, IUserImageServiceClient userImageService, IAuthService authService)
         {
             Navigation = navigationService;
             accountService = user;
@@ -97,6 +99,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
             currentUser = user.CurrentUser;
             this.userService = userService;
+            this.authService = authService;
 
             ViewProfileCommand = new RelayCommand(ExecuteViewProfileCommand);
             EditCommand = new RelayCommand(() => IsEditing = true);
@@ -182,11 +185,31 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-        private void ExecuteChangePasswordCommand(object parameter)
+        private async void ExecuteChangePasswordCommand(object parameter)
         {
-            Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
-            Mediator.Notify(MediatorKeys.HIDE_SIDE_BAR, null);
-            Navigation.NavigateTo<ChangePasswordViewModel>();
+            SendCodeRequest requestCode = new SendCodeRequest
+            {
+                Email = currentUser.Email
+            };
+
+            Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
+
+            var response = await authService.SendCodeEmailAsync(requestCode);
+
+            if (response.IsSuccess)
+            {
+                MessageBox.Show("Se ha enviado un código de verficación a tu correo electrónico", "Código de verificación", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
+                Mediator.Notify(MediatorKeys.HIDE_SIDE_BAR, null);
+                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+                Navigation.NavigateTo<ChangePasswordViewModel>(currentUser.Email);
+            }
+            else
+            {
+                MessageBox.Show(response.Message, "Hubo un error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+            }   
         }
 
         private void ExecuteCancelCommand(object parameter)

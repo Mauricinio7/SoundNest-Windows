@@ -9,6 +9,7 @@ using SoundNest_Windows_Client.Utilities;
 using Services.Communication.gRPC.Services;
 using System.IO;
 using Services.Communication.RESTful.Models.Auth;
+using SoundNest_Windows_Client.Models;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -39,7 +40,7 @@ namespace SoundNest_Windows_Client.ViewModels
         private readonly IUserService userService;
         private readonly IUserImageServiceClient userImageService;
         private readonly IAuthService authService;
-        private EditUserRequest _account;
+        private CreateUser  _account;
 
         public RelayCommand CancelCommand { get; set; }
         public AsyncRelayCommand VerifyCodeCommand { get; set; }
@@ -57,7 +58,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
         public void ReceiveParameter(object parameter)
         {
-            if (parameter is EditUserRequest account)
+            if (parameter is CreateUser account)
             {
                 _account = account;
             }
@@ -83,8 +84,8 @@ namespace SoundNest_Windows_Client.ViewModels
             NewUserRequest newUser = new NewUserRequest
             {
                 NameUser = _account.NameUser,
-                //Email = _account.Email,
-                //Password = _account.Password,
+                Email = _account.Email,
+                Password = _account.Password,
                 Code = VerificationCode
             };
 

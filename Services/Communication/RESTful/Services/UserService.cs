@@ -13,6 +13,7 @@ namespace Services.Communication.RESTful.Services
         Task<ApiResult<bool>> EditUserAsync(EditUserRequest request);
         Task<ApiResult<ValidatedUserResponse>> ValidateJwtAsync();
         Task<ApiResult<AdditionalInformation>> GetAdditionalInformationAsync(string token);
+        Task<ApiResult<bool>> EditUserPasswordAsync(EditUserPasswordRequest request);
     }
     public class UserService : IUserService
     {
@@ -85,6 +86,27 @@ namespace Services.Communication.RESTful.Services
                 result.StatusCode.GetValueOrDefault(HttpStatusCode.Unauthorized)
             );
         }
+
+        public async Task<ApiResult<bool>> EditUserPasswordAsync(EditUserPasswordRequest request)
+        {
+            var result = await _apiClient.PatchAsync(ApiRoutes.UserEditPassword, request);
+
+            if (result.IsSuccess)
+            {
+                return ApiResult<bool>.Success(
+                    true,
+                    "Contraseña editada correctamente",
+                    result.StatusCode.GetValueOrDefault(HttpStatusCode.OK)
+                );
+            }
+
+            return ApiResult<bool>.Failure(
+                result.ErrorMessage ?? "Error al editar la contraseña",
+                result.Message,
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)
+            );
+        }
+
 
     }
 }

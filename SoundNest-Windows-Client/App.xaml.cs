@@ -55,7 +55,6 @@ public partial class App : Application
         service.AddTransient<SearchBarViewModel>();
         service.AddTransient<ProfileViewModel>();
         service.AddTransient<ChangePasswordViewModel>();
-        service.AddTransient<ConfirmCodeViewModel>();
         service.AddTransient<CreateAccountViewModel>();
         service.AddTransient<ForgottenPasswordViewModel>();
         service.AddTransient<LoginViewModel>();

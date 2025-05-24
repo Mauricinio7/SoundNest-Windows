@@ -3,6 +3,7 @@ using Services.Communication.RESTful.Models.User;
 using Services.Communication.RESTful.Services;
 using Services.Infrestructure;
 using Services.Navigation;
+using SoundNest_Windows_Client.Models;
 using SoundNest_Windows_Client.Utilities;
 using System;
 using System.Threading.Tasks;
@@ -57,14 +58,14 @@ namespace SoundNest_Windows_Client.ViewModels
         private async Task ExecuteCreateAccountCommand()
         {
 
-            EditUserRequest requestAccount = CreateRequest();
+            CreateUser requestAccount = CreateRequest();
 
             SendCodeRequest requestCode = new SendCodeRequest
             {
-                //Email = requestAccount.Email,
+                Email = requestAccount.Email,
             };
 
-            var response = await ExecuteRESTfulApiCall(() => authService.SendCodeEmailAsync(requestCode));
+            var response = await authService.SendCodeEmailAsync(requestCode);
 
             if (response.IsSuccess)
             {
@@ -78,13 +79,13 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-        private EditUserRequest CreateRequest()
+        private CreateUser CreateRequest()
         {
-            return new EditUserRequest
+            return new CreateUser
             {
                 NameUser = Username,
-                //Email = Email,
-                //Password = Password,
+                Email = Email,
+                Password = Password,
             };
         }
 

@@ -162,7 +162,6 @@
                                     <ColumnDefinition Width="150" />
                                 </Grid.ColumnDefinitions>
 
-                                <!-- Usamos PlaylistName en lugar de Name -->
                                 <controls:AnimatedLabelButton
                                       LabelText="{Binding PlaylistName}"
                                       Grid.Column="0"
