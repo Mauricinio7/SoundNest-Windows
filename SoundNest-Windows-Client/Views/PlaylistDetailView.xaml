@@ -21,6 +21,26 @@
                 <Run Text="{Binding PlaylistName}"/>
             </TextBlock>
 
+            <Button Content="Editar playlist"
+                FontSize="20"
+                FontWeight="Bold"
+                Style="{StaticResource PrimaryButtonStyle}"
+                Command="{Binding EditPlaylistCommand}"
+                Canvas.Left="1334" 
+                Canvas.Top="122"
+                Width="261" 
+                Height="78" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+
+            <Button Content="Elliminar playlist"
+                FontSize="20"
+                FontWeight="Bold"
+                Style="{StaticResource NegativeButtonStyle}"
+                Command="{Binding DeletePlaylistCommand}"
+                Canvas.Left="1623" 
+                Canvas.Top="123"
+                Width="243" 
+                Height="76"/>
+
             <ScrollViewer Height="615"
                           Width="1427"
                           Canvas.Left="349" 

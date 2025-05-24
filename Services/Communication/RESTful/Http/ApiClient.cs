@@ -182,19 +182,19 @@ namespace Services.Communication.RESTful.Http
         {
             try
             {
-                var json = JsonSerializer.Serialize(data);
-                var request = new HttpRequestMessage(new HttpMethod("PATCH"), url)
+                var request = new HttpRequestMessage(HttpMethod.Patch, url);
+
+                if (data is not null)
                 {
-                    Content = new StringContent(json, Encoding.UTF8, "application/json")
-                };
+                    var json = JsonSerializer.Serialize(data);
+                    request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+                }
 
                 var response = await _httpClient.SendAsync(request);
                 var result = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
-                {
                     return ApiResult<bool>.Success(true, "Actualización realizada con éxito.", response.StatusCode);
-                }
 
                 return ApiResult<bool>.Failure(
                     error: $"HTTP {(int)response.StatusCode} - {response.ReasonPhrase}: {result}",

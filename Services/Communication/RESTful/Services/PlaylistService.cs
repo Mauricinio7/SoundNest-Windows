@@ -19,6 +19,7 @@ namespace Services.Communication.RESTful.Services
         Task<ApiResult<bool>> RemoveSongFromPlaylistAsync(string songId, string playlistId);
         Task<ApiResult<bool>> DeletePlaylistAsync(string playlistId);
         Task<ApiResult<PlaylistResponse>> CreatePlaylistAsync(string playlistName,string description,string imageBase64);
+        Task<ApiResult<bool>> EditPlaylistAsync(string playlistId, string playlistName, string description);
     }
 
     public class PlaylistService : IPlaylistService
@@ -49,7 +50,7 @@ namespace Services.Communication.RESTful.Services
         public async Task<ApiResult<bool>> AddSongToPlaylistAsync(string songId, string playlistId)
         {
             var url = ApiRoutes.PlaylistPatchAddSong
-                         .Replace("{idSong}", songId)
+                         .Replace("{idsong}", songId)
                          .Replace("{idPlaylist}", playlistId);
 
             var result = await _apiClient.PatchAsync<object>(url, null);
@@ -131,6 +132,32 @@ namespace Services.Communication.RESTful.Services
 
             return ApiResult<PlaylistResponse>.Failure(
                 result.ErrorMessage ?? "Error al crear la playlist",
+                result.Message,
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+        }
+
+        public async Task<ApiResult<bool>> EditPlaylistAsync(string playlistId, string playlistName, string description)
+        {
+            var url = ApiRoutes.PlaylistPatchEditPlaylist
+                              .Replace("{idPlaylist}", playlistId);
+
+            var payload = new EditPlaylistRequest
+            {
+                PlaylistName = playlistName,
+                Description = description
+            };
+
+            var result = await _apiClient.PatchAsync<object>(url, new { });
+            if (result.IsSuccess)
+            {
+                return ApiResult<bool>.Success(
+                    true,
+                    "Playlist actualizada correctamente",
+                    result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+            }
+
+            return ApiResult<bool>.Failure(
+                result.ErrorMessage ?? "Error al editar la playlist",
                 result.Message,
                 result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }

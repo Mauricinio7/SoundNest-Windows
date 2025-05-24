@@ -38,6 +38,13 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand AddSongToPlaylistCommand { get; set; }
         public ObservableCollection<PlaylistResponse> Playlists { get; } = new();
 
+        private PlaylistResponse _selectedPlaylist;
+        public PlaylistResponse SelectedPlaylist
+        {
+            get => _selectedPlaylist;
+            set { _selectedPlaylist = value; OnPropertyChanged(); }
+        }
+
         private readonly INavigationService _navigation;
         private readonly ISongDownloader _songService;
         private readonly IPlaylistService _playlistService;
@@ -348,9 +355,9 @@ namespace SoundNest_Windows_Client.ViewModels
                     SongImage = img;
                 }
                else if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
-                {
+               {
                     SongImage = await ImagesHelper.LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, song.PathImageUrl.AsSpan(1)));
-                }
+               }
                 else
                 {
                     SongImage = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
@@ -434,9 +441,9 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async void ExecuteAddSongToPlaylistCommand(object parameter)
         {
-            if (parameter is not string playlistId ||
-                currentIndex < 0 ||
-                currentIndex >= playlist.Count)
+            //TODO quitar esto
+            parameter = "6830eeb0f229e5362767c709";
+            if (parameter is not string playlistId || currentIndex < 0 || currentIndex >= playlist.Count)
                 return;
 
             var song = playlist[currentIndex];

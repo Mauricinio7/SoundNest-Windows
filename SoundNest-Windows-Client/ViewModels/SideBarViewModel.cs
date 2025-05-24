@@ -45,7 +45,7 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand GoHomeCommand { get; set; }
         public RelayCommand CreatePlaylistCommand { get; set; }
         public RelayCommand RefreshPlaylistsCommand { get; set; }
-        public RelayCommand OpenPlaylistCommand { get; set; }
+        public RelayCommand OpenPlaylistCommand { get; }
         public RelayCommand UploadSongCommand { get; set; }
 
         public ObservableCollection<PlaylistResponse> Playlists { get; set; } = new();
@@ -138,7 +138,8 @@ namespace SoundNest_Windows_Client.ViewModels
         private void ExecuteOpenPlaylistCommand(object parameter)
         {
             Mediator.Notify(MediatorKeys.HIDE_SEARCH_BAR, null);
-            Navigation.NavigateTo<PlaylistDetailViewModel>();
+            if (parameter is PlaylistResponse playlist)
+                Navigation.NavigateTo<PlaylistDetailViewModel>(playlist);
         }
 
         private void ExecuteViewProfileCommand(object parameter)
