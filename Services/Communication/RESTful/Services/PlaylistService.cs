@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http;
+using System.IO;
+using System;
 
 namespace Services.Communication.RESTful.Services
 {
@@ -16,7 +18,8 @@ namespace Services.Communication.RESTful.Services
         Task<ApiResult<bool>> AddSongToPlaylistAsync(string songId, string playlistId);
         Task<ApiResult<bool>> RemoveSongFromPlaylistAsync(string songId, string playlistId);
         Task<ApiResult<bool>> DeletePlaylistAsync(string playlistId);
-        Task<ApiResult<bool>> CreatePlaylistAsync(string playlistName,string description,byte[] imageBytes,string imageFileName,string contentType);
+        Task<ApiResult<PlaylistResponse>> CreatePlaylistAsync(string playlistName,string description,string imageBase64);
+        Task<ApiResult<bool>> EditPlaylistAsync(string playlistId, string playlistName, string description);
     }
 
     public class PlaylistService : IPlaylistService
@@ -30,15 +33,12 @@ namespace Services.Communication.RESTful.Services
 
         public async Task<ApiResult<List<PlaylistResponse>>> GetPlaylistsByUserIdAsync(string userId)
         {
-            var url = ApiRoutes.PlaylistGetByUserId.Replace("{userId}", userId);
-            var result = await _apiClient.GetAsync<List<PlaylistResponse>>(url);
+            var url = ApiRoutes.PlaylistGetByUserId.Replace("{idUser}", userId);
+            var result = await _apiClient.GetAsync<GetPlaylistsByUserIdResponse>(url);
 
             if (result.IsSuccess && result.Data is not null)
                 return ApiResult<List<PlaylistResponse>>.Success(
-                    result.Data,
-                    result.Message,
-                    result.StatusCode.GetValueOrDefault(HttpStatusCode.OK)
-                );
+                    result.Data.Playlists,null,result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
 
             return ApiResult<List<PlaylistResponse>>.Failure(
                 result.ErrorMessage ?? "No se pudieron obtener las playlists",
@@ -50,7 +50,7 @@ namespace Services.Communication.RESTful.Services
         public async Task<ApiResult<bool>> AddSongToPlaylistAsync(string songId, string playlistId)
         {
             var url = ApiRoutes.PlaylistPatchAddSong
-                         .Replace("{idSong}", songId)
+                         .Replace("{idsong}", songId)
                          .Replace("{idPlaylist}", playlistId);
 
             var result = await _apiClient.PatchAsync<object>(url, null);
@@ -108,30 +108,58 @@ namespace Services.Communication.RESTful.Services
             );
         }
 
-        public async Task<ApiResult<bool>> CreatePlaylistAsync(string playlistName,
-                                                                string description,
-                                                                byte[] imageBytes,
-                                                                string imageFileName,
-                                                                string contentType)
+        public async Task<ApiResult<PlaylistResponse>> CreatePlaylistAsync(string playlistName,string description,string imageBase64)
         {
-            var endpoint = ApiRoutes.PlaylistPutNewPlaylist;
+            var request = new CreatePlaylistRequest
+            {
+                PlaylistName = playlistName,
+                Description = description ?? "",
+                ImageBase64 = imageBase64
+            };
+            Console.WriteLine(request);
 
-            var form = new MultipartFormDataContent();
+            var result = await _apiClient.PutAsync<CreatePlaylistRequest, CreatePlaylistResponse>(
+                ApiRoutes.PlaylistPutNewPlaylist,
+                request);
 
-            var imgContent = new ByteArrayContent(imageBytes);
-            imgContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return ApiResult<PlaylistResponse>.Success(
+                    result.Data.Playlist,
+                    result.Data.Message,
+                    result.StatusCode.GetValueOrDefault(HttpStatusCode.Created));
+            }
 
-            form.Add(imgContent, "image", imageFileName);
+            return ApiResult<PlaylistResponse>.Failure(
+                result.ErrorMessage ?? "Error al crear la playlist",
+                result.Message,
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+        }
 
-            form.Add(new StringContent(playlistName), "playlistName");
-            form.Add(new StringContent(description ?? ""), "description");
+        public async Task<ApiResult<bool>> EditPlaylistAsync(string playlistId, string playlistName, string description)
+        {
+            var url = ApiRoutes.PlaylistPatchEditPlaylist
+                              .Replace("{idPlaylist}", playlistId);
 
-            var result = await _apiClient.PutAsync<MultipartFormDataContent, object>(endpoint,form);
+            var payload = new EditPlaylistRequest
+            {
+                PlaylistName = playlistName,
+                Description = description
+            };
 
+            var result = await _apiClient.PatchAsync<object>(url, new { });
             if (result.IsSuccess)
-                return ApiResult<bool>.Success(true,"Playlist creada exitosamente",result.StatusCode.GetValueOrDefault());
-            else
-                return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al crear la playlist",result.Message,result.StatusCode.GetValueOrDefault());
+            {
+                return ApiResult<bool>.Success(
+                    true,
+                    "Playlist actualizada correctamente",
+                    result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+            }
+
+            return ApiResult<bool>.Failure(
+                result.ErrorMessage ?? "Error al editar la playlist",
+                result.Message,
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
     }

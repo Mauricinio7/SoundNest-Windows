@@ -144,9 +144,11 @@
                 LabelText="" FontFamily="Segoe Fluent Icons" ForegroundColor="{StaticResource SecondaryColor2}" LabelFontSize="24"
                 ClickCommand="{Binding DownloadSongCommand}" 
                Canvas.Left="1118" Canvas.Top="34" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+
             <controls:AnimatedLabelButton 
                 LabelText="&#xECC8;" FontFamily="Segoe Fluent Icons" ForegroundColor="{StaticResource SecondaryColor2}" LabelFontSize="24"
-                ClickCommand="{Binding AddToPlaylistCommand}" 
+                ClickCommand="{Binding AddSongToPlaylistCommand}" 
+                CommandParameter="{Binding SelectedPlaylist.Id}"
                Canvas.Left="1179" Canvas.Top="34" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
 

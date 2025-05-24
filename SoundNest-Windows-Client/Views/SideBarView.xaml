@@ -5,9 +5,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:SoundNest_Windows_Client.Views"
              xmlns:controls="clr-namespace:SoundNest_Windows_Client.Resources.Controls"
+             xmlns:converters="clr-namespace:SoundNest_Windows_Client.Resources.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="850" Width="611">
 
+    <UserControl.Resources>
+        <converters:PlaylistImageConverter x:Key="PlaylistImageConverter"/>
+    </UserControl.Resources>
+    
     <Viewbox Stretch="Fill" Margin="0,0,0,0">
 
         <Grid Background="#171717" x:Name="SidebarGrid"  Width="481" Height="850">
@@ -157,39 +162,41 @@
                                     <ColumnDefinition Width="150" />
                                 </Grid.ColumnDefinitions>
 
-                                <controls:AnimatedLabelButton LabelText="{Binding Name}"
-                                                                  Grid.Column="0"
-                                                                  VerticalAlignment="Center"
-                                                                  HorizontalAlignment="Left"
-                                                                  LabelFontSize="25"
-                                                                  FontWeight="Bold"
-                                                                  Foreground="White"
-                                                                  ClickCommand="{Binding DataContext.OpenPlaylistCommand, 
-                                                                    RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                                  CommandParameter="{Binding}"/>
+                                <!-- Usamos PlaylistName en lugar de Name -->
+                                <controls:AnimatedLabelButton
+                                      LabelText="{Binding PlaylistName}"
+                                      Grid.Column="0"
+                                      VerticalAlignment="Center"
+                                      HorizontalAlignment="Left"
+                                      LabelFontSize="25"
+                                      FontWeight="Bold"
+                                      Foreground="White"
+                                      ClickCommand="{Binding DataContext.OpenPlaylistCommand,
+                                                  RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                      CommandParameter="{Binding}" />
 
                                 <Border Width="70" Height="70"
-                                            Grid.Column="1" 
-                                            BorderBrush="Transparent" 
-                                            BorderThickness="0"
-                                            Background="{StaticResource PrimaryColor2}">
-                                    <Border.Clip>
-                                        <RectangleGeometry RadiusX="15" RadiusY="15" Rect="0,0,70,70" />
-                                    </Border.Clip>
-                                    <controls:AnimatedImageButton ImageSource="{Binding Image}"
-                                                                      Width="70"
-                                                                      Height="70"
-                                                                      VerticalAlignment="Center"
-                                                                      HorizontalAlignment="Center"
-                                                                      Stretch="UniformToFill"
-                                                                      ClickCommand="{Binding DataContext.OpenPlaylistCommand, 
-                                                                        RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                                      CommandParameter="{Binding}"/>
+                                    Grid.Column="1"
+                                    Background="{StaticResource PrimaryColor2}"
+                                    ClipToBounds="True"
+                                    CornerRadius="15">      
+                                    
+                                    <controls:AnimatedImageButton
+                                        ImageSource="{Binding ImagePath,
+                                                         Converter={StaticResource PlaylistImageConverter}}"
+                                        Width="70"
+                                        Height="70"
+                                        VerticalAlignment="Center"
+                                        HorizontalAlignment="Center"
+                                        ClickCommand="{Binding DataContext.OpenPlaylistCommand,
+                                                      RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}" />
                                 </Border>
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+
             </ScrollViewer>
 
         </Grid>

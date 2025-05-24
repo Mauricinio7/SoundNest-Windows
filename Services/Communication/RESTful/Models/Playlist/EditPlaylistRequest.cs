@@ -2,15 +2,12 @@
 
 namespace Services.Communication.RESTful.Models.Playlist
 {
-    public class CreatePlaylistRequest
+    public class EditPlaylistRequest
     {
-        [JsonPropertyName("playlistName")]
+        [JsonPropertyName("playlist_name")]
         public string PlaylistName { get; set; }
 
         [JsonPropertyName("description")]
         public string Description { get; set; }
-
-        [JsonPropertyName("imageBase64")]
-        public string ImageBase64 { get; set; }
     }
 }

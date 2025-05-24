@@ -52,10 +52,13 @@ namespace Services.Communication.RESTful.Constants
         public const string SongGetExtensions = "songs/extensions";
 
         //Playlist endpoints
-        public const string PlaylistGetByUserId = "api/playlist/{iduser}/user";
+        public const string PlaylistCleanDeletedSongs = "api/playlist/list/{idPlaylist}/clean";
+        public const string PlaylistPatchEditPlaylist = "api/playlist/edit/{idPlaylist}";
+        public const string PlaylistGetById = "api/playlist/one/{idPlaylist}";
+        public const string PlaylistGetByUserId = "api/playlist/{idUser}/user";
         public const string PlaylistPatchRemoveSong = "api/playlist/{idsong}/{idPlaylist}/remove";
         public const string PlaylistPatchAddSong = "api/playlist/{idsong}/{idPlaylist}/add";
         public const string PlaylistDelete = "api/playlist/{idPlaylist}/delete/";
-        public const string PlaylistPutNewPlaylist = "api/playlist/upload";
+        public const string PlaylistPutNewPlaylist = "api/playlist/base64/upload";
     }
 }

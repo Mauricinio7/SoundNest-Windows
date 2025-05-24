@@ -45,7 +45,7 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand GoHomeCommand { get; set; }
         public RelayCommand CreatePlaylistCommand { get; set; }
         public RelayCommand RefreshPlaylistsCommand { get; set; }
-        public RelayCommand OpenPlaylistCommand { get; set; }
+        public RelayCommand OpenPlaylistCommand { get; }
         public RelayCommand UploadSongCommand { get; set; }
 
         public ObservableCollection<PlaylistResponse> Playlists { get; set; } = new();
@@ -60,7 +60,8 @@ namespace SoundNest_Windows_Client.ViewModels
             _accountService = user; 
             this.userImageService = userImageService;
             clientManager = clientService;
-            
+
+            _userId = _accountService.CurrentUser.Id.ToString();
 
             ViewProfileCommand = new RelayCommand(ExecuteViewProfileCommand);
             GoHomeCommand = new RelayCommand(ExecuteGoHomeCommand);
@@ -70,13 +71,19 @@ namespace SoundNest_Windows_Client.ViewModels
             ViewNotificationsCommand = new RelayCommand(ExecuteViewNotificationsCommand);
             UploadSongCommand = new RelayCommand(ExecuteUploadSongCommand);
 
-            Mediator.Register(MediatorKeys.ADD_PLAYLIST, (param) =>
+            Mediator.Register(MediatorKeys.ADD_PLAYLIST, param =>
             {
                 if (param is PlaylistResponse newPlaylist)
                     App.Current.Dispatcher.Invoke(() => Playlists.Add(newPlaylist));
             });
 
+            Mediator.Register(MediatorKeys.REFRESH_PLAYLISTS, _ =>
+            {
+                _ = LoadPlaylistsAsync();
+            });
+
             EnsureTokenIsConfigured();
+            _ = LoadPlaylistsAsync();
             _ = LoadProfileImage();
         }
 
@@ -131,7 +138,8 @@ namespace SoundNest_Windows_Client.ViewModels
         private void ExecuteOpenPlaylistCommand(object parameter)
         {
             Mediator.Notify(MediatorKeys.HIDE_SEARCH_BAR, null);
-            Navigation.NavigateTo<PlaylistDetailViewModel>();
+            if (parameter is PlaylistResponse playlist)
+                Navigation.NavigateTo<PlaylistDetailViewModel>(playlist);
         }
 
         private void ExecuteViewProfileCommand(object parameter)
@@ -161,19 +169,18 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             var result = await _playlistService.GetPlaylistsByUserIdAsync(_userId);
             if (!result.IsSuccess || result.Data is null)
+            {
+                MessageBox.Show(result.ErrorMessage);
                 return;
+            }
 
             App.Current.Dispatcher.Invoke(() =>
             {
                 Playlists.Clear();
                 foreach (var dto in result.Data)
-                {
-                    Playlists.Add(new PlaylistResponse
-                    {
-                        //TODO mapear
-                    });
-                }
+                    Playlists.Add(dto);
             });
         }
+
     }
 }

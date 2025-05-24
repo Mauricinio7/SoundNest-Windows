@@ -3,13 +3,16 @@ using Microsoft.Win32;
 using Services.Communication.gRPC.Http;
 using Services.Communication.gRPC.Services;
 using Services.Communication.RESTful.Constants;
+using Services.Communication.RESTful.Models.Playlist;
 using Services.Communication.RESTful.Models.Songs;
 using Services.Communication.RESTful.Services;
 using Services.Infrestructure;
 using Services.Navigation;
+using SoundNest_Windows_Client.Models;
 using SoundNest_Windows_Client.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -32,9 +35,20 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand NextSongCommand { get; set; }
         public RelayCommand DownloadSongCommand { get; set; }
         public RelayCommand CommentsViewCommand { get; set; }
+        public RelayCommand AddSongToPlaylistCommand { get; set; }
+        public ObservableCollection<PlaylistResponse> Playlists { get; } = new();
+
+        private PlaylistResponse _selectedPlaylist;
+        public PlaylistResponse SelectedPlaylist
+        {
+            get => _selectedPlaylist;
+            set { _selectedPlaylist = value; OnPropertyChanged(); }
+        }
 
         private readonly INavigationService _navigation;
         private readonly ISongDownloader _songService;
+        private readonly IPlaylistService _playlistService;
+        private readonly IAccountService _accountService;
         private static readonly MediaPlayer _mediaPlayer = new MediaPlayer();
         private readonly DispatcherTimer _timer;
 
@@ -119,10 +133,11 @@ namespace SoundNest_Windows_Client.ViewModels
             set { songImage = value; OnPropertyChanged(); }
         }
 
-        public MusicPlayerBarViewModel(INavigationService navigation, ISongDownloader songDownloaderService, IGrpcClientManager grpcClient)
+        public MusicPlayerBarViewModel(INavigationService navigation, ISongDownloader songDownloaderService, IGrpcClientManager grpcClient, IPlaylistService playlistService)
         {
             _navigation = navigation;
             _songService = songDownloaderService;
+            _playlistService = playlistService;
             _mediaPlayer.Volume = volume;
 
             _mediaPlayer.MediaOpened += (s, e) =>
@@ -154,6 +169,9 @@ namespace SoundNest_Windows_Client.ViewModels
             NextSongCommand = new RelayCommand(PlayNextSong);
             DownloadSongCommand = new RelayCommand(DownloadSong);
             CommentsViewCommand = new RelayCommand(ExecuteCommentsViewCommand);
+            AddSongToPlaylistCommand = new RelayCommand(ExecuteAddSongToPlaylistCommand);
+
+            _ = LoadUserPlaylistsAsync();
         }
 
         public async void ReceiveParameter(object parameter)
@@ -337,9 +355,9 @@ namespace SoundNest_Windows_Client.ViewModels
                     SongImage = img;
                 }
                else if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
-                {
+               {
                     SongImage = await ImagesHelper.LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, song.PathImageUrl.AsSpan(1)));
-                }
+               }
                 else
                 {
                     SongImage = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
@@ -421,5 +439,45 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
+        private async void ExecuteAddSongToPlaylistCommand(object parameter)
+        {
+            //TODO quitar esto
+            parameter = "6830eeb0f229e5362767c709";
+            if (parameter is not string playlistId || currentIndex < 0 || currentIndex >= playlist.Count)
+                return;
+
+            var song = playlist[currentIndex];
+            var result = await _playlistService.AddSongToPlaylistAsync(
+                song.IdSong.ToString(),
+                playlistId);
+
+            if (result.IsSuccess)
+            {
+                MessageBox.Show("Canción agregada a la playlist.",
+                                "Éxito",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage ?? "Error al agregar canción.",
+                                "Error",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error);
+            }
+        }
+        private async Task LoadUserPlaylistsAsync()
+        {
+            var userId = _accountService.CurrentUser.Id.ToString();
+            var result = await _playlistService.GetPlaylistsByUserIdAsync(userId);
+            if (!result.IsSuccess || result.Data is null) return;
+
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                Playlists.Clear();
+                foreach (var pl in result.Data)
+                    Playlists.Add(pl);
+            });
+        }
     }
 }
