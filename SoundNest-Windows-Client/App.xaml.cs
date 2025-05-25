@@ -64,6 +64,7 @@ public partial class App : Application
         service.AddTransient<NotificationViewModel>();
         service.AddTransient<UploadSongViewModel>();
         service.AddTransient<PlaylistDetailViewModel>();
+        service.AddTransient<EditPlaylistViewModel>();
         service.AddTransient<SearchResultsViewModel>();
 
         service.AddSingleton<IAccountService, AccountService>();
