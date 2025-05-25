@@ -51,6 +51,7 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             if (parameter is PlaylistResponse playlist)
             {
+                _currentPlaylist = playlist;
                 LoadPlaylist(playlist);
             }
             else

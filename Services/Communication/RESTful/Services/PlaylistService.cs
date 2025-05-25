@@ -136,7 +136,10 @@ namespace Services.Communication.RESTful.Services
                 result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
 
-        public async Task<ApiResult<bool>> EditPlaylistAsync(string playlistId, string playlistName, string description)
+        public async Task<ApiResult<bool>> EditPlaylistAsync(
+                                        string playlistId,
+                                        string playlistName,
+                                        string description)
         {
             var url = ApiRoutes.PlaylistPatchEditPlaylist
                               .Replace("{idPlaylist}", playlistId);
@@ -147,7 +150,8 @@ namespace Services.Communication.RESTful.Services
                 Description = description
             };
 
-            var result = await _apiClient.PatchAsync<object>(url, new { });
+            var result = await _apiClient.PatchAsync<EditPlaylistRequest>(url, payload);
+
             if (result.IsSuccess)
             {
                 return ApiResult<bool>.Success(
