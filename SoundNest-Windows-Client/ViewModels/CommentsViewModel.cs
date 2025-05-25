@@ -54,6 +54,13 @@ namespace SoundNest_Windows_Client.ViewModels
             set { songImage = value; OnPropertyChanged(); }
         }
 
+        private Comment replyingToComment;
+        public Comment ReplyingToComment
+        {
+            get => replyingToComment;
+            set { replyingToComment = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsReplying)); }
+        }
+
         private ObservableCollection<Comment> comments = new();
         public ObservableCollection<Comment> Comments
         {
@@ -62,13 +69,26 @@ namespace SoundNest_Windows_Client.ViewModels
         }
 
         public string CurrentUsername { get; set; }
-        public string SongId { get; set; } 
+        public string SongId { get; set; }
+        public bool IsReplying => ReplyingToComment != null;
 
         public AsyncRelayCommand DeleteCommentCommand { get; set; }
         public AsyncRelayCommand SendCommentCommand { get; set; }
-        private Models.Song CurrentSong;
+        public RelayCommand CancelReplyCommand { get; set; }
+        public RelayCommand ReplyToCommentCommand { get; set; }
+        public RelayCommand ToggleRepliesCommand { get; set; }
+
+
+                private Comment selectedComment;
+        public Comment SelectedComment
+        {
+            get => selectedComment;
+            set { selectedComment = value; OnPropertyChanged(); }
+        }
+
 
         private ICommentService commentService;
+        private int userRole;
 
         private string commentText;
         public string CommentText
@@ -77,7 +97,7 @@ namespace SoundNest_Windows_Client.ViewModels
             set { commentText = value; OnPropertyChanged(); }
         }
 
-        private int userRole;
+        private Models.Song CurrentSong;
 
         public CommentsViewModel(INavigationService navigationService, ICommentService commentService, IAccountService accountService)
         {
@@ -86,6 +106,9 @@ namespace SoundNest_Windows_Client.ViewModels
 
             DeleteCommentCommand = new AsyncRelayCommand(async (param) => await DeleteComment(param));
             SendCommentCommand = new AsyncRelayCommand(async () => await SendComment());
+            CancelReplyCommand = new RelayCommand(CancelReply);
+            ReplyToCommentCommand = new RelayCommand(ReplyToComment);
+            ToggleRepliesCommand = new RelayCommand(ToggleReplies);
 
             Comments = new ObservableCollection<Comment>();
 
@@ -100,26 +123,178 @@ namespace SoundNest_Windows_Client.ViewModels
             var result = await ExecuteRESTfulApiCall(() => commentService.GetCommentsBySongIdAsync(SongId));
 
             if (result.IsSuccess && result.Data != null)
+            {
+                foreach (var comment in result.Data)
                 {
-                    foreach (var comment in result.Data)
-                    {
-                        DateTime.TryParse(comment.Timestap, null, System.Globalization.DateTimeStyles.RoundtripKind, out var parsedTimestamp);
+                    DateTime.TryParse(comment.Timestap, null, System.Globalization.DateTimeStyles.RoundtripKind, out var parsedTimestamp);
 
-                        Comments.Add(new Comment
+                    Comments.Add(new Comment
+                    {
+                        Username = comment.User,
+                        Text = comment.Message,
+                        Timestamp = parsedTimestamp,
+                        IsMine = comment.User == CurrentUsername || userRole == 2,
+                        CommentId = comment.Id
+                    });
+                }
+            }
+            else
+            {
+                MessageBox.Show($"Hubo un error al cargar los comentarios" ?? "Error", result.Message, MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void ReplyToComment(object parameter)
+        {
+            if (parameter is Comment comment)
+            {
+                SelectedComment = comment;
+                if (SelectedComment != null)
+                    ReplyingToComment = SelectedComment;
+            }
+            else
+            {
+                MessageBox.Show("Comentario inválido.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+          
+        }
+
+        private void CancelReply()
+        {
+            ReplyingToComment = null;
+        }
+
+        private async void ToggleReplies(object parameter)
+        {
+            if (parameter is Comment comment)
+            {
+                comment.IsRepliesVisible = !comment.IsRepliesVisible;
+
+                if (comment.IsRepliesVisible)
+                {
+                    comment.Replies.Clear(); 
+                    var result = await commentService.GetRepliesByCommentIdAsync(comment.CommentId);
+                    if (result.IsSuccess && result.Data != null)
+                    {
+                        var orderedReplies = result.Data.OrderBy(r => DateTime.Parse(r.Timestap));
+                        foreach (var reply in orderedReplies)
                         {
-                            Username = comment.User,
-                            Text = comment.Message,
-                            Timestamp = parsedTimestamp,
-                            IsMine = comment.User == CurrentUsername || userRole == 2, 
-                            CommentId = comment.Id
-                        });
+                            DateTime.TryParse(reply.Timestap, null, System.Globalization.DateTimeStyles.RoundtripKind, out var parsedTimestamp);
+                            comment.Replies.Add(new Comment
+                            {
+                                Username = reply.User,
+                                Text = reply.Message,
+                                Timestamp = parsedTimestamp,
+                                CommentId = reply.Id,
+                                IsMine = reply.User == CurrentUsername || userRole == 2
+                            });
+                        }
                     }
+                    else
+                    {
+                        MessageBox.Show($"No se pudieron cargar las respuestas: {result.Message ?? "Error desconocido"}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                }
+
+                OnPropertyChanged(nameof(Comments)); 
+            }
+        }
+
+
+
+        private async Task DeleteComment(object parameter)
+        {
+            if (parameter is not Comment comment)
+            {
+                MessageBox.Show("Comentario inválido.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!comment.IsMine)
+            {
+                MessageBox.Show("No puedes eliminar este comentario.", "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var confirm = MessageBox.Show("¿Estás seguro de que deseas eliminar este comentario?", "Confirmar eliminación",
+                                          MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (confirm != MessageBoxResult.Yes)
+                return;
+
+            var result = await ExecuteRESTfulApiCall(() => commentService.DeleteCommentAsync(comment.CommentId));
+
+            if (result.IsSuccess)
+            {
+                LoadComments();
+                MessageBox.Show("Comentario eliminado correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show($"No se pudo eliminar el comentario" ?? "Error desconocido.", result.Message, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task SendComment()
+        {
+            if (string.IsNullOrWhiteSpace(CommentText))
+            {
+                MessageBox.Show("El comentario no puede estar vacío.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (IsReplying)
+            {
+                _ = SendCommentResponse();
+                return;
+            }
+
+            var commentRequest = new CreateCommentRequest
+            {
+                Message = CommentText,
+                SongId = int.Parse(SongId),
+            };
+
+            var result = await  commentService.CreateCommentAsync(commentRequest);
+
+            if (result.IsSuccess)
+            {
+                LoadComments();
+                CommentText = string.Empty;
+            }
+            else
+            {
+                MessageBox.Show($"No se pudo enviar el comentario" ?? "Error desconocido",
+                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task SendCommentResponse()
+        {
+            MessageBox.Show($"Comentando: '{CommentText}'\nRespondiendo a: '{ReplyingToComment.Text}'", "Responder", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            if (ReplyingToComment != null)
+            {
+                var replyRequest = new RespondCommentRequest
+                {
+                    Message = CommentText,
+                    CommentId = ReplyingToComment.CommentId,
+                };
+
+                var response = await commentService.RespondToCommentAsync(replyRequest);
+
+                if (response.IsSuccess)
+                {
+                    ToggleReplies(ReplyingToComment);
+                    CommentText = string.Empty;
                 }
                 else
                 {
-                    MessageBox.Show($"Hubo un error al cargar los comentarios"  ?? "Error", result.Message ,MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show($"No se pudo enviar el comentario" ?? "Error desconocido",
+                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-            
+            }
         }
 
         public void ReceiveParameter(object parameter)
@@ -136,7 +311,6 @@ namespace SoundNest_Windows_Client.ViewModels
                 MessageBox.Show("Error al cargar la canción");
             }
         }
-
 
         private async void InitProperties()
         {
@@ -178,98 +352,6 @@ namespace SoundNest_Windows_Client.ViewModels
                 SongArtist = CurrentSong.UserName ?? "Artista desconocido";
                 SongImage = null;
             }
-        }
-
-        private async Task<ImageSource?> LoadImageFromUrlAsync(string url)
-        {
-            try
-            {
-                using var httpClient = new HttpClient();
-                var imageData = await httpClient.GetByteArrayAsync(url);
-
-                return await Task.Run(() =>
-                {
-                    using var ms = new MemoryStream(imageData);
-                    var bitmap = new System.Windows.Media.Imaging.BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                    bitmap.StreamSource = ms;
-                    bitmap.EndInit();
-                    bitmap.Freeze();
-                    return (ImageSource)bitmap;
-                });
-            }
-            catch
-            {
-                MessageBox.Show("Error al cargar la imagen de la canción", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return null;
-            }
-        }
-
-
-        private async Task DeleteComment(object parameter)
-        {
-            if (parameter is not Comment comment)
-            {
-                MessageBox.Show("Comentario inválido.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!comment.IsMine)
-            {
-                MessageBox.Show("No puedes eliminar este comentario.", "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            var confirm = MessageBox.Show("¿Estás seguro de que deseas eliminar este comentario?", "Confirmar eliminación",
-                                          MessageBoxButton.YesNo, MessageBoxImage.Question);
-
-            if (confirm != MessageBoxResult.Yes)
-                return;
-
-
-            var resultDelete = await ExecuteRESTfulApiCall(() => commentService.DeleteCommentAsync(comment.CommentId));
-
-                if (resultDelete.IsSuccess)
-                {
-                    LoadComments(); 
-                    MessageBox.Show("Comentario eliminado correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    MessageBox.Show($"No se pudo eliminar el comentario:" ?? "Error desconocido.",
-                                    resultDelete.Message, MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-
-        }
-
-        private async Task SendComment()
-        {
-            if (string.IsNullOrWhiteSpace(CommentText))
-            {
-                MessageBox.Show("El comentario no puede estar vacío.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-                var commentRequest = new CreateCommentRequest
-                {
-                    Message = CommentText,
-                    SongId = int.Parse(SongId),
-                };
-
-                var result = await ExecuteRESTfulApiCall(() => commentService.CreateCommentAsync(commentRequest));
-
-                if (result.IsSuccess)
-                {
-                    LoadComments(); 
-                    CommentText = string.Empty; 
-                }
-                else
-                {
-                    MessageBox.Show($"No se pudo enviar el comentario" ?? "Error desconocido",
-                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            
         }
     }
 }

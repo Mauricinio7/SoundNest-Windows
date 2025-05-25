@@ -14,6 +14,8 @@ namespace Services.Communication.RESTful.Services
         Task<ApiResult<List<CommentResponse>>> GetCommentsBySongIdAsync(string songId);
         Task<ApiResult<CommentResponse>> GetCommentByIdAsync(string commentId);
         Task<ApiResult<bool>> DeleteCommentAsync(string commentId);
+        Task<ApiResult<List<CommentResponse>>> GetRepliesByCommentIdAsync(string commentId);
+        Task<ApiResult<bool>> RespondToCommentAsync(RespondCommentRequest request);
     }
 
     public class CommentService : ICommentService
@@ -55,6 +57,30 @@ namespace Services.Communication.RESTful.Services
 
             return ApiResult<CommentResponse>.Failure(result.ErrorMessage ?? "No se pudo obtener el comentario", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
+
+        public async Task<ApiResult<List<CommentResponse>>> GetRepliesByCommentIdAsync(string commentId)
+        {
+            var url = ApiRoutes.CommentGetRepliesByCommentId.Replace("{id}", commentId);
+            var result = await _apiClient.GetAsync<List<CommentResponse>>(url);
+
+            if (result.IsSuccess && result.Data is not null)
+                return ApiResult<List<CommentResponse>>.Success(result.Data, "Success", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<List<CommentResponse>>.Failure(result.ErrorMessage ?? "No se pudieron obtener las respuestas", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+        }
+
+        public async Task<ApiResult<bool>> RespondToCommentAsync(RespondCommentRequest request)
+        {
+            var url = ApiRoutes.CommentRespondComment.Replace("{commentId}", request.CommentId.ToString());
+            var body = new { message = request.Message }; // Solo se envía el mensaje en el body
+            var result = await _apiClient.PostAsync<object, object>(url, body);
+
+            if (result.IsSuccess)
+                return ApiResult<bool>.Success(true, "Respuesta enviada exitosamente", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<bool>.Failure(result.ErrorMessage ?? "Error al responder comentario", result.Message, result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
+        }
+
 
         public async Task<ApiResult<bool>> DeleteCommentAsync(string commentId)
         {

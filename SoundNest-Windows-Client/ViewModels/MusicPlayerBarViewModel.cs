@@ -37,6 +37,9 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand CommentsViewCommand { get; set; }
         public RelayCommand AddSongToPlaylistCommand { get; set; }
         public ObservableCollection<PlaylistResponse> Playlists { get; } = new();
+        public RelayCommand OpenPlaylistPopupCommand { get; }
+        public RelayCommand ClosePlaylistPopupCommand { get; }
+        public RelayCommand AddToPlaylistCommand { get; }
 
         private PlaylistResponse _selectedPlaylist;
         public PlaylistResponse SelectedPlaylist
@@ -133,12 +136,23 @@ namespace SoundNest_Windows_Client.ViewModels
             set { songImage = value; OnPropertyChanged(); }
         }
 
-        public MusicPlayerBarViewModel(INavigationService navigation, ISongDownloader songDownloaderService, IGrpcClientManager grpcClient, IPlaylistService playlistService)
+        public bool IsPlaylistPopupVisible
+        {
+            get => isPlaylistPopupVisible;
+            set { isPlaylistPopupVisible = value; OnPropertyChanged(); }
+        }
+        private bool isPlaylistPopupVisible;
+
+        public ObservableCollection<PlaylistResponse> UserPlaylists { get; set; } = new();
+
+
+        public MusicPlayerBarViewModel(INavigationService navigation, ISongDownloader songDownloaderService, IGrpcClientManager grpcClient, IPlaylistService playlistService, IAccountService accountService)
         {
             _navigation = navigation;
             _songService = songDownloaderService;
             _playlistService = playlistService;
             _mediaPlayer.Volume = volume;
+            _accountService = accountService;
 
             _mediaPlayer.MediaOpened += (s, e) =>
             {
@@ -170,6 +184,10 @@ namespace SoundNest_Windows_Client.ViewModels
             DownloadSongCommand = new RelayCommand(DownloadSong);
             CommentsViewCommand = new RelayCommand(ExecuteCommentsViewCommand);
             AddSongToPlaylistCommand = new RelayCommand(ExecuteAddSongToPlaylistCommand);
+            OpenPlaylistPopupCommand = new RelayCommand(OpenPlaylistPopup);
+            ClosePlaylistPopupCommand = new RelayCommand(ClosePlaylistPopup);
+            AddToPlaylistCommand = new RelayCommand(AddToPlaylist);
+
 
             _ = LoadUserPlaylistsAsync();
         }
@@ -194,6 +212,72 @@ namespace SoundNest_Windows_Client.ViewModels
                 MessageBox.Show("Error al cargar la canción.");
             }
         }
+
+        private async void OpenPlaylistPopup()
+        {
+            var result = await _playlistService.GetPlaylistsByUserIdAsync(_accountService.CurrentUser.Id.ToString());
+            if (!result.IsSuccess || result.Data == null)
+            {
+                MessageBox.Show(result.ErrorMessage ?? "Error al cargar playlists", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            UserPlaylists.Clear();
+            foreach (var playlist in result.Data)
+            {
+                playlist.ImagePath = string.Concat(ApiRoutes.BaseUrl, playlist.ImagePath.AsSpan(1));
+                UserPlaylists.Add(playlist);
+            }
+
+            IsPlaylistPopupVisible = true;
+        }
+
+        private void ClosePlaylistPopup()
+        {
+            IsPlaylistPopupVisible = false;
+        }
+
+        private async void AddToPlaylist(object param)
+        {
+            if (param is not string playlistId)
+            {
+                MessageBox.Show("Error: parámetro inválido.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Buscamos el objeto PlaylistResponse
+            var playlistResponse = UserPlaylists.FirstOrDefault(p => p.Id == playlistId);
+            var playlistName = playlistResponse?.PlaylistName ?? "Desconocida";
+
+            // Validar índice de la canción
+            if (currentIndex < 0 || currentIndex >= playlist.Count)
+            {
+                MessageBox.Show("No hay ninguna canción seleccionada.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var song = playlist[currentIndex];  // Aquí usamos la lista 'playlist' con las canciones
+            MessageBox.Show($"Canción: {song.SongName}\nPlaylist: {playlistName}", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            //if (param is not string playlistId || currentIndex < 0 || currentIndex >= playlist.Count)
+            //{
+            //    MessageBox.Show("Error al agregar canción: parámetro inválido.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            //    return;
+            //}
+
+            //var song = playlist[currentIndex];
+            //var result = await _playlistService.AddSongToPlaylistAsync(song.IdSong.ToString(), playlistId);
+            //if (result.IsSuccess)
+            //{
+            //    MessageBox.Show("Canción agregada a la playlist.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+            //    IsPlaylistPopupVisible = false;
+            //}
+            //else
+            //{
+            //    MessageBox.Show(result.ErrorMessage ?? "Error al agregar canción.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            //}
+        }
+
 
         private async Task<bool> SaveSongOnCacheAsync(int idSong, string fileNameWithoutExtension)
         {
@@ -441,30 +525,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async void ExecuteAddSongToPlaylistCommand(object parameter)
         {
-            //TODO quitar esto
-            parameter = "6830eeb0f229e5362767c709";
-            if (parameter is not string playlistId || currentIndex < 0 || currentIndex >= playlist.Count)
-                return;
-
-            var song = playlist[currentIndex];
-            var result = await _playlistService.AddSongToPlaylistAsync(
-                song.IdSong.ToString(),
-                playlistId);
-
-            if (result.IsSuccess)
-            {
-                MessageBox.Show("Canción agregada a la playlist.",
-                                "Éxito",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Information);
-            }
-            else
-            {
-                MessageBox.Show(result.ErrorMessage ?? "Error al agregar canción.",
-                                "Error",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Error);
-            }
+            //TODO add to playlist 
         }
         private async Task LoadUserPlaylistsAsync()
         {

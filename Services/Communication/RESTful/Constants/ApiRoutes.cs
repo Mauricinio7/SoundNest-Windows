@@ -30,6 +30,8 @@ namespace Services.Communication.RESTful.Constants
         public const string CommentGetBySongId = "api/comment/getComment/{song_id}/song";
         public const string CommentGetById = "api/comment/{id}/all";
         public const string CommentDelete = "api/comment/delete/{id}";
+        public const string CommentGetRepliesByCommentId = "api/comment/responses/flat/{id}";
+
 
         // Notification endpoints
         public const string NotificationCreate = "api/notifications/createNotification";

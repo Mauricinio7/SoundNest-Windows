@@ -146,8 +146,9 @@
                Canvas.Left="1118" Canvas.Top="34" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
             <controls:AnimatedLabelButton 
+                x:Name="AddToPlaylistButton"
                 LabelText="&#xECC8;" FontFamily="Segoe Fluent Icons" ForegroundColor="{StaticResource SecondaryColor2}" LabelFontSize="24"
-                ClickCommand="{Binding AddSongToPlaylistCommand}" 
+                ClickCommand="{Binding OpenPlaylistPopupCommand}" 
                 CommandParameter="{Binding SelectedPlaylist.Id}"
                Canvas.Left="1179" Canvas.Top="34" HorizontalAlignment="Left" VerticalAlignment="Center"/>
 
@@ -168,6 +169,53 @@
         Value="{Binding Volume, Mode=TwoWay}"
         ToolTip="Volumen"
         />
+            <Popup x:Name="PlaylistPopup"
+           IsOpen="{Binding IsPlaylistPopupVisible}"
+           PlacementTarget="{Binding ElementName=AddToPlaylistButton}" 
+           Placement="Top"
+           AllowsTransparency="True"
+           PopupAnimation="Fade"
+           StaysOpen="True">        
+                <Border Background="#282828" CornerRadius="12" Padding="20" Width="400" MaxHeight="500">
+                    <StackPanel>
+                        <TextBlock Text="Elige una Playlist" FontSize="18" FontWeight="Bold" Foreground="White" Margin="0,0,0,10"/>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="400">
+                            <ItemsControl ItemsSource="{Binding UserPlaylists}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#444" CornerRadius="5" Padding="10" Margin="0,5,0,5">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <Image Source="{Binding ImagePath}" Width="40" Height="40" Margin="0,0,10,0" Grid.Column="0"/>
+                                                <TextBlock Text="{Binding PlaylistName}" Foreground="White" FontSize="14" VerticalAlignment="Center" Grid.Column="1" Margin="10,0" />
+                                                <Button Content="Agregar" 
+                                                    Background="{StaticResource SecondaryColor2}" 
+                                                    Foreground="White" 
+                                                    BorderThickness="0" 
+                                                    Width="120" 
+                                                    Margin="10,0,0,0"
+                                                    Command="{Binding DataContext.AddToPlaylistCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding Id}"
+                                                    Tag="{Binding PlaylistName}"
+                                                    Grid.Column="2"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        <Button Content="Cancelar" Background="Transparent" Foreground="White" BorderThickness="0" HorizontalAlignment="Right" Margin="0,10,0,0"
+                    Command="{Binding ClosePlaylistPopupCommand}"/>
+                    </StackPanel>
+                </Border>
+            </Popup>
+
         </Canvas>
     </Viewbox>
 </UserControl>

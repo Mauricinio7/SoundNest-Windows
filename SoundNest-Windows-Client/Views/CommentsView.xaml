@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:controls="clr-namespace:SoundNest_Windows_Client.Resources.Controls"
              xmlns:converters="clr-namespace:SoundNest_Windows_Client.Resources.Converters"
              mc:Ignorable="d" 
              Background="{StaticResource BackgroundyColor1}"
@@ -19,21 +18,21 @@
             <Border Background="#222" CornerRadius="10" Width="1273" Height="120"
                     Canvas.Left="426" Canvas.Top="135" HorizontalAlignment="Left" VerticalAlignment="Center">
                 <Grid Margin="10">
-                    <Image Width="100" Height="100" HorizontalAlignment="Left" Source="{Binding SongImage, UpdateSourceTrigger=PropertyChanged}" Margin="1150,0,0,0"/>
+                    <Image Width="100" Height="100" HorizontalAlignment="Left" Source="{Binding SongImage}" Margin="1150,0,0,0"/>
                     <StackPanel Orientation="Vertical" Margin="350,0,108,0">
-                        <TextBlock Text="{Binding SongTittle, UpdateSourceTrigger=PropertyChanged}" FontWeight="Bold" FontSize="24" Foreground="White"/>
-                        <TextBlock Text="{Binding SongArtist, UpdateSourceTrigger=PropertyChanged}" Foreground="Gray" FontSize="16" Margin="0,5,0,0"/>
-                        <TextBlock Text="{Binding SongDuration, UpdateSourceTrigger=PropertyChanged}" Foreground="Gray" FontSize="16" Margin="0,2,0,0"/>
+                        <TextBlock Text="{Binding SongTittle}" FontWeight="Bold" FontSize="24" Foreground="White"/>
+                        <TextBlock Text="{Binding SongArtist}" Foreground="Gray" FontSize="16" Margin="0,5,0,0"/>
+                        <TextBlock Text="{Binding SongDuration}" Foreground="Gray" FontSize="16" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
             <TextBlock Text="Comentarios: " FontSize="40" FontWeight="Bold" Foreground="White"
-             Canvas.Left="461" Canvas.Top="163"/>
+                       Canvas.Left="461" Canvas.Top="163"/>
 
             <Border Background="#333" CornerRadius="10" Width="1276" Height="532"
-        Canvas.Left="426" Canvas.Top="255" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Top">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    Canvas.Left="426" Canvas.Top="255" Padding="20" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,0,0,49">
                     <ItemsControl ItemsSource="{Binding Comments}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -42,39 +41,69 @@
                                         <TextBlock Text="{Binding Username}" FontWeight="Bold" Foreground="White"/>
                                         <TextBlock Text="{Binding Text}" Foreground="White" TextWrapping="Wrap" Margin="0,5,0,0"/>
                                         <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:MM/dd/yyyy hh:mm tt}'}"
-                       FontSize="12" Foreground="Gray" HorizontalAlignment="Right" Margin="0,5,0,0"/>
+                                                   FontSize="12" Foreground="Gray" HorizontalAlignment="Right" Margin="0,5,0,0"/>
 
-                                        <Button Content="Borrar" Background="#b00020" Foreground="White" BorderThickness="0"
-                                            Visibility="{Binding IsMine, Converter={StaticResource BoolToVisibilityConverter}}"
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,10,0,0">
+                                            <Button Content="Responder" Background="#1DB954" Foreground="White" BorderThickness="0"
+                                                Width="100"
+                                                Margin="0,10,10,0"
+                                                Command="{Binding DataContext.ReplyToCommentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}" />
+
+                                            <Button Content="{Binding RepliesButtonText}" Background="#1DB954" Foreground="White" BorderThickness="0"
+                                                Width="120" Margin="0,10,10,0"
+                                                Command="{Binding DataContext.ToggleRepliesCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}" />
+                                            <Button Content="Borrar" Background="#b00020" Foreground="White" BorderThickness="0"
+                                                Visibility="{Binding IsMine, Converter={StaticResource BoolToVisibilityConverter}}"
                                                 Command="{Binding DataContext.DeleteCommentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                 CommandParameter="{Binding}"
-                                            HorizontalAlignment="Right" Margin="0,10,40,0" Width="70" Height="30"/>
+                                                Width="70" Margin="0,10,0,0"/>
+                                        </StackPanel>
+
+                                        <!-- Respuestas con ScrollViewer y altura máxima -->
+                                        <ItemsControl ItemsSource="{Binding Replies}" Visibility="{Binding IsRepliesVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <ItemsControl.Template>
+                                                <ControlTemplate>
+                                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="200">
+                                                        <ItemsPresenter/>
+                                                    </ScrollViewer>
+                                                </ControlTemplate>
+                                            </ItemsControl.Template>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="#555" CornerRadius="5" Padding="5" Margin="10,5,0,5">
+                                                        <TextBlock Text="{Binding Text}" Foreground="White"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
-
-
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
             </Border>
 
+            <TextBlock Text="{Binding ReplyingToComment.Text, StringFormat='Responder a: {0}'}"
+                       Visibility="{Binding IsReplying, Converter={StaticResource BoolToVisibilityConverter}}"
+                       Foreground="White" FontSize="16" Canvas.Left="426" Canvas.Top="737" HorizontalAlignment="Center" VerticalAlignment="Top" Width="1188" Height="36"/>
 
+            <Button Content="X" Width="30" Height="30" Background="Red" Foreground="White" BorderThickness="0"
+                    Visibility="{Binding IsReplying, Converter={StaticResource BoolToVisibilityConverter}}"
+                    Command="{Binding CancelReplyCommand}" Canvas.Left="1637" Canvas.Top="737"/>
 
             <Border Background="#222" CornerRadius="10" Width="1273" Height="149"
                     Canvas.Left="426" Canvas.Top="792" HorizontalAlignment="Center" VerticalAlignment="Top">
                 <Grid Margin="10">
-                    <TextBox FontSize="18" Foreground="White" 
-                 Background="#444" BorderThickness="0"
-                 VerticalScrollBarVisibility="Auto"
-                 Padding="10"
-                 AcceptsReturn="True"
-                 TextWrapping="Wrap"
-                 Margin="119,13,196,23"
-                 Text="{Binding CommentText, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBox FontSize="18" Foreground="White" Background="#444" BorderThickness="0"
+                             VerticalScrollBarVisibility="Auto" Padding="10" AcceptsReturn="True"
+                             TextWrapping="Wrap" Margin="31,13,196,23"
+                             Text="{Binding CommentText}"/>
                     <Button Content="Enviar" Width="167" Background="#1DB954" Foreground="White" BorderThickness="0"
-                HorizontalAlignment="Right" Margin="0,34,10,43" FontSize="25"
-                Command="{Binding SendCommentCommand}"/>
+                            HorizontalAlignment="Right" Margin="0,34,10,43" FontSize="25"
+                            Command="{Binding SendCommentCommand}"/>
                 </Grid>
             </Border>
 
