@@ -106,7 +106,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private void ExecuteCancel()
         {
-            _navigation.NavigateTo<HomeViewModel>();
+            _navigation.NavigateTo<PlaylistDetailViewModel>(_playlist);
         }
     }
 }

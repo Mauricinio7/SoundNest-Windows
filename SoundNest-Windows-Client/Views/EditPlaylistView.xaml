@@ -25,11 +25,12 @@
                  Foreground="{StaticResource ForegroundWhiteColor}"
                  Canvas.Left="409" 
                  Canvas.Top="181"/>
-            
+
             <controls:PlaceholderTextBoxControl
                   Text="{Binding PlaylistName, UpdateSourceTrigger=PropertyChanged}"
                   Style="{StaticResource PrimarySimpleTextBoxStyle}"
                   FontSizeValue="30"
+                  PlaceholderText=""
                   BackgroundColorValue="{StaticResource BackgroundyColor2}"
                   Canvas.Left="386" 
                   Canvas.Top="241"
@@ -41,11 +42,12 @@
                  Foreground="{StaticResource ForegroundWhiteColor}"
                  Canvas.Left="409" 
                  Canvas.Top="351"/>
-            
+
             <controls:PlaceholderTextBoxControl
                   Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
                   Style="{StaticResource PrimarySimpleTextBoxStyle}"
                   FontSizeValue="30"
+                  PlaceholderText=""
                   BackgroundColorValue="{StaticResource BackgroundyColor2}"
                   Canvas.Left="386"
                   Canvas.Top="411"
@@ -67,16 +69,16 @@
                   Canvas.Top="191"
                   Width="358" 
                   Height="110"/>
-            
+
             <Button Content="Cancelar"
                   Style="{StaticResource NegativeButtonStyle}"
                   Command="{Binding CancelCommand}"
                   FontSize="35" 
                   FontWeight="Bold"
                   Canvas.Left="1467" 
-                  Canvas.Top="450"
+                  Canvas.Top="407"
                   Width="358" 
-                  Height="110"/>
+                  Height="110" HorizontalAlignment="Center" VerticalAlignment="Top"/>
 
         </Canvas>
     </Viewbox>
