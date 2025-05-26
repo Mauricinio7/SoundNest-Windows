@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.IO;
 using System.Net.Http;
 using Services.Communication.RESTful.Constants;
+using System.Windows.Input;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -245,7 +246,25 @@ namespace SoundNest_Windows_Client.ViewModels
             CanScrollRightPopular = _popularScrollViewer.HorizontalOffset + _popularScrollViewer.ViewportWidth < _popularScrollViewer.ExtentWidth;
         }
 
+        private void CarouselPopularSongsScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (sender is ScrollViewer scrollViewer)
+            {
+                double offsetChange = e.Delta > 0 ? -100 : 100;
+                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + offsetChange);
+                e.Handled = true;
+            }
+        }
 
+        private void CarouselRecentSongsScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (sender is ScrollViewer scrollViewer)
+            {
+                double offsetChange = e.Delta > 0 ? -100 : 100;
+                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + offsetChange);
+                e.Handled = true;
+            }
+        }
 
     }
 }

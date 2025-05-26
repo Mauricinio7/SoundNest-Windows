@@ -160,22 +160,22 @@
            Foreground="{StaticResource SecondaryColor2}"
            FontSize="24"/>
             <Slider Canvas.Left="1404"
-        Canvas.Top="42"
-        Width="142"
-        Minimum="0"
-        Maximum="1"
-        SmallChange="0.01"
-        LargeChange="0.1"
-        Value="{Binding Volume, Mode=TwoWay}"
-        ToolTip="Volumen"
-        />
+                Canvas.Top="42"
+                Width="142"
+                Minimum="0"
+                Maximum="1"
+                SmallChange="0.01"
+                LargeChange="0.1"
+                Value="{Binding Volume, Mode=TwoWay}"
+                ToolTip="Volumen"
+                />
             <Popup x:Name="PlaylistPopup"
-           IsOpen="{Binding IsPlaylistPopupVisible}"
-           PlacementTarget="{Binding ElementName=AddToPlaylistButton}" 
-           Placement="Top"
-           AllowsTransparency="True"
-           PopupAnimation="Fade"
-           StaysOpen="True">        
+               IsOpen="{Binding IsPlaylistPopupVisible}"
+               PlacementTarget="{Binding ElementName=AddToPlaylistButton}" 
+               Placement="Top"
+               AllowsTransparency="True"
+               PopupAnimation="Fade"
+               StaysOpen="True">        
                 <Border Background="#282828" CornerRadius="12" Padding="20" Width="400" MaxHeight="500">
                     <StackPanel>
                         <TextBlock Text="Elige una Playlist" FontSize="18" FontWeight="Bold" Foreground="White" Margin="0,0,0,10"/>

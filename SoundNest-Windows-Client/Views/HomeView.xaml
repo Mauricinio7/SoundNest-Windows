@@ -6,6 +6,8 @@
              xmlns:local="clr-namespace:SoundNest_Windows_Client.Views"
              xmlns:controls="clr-namespace:SoundNest_Windows_Client.Resources.Controls"
              xmlns:converters="clr-namespace:SoundNest_Windows_Client.Resources.Converters"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:behaviors="clr-namespace:SoundNest_Windows_Client.Utilities"
              mc:Ignorable="d" 
              Background="{StaticResource BackgroundyColor1}"
              d:DesignHeight="450" d:DesignWidth="800">
@@ -29,7 +31,14 @@
                     Content="&#xE76B;"  
                     Command="{Binding ScrollLeftPopularCommand}"
                     Visibility="{Binding CanScrollLeftPopular, Converter={StaticResource BoolToVisibilityConverter}}" />
-                <ScrollViewer x:Name="CarouselPopularSongsScrollViewer" Width="1495" Height="250" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled">
+                <ScrollViewer x:Name="CarouselPopularSongsScrollViewer" 
+                        Width="1495" 
+                        Height="250" 
+                        HorizontalScrollBarVisibility="Hidden" 
+                        VerticalScrollBarVisibility="Disabled">
+                    <i:Interaction.Behaviors>
+                        <behaviors:HorizontalScrollOnMouseWheelBehavior/>
+                    </i:Interaction.Behaviors>
                     <ItemsControl ItemsSource="{Binding PopularSongs}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -93,6 +102,9 @@
                       Height="250"
                       HorizontalScrollBarVisibility="Hidden"
                       VerticalScrollBarVisibility="Disabled">
+                    <i:Interaction.Behaviors>
+                        <behaviors:HorizontalScrollOnMouseWheelBehavior/>
+                    </i:Interaction.Behaviors>
                     <ItemsControl ItemsSource="{Binding RecentSongs}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
