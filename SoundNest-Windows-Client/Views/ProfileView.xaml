@@ -119,9 +119,9 @@
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
                 Canvas.Left="523" Canvas.Top="235" RenderTransformOrigin="0.649,0.707">
-                        <Button.Template>
-                            <ControlTemplate TargetType="Button">
-                                <Border Background="{TemplateBinding Background}"
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="55"
@@ -147,6 +147,15 @@
                 Style="{StaticResource DeleteButtonStyle}"
                 Command="{Binding CloseSesionCommand}"
                 Canvas.Left="1428" Canvas.Top="748"
+                Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisibilityConverter}}"
+                Width="358" Height="110" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+
+            <Button Content="Ver estadísiticas"
+                FontSize="35"
+                FontWeight="Bold"
+                Style="{StaticResource PrimaryButtonStyle}"
+                Command="{Binding ViewStatistcsCommand}"
+                Canvas.Left="1428" Canvas.Top="572"
                 Visibility="{Binding IsEditing, Converter={StaticResource InverseBoolToVisibilityConverter}}"
                 Width="358" Height="110" HorizontalAlignment="Center" VerticalAlignment="Top"/>
 

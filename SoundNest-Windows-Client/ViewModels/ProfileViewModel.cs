@@ -84,6 +84,7 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand ChangePasswordCommand { get; set; }
         public RelayCommand CloseSesionCommand { get; set; }
         public RelayCommand EditImageCommand { get; set; }
+        public RelayCommand ViewStatistcsCommand { get; set; }
 
         private readonly IAccountService accountService;
         private readonly IAuthService authService;
@@ -108,6 +109,7 @@ namespace SoundNest_Windows_Client.ViewModels
             ChangePasswordCommand = new RelayCommand(ExecuteChangePasswordCommand);
             CloseSesionCommand = new RelayCommand(ExecuteCloseSesion);
             EditImageCommand = new RelayCommand(ExecuteEditImageCommand);
+            ViewStatistcsCommand = new RelayCommand(ExecuteViewStatistcsCommand);
 
             InitProfile();
             this.userImageService = userImageService;
@@ -142,6 +144,11 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 ProfilePhoto = null; //TODO charge default image
             }
+        }
+
+        private void ExecuteViewStatistcsCommand()
+        {
+            Navigation.NavigateTo<StatisticsViewModel>();
         }
 
         private void ExecuteCloseSesion(object parameter)

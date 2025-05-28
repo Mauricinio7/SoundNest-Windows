@@ -96,7 +96,19 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 await UploadDefaultProfileImageAsync(newUser.Email, newUser.Password);
 
-                    MessageBox.Show("¡Cuenta creada exitosamente!", "Código de verificación", MessageBoxButton.OK, MessageBoxImage.Information);
+                EditUserRequest editUserRequest = new EditUserRequest
+                {
+                    AdditionalInformation = "Hola Soundnest, esta es mi cuenta"
+                };
+
+                var result = await userService.EditUserAsync(editUserRequest);
+
+                if (!result.IsSuccess)
+                {
+                    MessageBox.Show(result.Message ?? "Error al agregar información adicional al usuario", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+
+                MessageBox.Show("¡Cuenta creada exitosamente!", "Código de verificación", MessageBoxButton.OK, MessageBoxImage.Information);
                     Navigation.NavigateTo<LoginViewModel>();
                 }
                 else
@@ -140,7 +152,6 @@ namespace SoundNest_Windows_Client.ViewModels
                 {
                     MessageBox.Show("No se pudo subir la imagen de perfil por defecto.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
-
                 File.Delete(tempPath);
             }
             catch (Exception ex)
