@@ -245,37 +245,28 @@ namespace SoundNest_Windows_Client.ViewModels
                 return;
             }
 
-            // Buscamos el objeto PlaylistResponse
             var playlistResponse = UserPlaylists.FirstOrDefault(p => p.Id == playlistId);
             var playlistName = playlistResponse?.PlaylistName ?? "Desconocida";
 
-            // Validar índice de la canción
             if (currentIndex < 0 || currentIndex >= playlist.Count)
             {
                 MessageBox.Show("No hay ninguna canción seleccionada.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            var song = playlist[currentIndex];  // Aquí usamos la lista 'playlist' con las canciones
+            var song = playlist[currentIndex];
             MessageBox.Show($"Canción: {song.SongName}\nPlaylist: {playlistName}", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
 
-            //if (param is not string playlistId || currentIndex < 0 || currentIndex >= playlist.Count)
-            //{
-            //    MessageBox.Show("Error al agregar canción: parámetro inválido.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-            //    return;
-            //}
-
-            //var song = playlist[currentIndex];
-            //var result = await _playlistService.AddSongToPlaylistAsync(song.IdSong.ToString(), playlistId);
-            //if (result.IsSuccess)
-            //{
-            //    MessageBox.Show("Canción agregada a la playlist.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-            //    IsPlaylistPopupVisible = false;
-            //}
-            //else
-            //{
-            //    MessageBox.Show(result.ErrorMessage ?? "Error al agregar canción.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            //}
+            var result = await _playlistService.AddSongToPlaylistAsync(song.IdSong.ToString(), playlistId);
+            if (result.IsSuccess)
+            {
+                MessageBox.Show("Canción agregada a la playlist.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                IsPlaylistPopupVisible = false;
+            }
+            else
+            {
+                MessageBox.Show(result.ErrorMessage ?? "Error al agregar canción.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
 
