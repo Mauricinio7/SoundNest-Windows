@@ -135,11 +135,37 @@ namespace SoundNest_Windows_Client.ViewModels
             Navigation.NavigateTo<NotificationViewModel>();
         }
 
-        private void ExecuteOpenPlaylistCommand(object parameter)
+        private async void ExecuteOpenPlaylistCommand(object parameter)
         {
             Mediator.Notify(MediatorKeys.HIDE_SEARCH_BAR, null);
+
             if (parameter is PlaylistResponse playlist)
-                Navigation.NavigateTo<PlaylistDetailViewModel>(playlist);
+            {
+                var songIds = playlist.Songs.Select(s => s.SongId).ToList();
+
+                var songDetailsResult = await _playlistService.GetSongsDetailsAsync(songIds);
+
+                if (songDetailsResult.IsSuccess && songDetailsResult.Data != null)
+                {
+                    var detailedPlaylist = new Playlist
+                    {
+                        Id = playlist.Id,
+                        CreatorId = playlist.CreatorId,
+                        PlaylistName = playlist.PlaylistName,
+                        Description = playlist.Description,
+                        ImagePath = playlist.ImagePath,
+                        CreatedAt = playlist.CreatedAt,
+                        Version = playlist.Version,
+                        Songs = songDetailsResult.Data
+                    };
+
+                    Navigation.NavigateTo<PlaylistDetailViewModel>(detailedPlaylist);
+                }
+                else
+                {
+                    MessageBox.Show("No se pudieron cargar las canciones completas.");
+                }
+            }
         }
 
         private void ExecuteViewProfileCommand(object parameter)

@@ -70,14 +70,14 @@
                                             Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <TextBlock Text="{Binding Title}"
+                                    <TextBlock Text="{Binding SongName}"
                                                FontSize="20"
                                                FontWeight="Bold"
                                                Foreground="White"
                                                Grid.Row="0"
                                                Grid.Column="0"/>
 
-                                    <TextBlock Text="{Binding Artist}"
+                                    <TextBlock Text="{Binding UserName}"
                                                FontSize="16"
                                                Foreground="LightGray"
                                                Grid.Row="1"
