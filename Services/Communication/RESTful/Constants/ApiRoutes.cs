@@ -32,7 +32,6 @@ namespace Services.Communication.RESTful.Constants
         public const string CommentDelete = "api/comment/delete/{id}";
         public const string CommentGetRepliesByCommentId = "api/comment/responses/flat/{id}";
 
-
         // Notification endpoints
         public const string NotificationCreate = "api/notifications/createNotification";
         public const string NotificationGetById = "api/notifications/{id}/notification";
@@ -62,5 +61,8 @@ namespace Services.Communication.RESTful.Constants
         public const string PlaylistPatchAddSong = "api/playlist/{idsong}/{idPlaylist}/add";
         public const string PlaylistDelete = "api/playlist/{idPlaylist}/delete/";
         public const string PlaylistPutNewPlaylist = "api/playlist/base64/upload";
+
+        //Visualizaations
+        public const string AddVisitToSong = "api/visit/{idSong}/increment";
     }
 }

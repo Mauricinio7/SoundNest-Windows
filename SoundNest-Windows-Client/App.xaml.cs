@@ -126,6 +126,8 @@ public partial class App : Application
         service.AddTransient<INotificationService, NotificationService>();
         service.AddTransient<ICommentService, CommentService>();
         service.AddTransient<IPlaylistService, PlaylistService>();
+        service.AddTransient<IVisualizationsService, VisualizationsService>();
+
 
         service.AddSingleton<IGrpcClientManager, GrpcClientManager>();
 

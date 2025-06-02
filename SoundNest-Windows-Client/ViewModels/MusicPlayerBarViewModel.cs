@@ -290,16 +290,38 @@ namespace SoundNest_Windows_Client.ViewModels
                     MessageBox.Show("La canción ya existe en la caché.", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
                     return true;
                 }
-                
+
+                await Task.Run(() =>
+                {
+                    var files = new DirectoryInfo(songsFolder).GetFiles("*.mp3").OrderBy(f => f.CreationTime).ToList();
+                    if (files.Count >= 3)
+                    {
+                        var oldestFile = files.First();
+                        try
+                        {
+                            string deletedSong = Path.GetFileNameWithoutExtension(oldestFile.Name);
+                            oldestFile.Delete();
+                            App.Current.Dispatcher.Invoke(() =>
+                            {
+                                MessageBox.Show($"Se eliminó la canción más antigua de la caché: {deletedSong}", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            App.Current.Dispatcher.Invoke(() =>
+                            {
+                                MessageBox.Show($"Error al eliminar la canción más antigua:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            });
+                        }
+                    }
+                });
+
                 var response = await _songService.DownloadStreamToFileAsync(idSong.ToString(), destPath);
 
-                if (response.Success)
+                if (response.Success && File.Exists(destPath))
                 {
-                    if (File.Exists(destPath))
-                    {
-                        MessageBox.Show("La canción se descargó correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-                        flag = true;
-                    }
+                    MessageBox.Show("La canción se descargó correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                    flag = true;
                 }
             }
             catch (Exception ex)
@@ -308,6 +330,8 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             return flag;
         }
+
+
 
 
         private void ExecuteCommentsViewCommand(object obj)
