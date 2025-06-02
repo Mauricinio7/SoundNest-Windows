@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Net.Http;
 using System.IO;
 using System;
+using Services.Communication.RESTful.Models.Songs;
 
 namespace Services.Communication.RESTful.Services
 {
@@ -20,6 +21,7 @@ namespace Services.Communication.RESTful.Services
         Task<ApiResult<bool>> DeletePlaylistAsync(string playlistId);
         Task<ApiResult<PlaylistResponse>> CreatePlaylistAsync(string playlistName,string description,string imageBase64);
         Task<ApiResult<bool>> EditPlaylistAsync(string playlistId, string playlistName, string description);
+        Task<ApiResult<List<SongResponse>>> GetSongsDetailsAsync(List<int> songIds);
     }
 
     public class PlaylistService : IPlaylistService
@@ -165,6 +167,18 @@ namespace Services.Communication.RESTful.Services
                 result.Message,
                 result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable));
         }
+
+        public async Task<ApiResult<List<SongResponse>>> GetSongsDetailsAsync(List<int> songIds)
+        {
+            var payload = new { songIds };
+            var result = await _apiClient.PostAsync<object, List<SongResponse>>("api/songs/list/get", payload);
+
+            if (result.IsSuccess && result.Data is not null)
+                return ApiResult<List<SongResponse>>.Success(result.Data, null, result.StatusCode.GetValueOrDefault());
+
+            return ApiResult<List<SongResponse>>.Failure(result.ErrorMessage, result.Message, result.StatusCode.GetValueOrDefault());
+        }
+
 
     }
 }

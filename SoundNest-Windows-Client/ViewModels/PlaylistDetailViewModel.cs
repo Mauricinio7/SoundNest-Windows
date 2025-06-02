@@ -3,6 +3,7 @@ using Services.Communication.RESTful.Models.Songs;
 using Services.Communication.RESTful.Services;
 using Services.Infrestructure;
 using Services.Navigation;
+using SoundNest_Windows_Client.Models;
 using SoundNest_Windows_Client.Utilities;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ namespace SoundNest_Windows_Client.ViewModels
         private readonly INavigationService _navigation;
         private readonly IPlaylistService _playlistService;
 
-        private PlaylistResponse _currentPlaylist;
+        private Playlist _currentPlaylist;
 
         public PlaylistDetailViewModel(INavigationService navigation, IPlaylistService playlistService)
         {
@@ -40,7 +41,7 @@ namespace SoundNest_Windows_Client.ViewModels
             set { _playlistName = value; OnPropertyChanged(); }
         }
 
-        public ObservableCollection<SongResponse> Songs { get; }
+        public ObservableCollection<SongResponse> Songs { get; set; }
 
         public RelayCommand BackCommand { get; }
         public RelayCommand PlaySongCommand { get; }
@@ -49,7 +50,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
         public void ReceiveParameter(object parameter)
         {
-            if (parameter is PlaylistResponse playlist)
+            if (parameter is Playlist playlist)
             {
                 _currentPlaylist = playlist;
                 LoadPlaylist(playlist);
@@ -60,7 +61,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-        private void LoadPlaylist(PlaylistResponse playlist)
+        private void LoadPlaylist(Playlist playlist)
         {
             PlaylistName = playlist.PlaylistName;
             Songs.Clear();

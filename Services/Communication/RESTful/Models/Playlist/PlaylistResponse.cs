@@ -26,7 +26,7 @@ namespace Services.Communication.RESTful.Models.Playlist
         public string ImagePath { get; set; }
 
         [JsonPropertyName("songs")]
-        public List<SongResponse> Songs { get; set; }
+        public List<SongInPlaylist> Songs { get; set; }
 
         [JsonPropertyName("createdAt")]
         public DateTime CreatedAt { get; set; }
