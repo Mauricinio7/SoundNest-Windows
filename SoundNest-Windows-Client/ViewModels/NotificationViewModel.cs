@@ -55,9 +55,9 @@ namespace SoundNest_Windows_Client.ViewModels
                 {
                     Notifications.Clear();
 
-                    foreach (var notification in result.Data)
+                    foreach (NotificationResponse? notification in result.Data)
                     {
-                        Notifications.Add(new Notification(notification.Relevance.ToString(), notification.Sender, notification.Notification, notification.Relevance.Value, notification.Id));
+                        Notifications.Add(new Notification(notification.Title, notification.Sender, notification.Notification, notification.Relevance.Value, notification.Id));
                     }
                 }
                 else

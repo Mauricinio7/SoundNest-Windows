@@ -155,9 +155,9 @@ namespace SoundNest_Windows_Client.ViewModels
         private async Task LoadPopularSongsAsync()
         {
             int currentYear = DateTime.Now.Year;
-            int currentMonth = DateTime.Now.Month;
+            //int currentMonth = DateTime.Now.Month;
 
-            var result = await songService.GetPopularSongsByMonthAsync(50, currentYear, currentMonth);
+            var result = await songService.GetPopularSongsByMonthAsync(50, currentYear, 5);
 
             if (result.IsSuccess && result.Data is not null)
             {

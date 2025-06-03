@@ -160,7 +160,7 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             searchSong.IsRandom = true;
             Navigation.NavigateTo<SearchResultsViewModel>(searchSong);
-
+            searchSong.IsRandom = false;
         }
 
 

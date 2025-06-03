@@ -11,6 +11,8 @@ namespace Services.Communication.RESTful.Models.Notification
     {
         [JsonPropertyName("_id")]
         public string? Id { get; set; }
+        [JsonPropertyName("title")]
+        public string? Title { get; set; }
 
         [JsonPropertyName("sender")]
         public string? Sender { get; set; }
