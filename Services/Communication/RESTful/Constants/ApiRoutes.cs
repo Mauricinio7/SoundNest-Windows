@@ -51,6 +51,8 @@ namespace Services.Communication.RESTful.Constants
         public const string SongGetById = "api/songs/{idsong}/song";
         public const string SongGetGenres = "api/songs/genres";
         public const string SongGetExtensions = "songs/extensions";
+        public const string SongUploadImage = "api/songs/{idsong}/base64/image";
+        public const string SongGetLastestUserSong = "api/songs/user/{idAppUser}/lastest";
 
         //Playlist endpoints
         public const string PlaylistCleanDeletedSongs = "api/playlist/list/{idPlaylist}/clean";

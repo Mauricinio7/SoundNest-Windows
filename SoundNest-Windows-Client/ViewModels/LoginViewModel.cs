@@ -104,8 +104,7 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 aditionalInformation = aditionalInformationResult.Data.Info;
 
-
-                MessageBox.Show($"¡Bienvenido {username}! Has iniciado sesión con el correo: {email}", "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
+                //MessageBox.Show($"¡Bienvenido {username}! Has iniciado sesión con el correo: {email}", "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 user.SaveUser(username, email, role.Value, userId.Value, aditionalInformation);
 
@@ -113,9 +112,10 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show($"Se ha forzado el inicio de sesión back door hot fix", "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
+                //TODO its just for test
+                //MessageBox.Show($"Se ha forzado el inicio de sesión back door hot fix", "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                user.SaveUser(username, email, role.Value, userId.Value, "aditionalInformation");
+                user.SaveUser(username, email, role.Value, userId.Value, "Hubo un error al cargar la información adicional, se aplicó una por defecto");
 
                 GoHome();
             }       

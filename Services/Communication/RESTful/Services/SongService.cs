@@ -19,7 +19,8 @@ namespace Services.Communication.RESTful.Services
         Task<ApiResult<List<SongResponse>>> SearchSongsAsync(Search search);
         Task<ApiResult<List<SongResponse>>> GetRandomSongsAsync(int amount);
         Task<ApiResult<List<SongResponse>>> GetPopularSongsByMonthAsync(int amount, int year, int month);
-
+        Task<ApiResult<bool>> UploadSongImageAsync(int songId, string imageBase64);
+        Task<ApiResult<SongResponse>> GetLatestSongByUserIdAsync(int userId);
 
     }
 
@@ -131,6 +132,51 @@ namespace Services.Communication.RESTful.Services
                 result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)
             );
         }
+
+        public async Task<ApiResult<bool>> UploadSongImageAsync(int songId, string imageBase64)
+        {
+            var url = ApiRoutes.SongUploadImage.Replace("{idsong}", songId.ToString());
+
+            ImageSongRequest request = new ImageSongRequest
+            {
+                ImageBase64 = imageBase64
+            };
+
+            var result = await _apiClient.PatchAsync<object, object>(url, request);
+
+            if (result.IsSuccess)
+            {
+                return ApiResult<bool>.Success(true, "Imagen subida correctamente", result.StatusCode ?? HttpStatusCode.OK);
+            }
+
+            return ApiResult<bool>.Failure(
+                result.ErrorMessage ?? "No se pudo subir la imagen de la canción",
+                result.Message,
+                result.StatusCode ?? HttpStatusCode.ServiceUnavailable
+            );
+        }
+
+        public async Task<ApiResult<SongResponse>> GetLatestSongByUserIdAsync(int userId)
+        {
+            var url = ApiRoutes.SongsGetLatestSongsByUserId.Replace("{idAppUser}", userId.ToString());
+
+            var result = await _apiClient.GetAsync<SongResponse>(url);
+
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return ApiResult<SongResponse>.Success(
+                    result.Data,
+                    result.Message,
+                    result.StatusCode ?? HttpStatusCode.OK);
+            }
+
+            return ApiResult<SongResponse>.Failure(
+                result.ErrorMessage ?? "No se pudo obtener la última canción publicada",
+                result.Message,
+                result.StatusCode ?? HttpStatusCode.ServiceUnavailable);
+        }
+
+
 
 
     }

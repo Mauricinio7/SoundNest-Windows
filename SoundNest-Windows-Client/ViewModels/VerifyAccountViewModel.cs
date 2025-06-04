@@ -142,6 +142,7 @@ namespace SoundNest_Windows_Client.ViewModels
                     MessageBox.Show("No se pudo subir la imagen de perfil por defecto.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
 
+                //TODO Do this method SOLID
                 this.apiClient.SetAuthorizationToken(result.Data);
 
                 EditUserRequest editUserRequest = new EditUserRequest

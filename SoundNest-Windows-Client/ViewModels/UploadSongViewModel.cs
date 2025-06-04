@@ -22,6 +22,7 @@ using SoundNest_Windows_Client.Models;
 using Services.Communication.RESTful.Models.Songs;
 using Services.Communication.RESTful.Services;
 using System.Windows.Media;
+using Song;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -249,17 +250,58 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 if (result)
                 {
-                    //TODO Try to upload the image
+                    //TODO do this methods SOLID
+                    var songIdResult = await songService.GetLatestSongByUserIdAsync(user.CurrentUser.Id);
 
-                    MessageBox.Show("Canción publicada con éxito",
+                    if (songIdResult.IsSuccess)
+                    {
+                        if (SongCustomImage is BitmapImage bmp)
+                        {
+                            var encoder = new PngBitmapEncoder();
+                            encoder.Frames.Add(BitmapFrame.Create(bmp));
+                            using var ms = new MemoryStream();
+                            encoder.Save(ms);
+                            var imageBytes = ms.ToArray();
+                            int songId = songIdResult.Data.IdSong;
+
+                            var base64 = $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
+
+                            var uploadImageResult = await songService.UploadSongImageAsync(songId, base64);
+
+                            if (uploadImageResult.IsSuccess)
+                            {
+                                MessageBox.Show("Canción publicada con éxito",
+                                "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                                Navigation.NavigateTo<HomeViewModel>();
+
+                                PlaylistName = string.Empty;
+                                AdditionalInfo = string.Empty;
+                                SelectedFileName = null;
+                                SelectedGenre = null;
+                            }
+                            else {
+                                MessageBox.Show(uploadImageResult.ErrorMessage ?? "No se pudo subir la imagen de la canción", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("Canción publicada con éxito sin imagen, hubo un error al tratar de publicar la imagen",
                                     "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                            Navigation.NavigateTo<HomeViewModel>();
+                            PlaylistName = string.Empty;
+                            AdditionalInfo = string.Empty;
+                            SelectedFileName = null;
+                            SelectedGenre = null;
+                        }  
+                    }
+                    else
+                    {
+                        MessageBox.Show("Ocurrió un error al subir la canción.",
+                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
 
-                    Navigation.NavigateTo<HomeViewModel>();
-
-                    PlaylistName = string.Empty;
-                    AdditionalInfo = string.Empty;
-                    SelectedFileName = null;
-                    SelectedGenre = null;
+                    
                 }
                 else
                 {
