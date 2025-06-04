@@ -73,7 +73,7 @@ namespace Services.Communication.RESTful.Services
         public async Task<ApiResult<bool>> RemoveSongFromPlaylistAsync(string songId, string playlistId)
         {
             var url = ApiRoutes.PlaylistPatchRemoveSong
-                         .Replace("{idSong}", songId)
+                         .Replace("{idsong}", songId)
                          .Replace("{idPlaylist}", playlistId);
 
             var result = await _apiClient.PatchAsync<object>(url, null);

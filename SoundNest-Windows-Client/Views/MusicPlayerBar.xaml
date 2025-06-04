@@ -199,7 +199,7 @@
                                                     BorderThickness="0" 
                                                     Width="120" 
                                                     Margin="10,0,0,0"
-                                                    Command="{Binding DataContext.AddToPlaylistCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    Command="{Binding DataContext.AddSongToPlaylistCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding Id}"
                                                     Tag="{Binding PlaylistName}"
                                                     Grid.Column="2"/>
