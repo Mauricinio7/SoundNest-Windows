@@ -6,10 +6,8 @@ using Services.Navigation;
 using SoundNest_Windows_Client.Models;
 using SoundNest_Windows_Client.Utilities;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -19,7 +17,7 @@ namespace SoundNest_Windows_Client.ViewModels
     {
         private readonly INavigationService _navigation;
         private readonly IPlaylistService _playlistService;
-
+        
         private Playlist _currentPlaylist;
 
         public PlaylistDetailViewModel(INavigationService navigation, IPlaylistService playlistService)
@@ -28,10 +26,19 @@ namespace SoundNest_Windows_Client.ViewModels
             _playlistService = playlistService;
 
             Songs = new ObservableCollection<SongResponse>();
+
             BackCommand = new RelayCommand(_ => _navigation.NavigateTo<HomeViewModel>());
             PlaySongCommand = new RelayCommand(ExecutePlaySong);
             EditPlaylistCommand = new RelayCommand(_ => ExecuteEditPlaylist());
             DeletePlaylistCommand = new RelayCommand(async _ => await ExecuteDeletePlaylistAsync());
+
+            RemoveSongCommand = new RelayCommand(async param =>
+            {
+                if (param is SongResponse song)
+                {
+                    await ExecuteRemoveSongAsync(song);
+                }
+            });
         }
 
         private string _playlistName = string.Empty;
@@ -43,10 +50,13 @@ namespace SoundNest_Windows_Client.ViewModels
 
         public ObservableCollection<SongResponse> Songs { get; set; }
 
+
         public RelayCommand BackCommand { get; }
         public RelayCommand PlaySongCommand { get; }
         public RelayCommand EditPlaylistCommand { get; }
         public RelayCommand DeletePlaylistCommand { get; }
+        public RelayCommand RemoveSongCommand { get; }
+
 
         public void ReceiveParameter(object parameter)
         {
@@ -57,7 +67,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show("Error al cargar la playlist seleccionada.");
+                MessageBox.Show("Error al cargar la playlist seleccionada.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -66,7 +76,9 @@ namespace SoundNest_Windows_Client.ViewModels
             PlaylistName = playlist.PlaylistName;
             Songs.Clear();
             foreach (var song in playlist.Songs)
+            {
                 Songs.Add(song);
+            }
         }
 
         private void ExecutePlaySong(object parameter)
@@ -107,5 +119,37 @@ namespace SoundNest_Windows_Client.ViewModels
                                 "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private async Task ExecuteRemoveSongAsync(SongResponse song)
+        {
+            if (_currentPlaylist == null || song == null)
+                return;
+
+            var confirm = MessageBox.Show(
+                $"¿Seguro que quieres eliminar “{song.SongName}” de la playlist?",
+                "Confirmar eliminación",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirm != MessageBoxResult.Yes)
+                return;
+
+            string songIdString = song.IdSong.ToString();
+            var playlistIdString = _currentPlaylist.Id;
+
+            var result = await _playlistService
+                                  .RemoveSongFromPlaylistAsync(songIdString, playlistIdString);
+
+            if (result.IsSuccess)
+            {
+                Songs.Remove(song);
+            }
+            else
+            {
+                MessageBox.Show($"No se pudo eliminar la canción:\n{result.ErrorMessage}",
+                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
     }
 }
