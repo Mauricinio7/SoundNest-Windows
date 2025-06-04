@@ -104,6 +104,7 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 aditionalInformation = aditionalInformationResult.Data.Info;
 
+
                 MessageBox.Show($"¡Bienvenido {username}! Has iniciado sesión con el correo: {email}", "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 user.SaveUser(username, email, role.Value, userId.Value, aditionalInformation);

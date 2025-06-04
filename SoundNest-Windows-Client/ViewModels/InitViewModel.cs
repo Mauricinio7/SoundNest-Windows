@@ -84,11 +84,12 @@ namespace SoundNest_Windows_Client.ViewModels
             try
             {
                 apiClient.SetAuthorizationToken(token);
-
+                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
                 var result = await userService.ValidateJwtAsync();
+                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
                 if (!result.IsSuccess)
                 {
-                    MessageBox.Show(result.Message ?? "No se pudo validar el token.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Su sesión ha caducado, vuelva a inciar sesión" ?? "No se pudo validar el token.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 

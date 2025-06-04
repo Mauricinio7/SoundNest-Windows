@@ -52,6 +52,7 @@ namespace SoundNest_Windows_Client.ViewModels
         private readonly ISongDownloader _songService;
         private readonly IPlaylistService _playlistService;
         private readonly IAccountService _accountService;
+        private readonly IVisualizationsService _visualizationsService;
         private static readonly MediaPlayer _mediaPlayer = new MediaPlayer();
         private readonly DispatcherTimer _timer;
 
@@ -146,13 +147,14 @@ namespace SoundNest_Windows_Client.ViewModels
         public ObservableCollection<PlaylistResponse> UserPlaylists { get; set; } = new();
 
 
-        public MusicPlayerBarViewModel(INavigationService navigation, ISongDownloader songDownloaderService, IGrpcClientManager grpcClient, IPlaylistService playlistService, IAccountService accountService)
+        public MusicPlayerBarViewModel(INavigationService navigation, ISongDownloader songDownloaderService, IGrpcClientManager grpcClient, IPlaylistService playlistService, IAccountService accountService, IVisualizationsService visualizationsService)
         {
             _navigation = navigation;
             _songService = songDownloaderService;
             _playlistService = playlistService;
             _mediaPlayer.Volume = volume;
             _accountService = accountService;
+            _visualizationsService = visualizationsService;
 
             _mediaPlayer.MediaOpened += (s, e) =>
             {
@@ -287,6 +289,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 if (File.Exists(destPath))
                 {
+                    //TODO remember, this is just for testing purposes, remove this later
                     MessageBox.Show("La canción ya existe en la caché.", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
                     return true;
                 }
@@ -303,6 +306,7 @@ namespace SoundNest_Windows_Client.ViewModels
                             oldestFile.Delete();
                             App.Current.Dispatcher.Invoke(() =>
                             {
+                                //TODO remember, this is just for testing purposes, remove this later
                                 MessageBox.Show($"Se eliminó la canción más antigua de la caché: {deletedSong}", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
                             });
                         }
@@ -322,6 +326,18 @@ namespace SoundNest_Windows_Client.ViewModels
                 {
                     MessageBox.Show("La canción se descargó correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                     flag = true;
+
+                    var visitResutl = await _visualizationsService.AddVisitToSongAsync(idSong);
+
+                    if (visitResutl.IsSuccess) //TODO remember, is just for testing purposes, remove this later
+                    {
+                        MessageBox.Show("Visita incrementada exitosamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Error al incrementar visita:\n{visitResutl.ErrorMessage}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                    
                 }
             }
             catch (Exception ex)

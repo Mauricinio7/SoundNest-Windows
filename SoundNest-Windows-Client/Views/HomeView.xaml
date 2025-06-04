@@ -80,7 +80,7 @@
                 <Button Style="{StaticResource CarouselArrowButtonStyle}"
                     Content="&#xE76C;"  
                     Command="{Binding ScrollRightPopularCommand}"
-                    Visibility="{Binding CanScrollRight, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    Visibility="{Binding CanScrollRightPopular, Converter={StaticResource BoolToVisibilityConverter}}" />
             </StackPanel>
 
             <Label Content="Canciones recientes: "

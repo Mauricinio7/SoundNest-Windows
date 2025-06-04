@@ -27,7 +27,7 @@ namespace Services.Communication.RESTful.Services
         public async Task<ApiResult<bool>> AddVisitToSongAsync(int idSong)
         {
             string url = ApiRoutes.AddVisitToSong.Replace("{idSong}", idSong.ToString());
-            var result = await _apiClient.PostAsync<object, object>(url, null);
+            var result = await _apiClient.PostAsync<object, object>(url, new { });
 
             if (result.IsSuccess)
             {

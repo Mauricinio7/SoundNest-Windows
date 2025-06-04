@@ -10,6 +10,8 @@ using Services.Communication.gRPC.Services;
 using System.IO;
 using Services.Communication.RESTful.Models.Auth;
 using SoundNest_Windows_Client.Models;
+using Services.Communication.RESTful.Http;
+using Newtonsoft.Json.Linq;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -40,17 +42,19 @@ namespace SoundNest_Windows_Client.ViewModels
         private readonly IUserService userService;
         private readonly IUserImageServiceClient userImageService;
         private readonly IAuthService authService;
+        private readonly IApiClient apiClient;
         private CreateUser  _account;
 
         public RelayCommand CancelCommand { get; set; }
         public AsyncRelayCommand VerifyCodeCommand { get; set; }
 
-        public VerifyAccountViewModel(INavigationService navigationService, IUserService userService, IUserImageServiceClient userImageService, IAuthService authService)
+        public VerifyAccountViewModel(INavigationService navigationService, IUserService userService, IUserImageServiceClient userImageService, IAuthService authService, IApiClient apiClient)
         {
             Navigation = navigationService;
             this.userService = userService;
             this.userImageService = userImageService;
             this.authService = authService;
+            this.apiClient = apiClient;
 
             CancelCommand = new RelayCommand(ExecuteCancelCommand);
             VerifyCodeCommand = new AsyncRelayCommand(async () => await ExecuteVerifyCodeCommand());
@@ -94,19 +98,9 @@ namespace SoundNest_Windows_Client.ViewModels
                 if (response.IsSuccess)
                 {
 
-                await UploadDefaultProfileImageAsync(newUser.Email, newUser.Password);
+                await UploadDefaultProfileImageAsync(newUser.NameUser, newUser.Password);
 
-                EditUserRequest editUserRequest = new EditUserRequest
-                {
-                    AdditionalInformation = "Hola Soundnest, esta es mi cuenta"
-                };
-
-                var result = await userService.EditUserAsync(editUserRequest);
-
-                if (!result.IsSuccess)
-                {
-                    MessageBox.Show(result.Message ?? "Error al agregar información adicional al usuario", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                
 
                 MessageBox.Show("¡Cuenta creada exitosamente!", "Código de verificación", MessageBoxButton.OK, MessageBoxImage.Information);
                     Navigation.NavigateTo<LoginViewModel>();
@@ -140,18 +134,29 @@ namespace SoundNest_Windows_Client.ViewModels
                     return;
                 }
 
-                string? userId = JwtHelper.GetEmailFromToken(result.Data);
-                if (!int.TryParse(userId, out int id))
-                {
-                    MessageBox.Show("ID del usuario inválido.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
+                int userId = JwtHelper.GetUserIdFromToken(result.Data).Value;
 
-                bool uploadSuccess = await userImageService.UploadImageAsync(id, tempPath);
+                bool uploadSuccess = await userImageService.UploadImageAsync(userId, tempPath);
                 if (!uploadSuccess)
                 {
                     MessageBox.Show("No se pudo subir la imagen de perfil por defecto.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
+
+                this.apiClient.SetAuthorizationToken(result.Data);
+
+                EditUserRequest editUserRequest = new EditUserRequest
+                {
+                    NameUser = username,
+                    AdditionalInformation = "Hola Soundnest, esta es mi cuenta"
+                };
+
+                var resultAditionalInfo = await userService.EditUserAsync(editUserRequest);
+
+                if (!resultAditionalInfo.IsSuccess)
+                {
+                    MessageBox.Show(result.Message ?? "Error al agregar información adicional al usuario", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+
                 File.Delete(tempPath);
             }
             catch (Exception ex)
