@@ -39,7 +39,6 @@ namespace SoundNest_Windows_Client.ViewModels
         public ObservableCollection<PlaylistResponse> Playlists { get; } = new();
         public RelayCommand OpenPlaylistPopupCommand { get; }
         public RelayCommand ClosePlaylistPopupCommand { get; }
-        public RelayCommand AddToPlaylistCommand { get; }
 
         private PlaylistResponse _selectedPlaylist;
         public PlaylistResponse SelectedPlaylist
@@ -185,10 +184,9 @@ namespace SoundNest_Windows_Client.ViewModels
             NextSongCommand = new RelayCommand(PlayNextSong);
             DownloadSongCommand = new RelayCommand(DownloadSong);
             CommentsViewCommand = new RelayCommand(ExecuteCommentsViewCommand);
-            AddSongToPlaylistCommand = new RelayCommand(ExecuteAddSongToPlaylistCommand);
             OpenPlaylistPopupCommand = new RelayCommand(OpenPlaylistPopup);
             ClosePlaylistPopupCommand = new RelayCommand(ClosePlaylistPopup);
-            AddToPlaylistCommand = new RelayCommand(AddToPlaylist);
+            AddSongToPlaylistCommand = new RelayCommand(AddSongToPlaylist);
 
 
             _ = LoadUserPlaylistsAsync();
@@ -239,7 +237,7 @@ namespace SoundNest_Windows_Client.ViewModels
             IsPlaylistPopupVisible = false;
         }
 
-        private async void AddToPlaylist(object param)
+        private async void AddSongToPlaylist(object param)
         {
             if (param is not string playlistId)
             {
@@ -262,6 +260,7 @@ namespace SoundNest_Windows_Client.ViewModels
             var result = await _playlistService.AddSongToPlaylistAsync(song.IdSong.ToString(), playlistId);
             if (result.IsSuccess)
             {
+                Mediator.Notify(MediatorKeys.REFRESH_PLAYLISTS, null);
                 MessageBox.Show("Canción agregada a la playlist.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 IsPlaylistPopupVisible = false;
             }
@@ -554,10 +553,6 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-        private async void ExecuteAddSongToPlaylistCommand(object parameter)
-        {
-            //TODO add to playlist 
-        }
         private async Task LoadUserPlaylistsAsync()
         {
             var userId = _accountService.CurrentUser.Id.ToString();
