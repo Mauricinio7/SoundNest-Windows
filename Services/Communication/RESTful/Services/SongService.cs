@@ -142,7 +142,7 @@ namespace Services.Communication.RESTful.Services
                 ImageBase64 = imageBase64
             };
 
-            var result = await _apiClient.PatchAsync<object, object>(url, request);
+            var result = await _apiClient.PatchAsync<ImageSongRequest>(url, request);
 
             if (result.IsSuccess)
             {

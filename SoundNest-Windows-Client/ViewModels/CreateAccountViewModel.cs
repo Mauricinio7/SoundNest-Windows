@@ -6,6 +6,7 @@ using Services.Navigation;
 using SoundNest_Windows_Client.Models;
 using SoundNest_Windows_Client.Utilities;
 using System;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -66,6 +67,7 @@ namespace SoundNest_Windows_Client.ViewModels
             };
 
             var response = await authService.SendCodeEmailAsync(requestCode);
+            Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
 
             if (response.IsSuccess)
             {
@@ -77,6 +79,7 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 MessageBox.Show(response.Message, "Hubo un error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
         }
 
         private CreateUser CreateRequest()

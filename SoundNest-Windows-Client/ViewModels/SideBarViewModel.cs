@@ -82,6 +82,11 @@ namespace SoundNest_Windows_Client.ViewModels
                 _ = LoadPlaylistsAsync();
             });
 
+            Mediator.Register(MediatorKeys.UPLOAD_USER_IMAGE, _ =>
+            {
+                LoadProfileImage();
+            });
+
             EnsureTokenIsConfigured();
             _ = LoadPlaylistsAsync();
             _ = LoadProfileImage();

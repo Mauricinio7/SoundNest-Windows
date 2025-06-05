@@ -19,5 +19,6 @@ namespace Services.Infrestructure
         public const string ADD_PLAYLIST = "AddPlaylist";
         public const string REFRESH_PLAYLISTS = "RefreshPlaylists";
         public const string PLAY_SONG = "PlaySong";
+        public const string UPLOAD_USER_IMAGE = "UploadUserImage";
     }
 }

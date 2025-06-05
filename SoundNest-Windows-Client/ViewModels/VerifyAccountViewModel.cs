@@ -12,6 +12,9 @@ using Services.Communication.RESTful.Models.Auth;
 using SoundNest_Windows_Client.Models;
 using Services.Communication.RESTful.Http;
 using Newtonsoft.Json.Linq;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Services.Communication.gRPC.Http;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -98,9 +101,17 @@ namespace SoundNest_Windows_Client.ViewModels
                 if (response.IsSuccess)
                 {
 
-                await UploadDefaultProfileImageAsync(newUser.NameUser, newUser.Password);
+                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
+                if (!await UploadDefaultProfileImageAsync(newUser.NameUser, newUser.Password))
+                {
+                    MessageBox.Show("No se pudo subir la imagen de perfil por defecto.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
 
-                
+                if (!await UploadAditionalInformatcion(newUser.NameUser))
+                {
+                    MessageBox.Show("No se pudo subir la información adicional del usuario.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
 
                 MessageBox.Show("¡Cuenta creada exitosamente!", "Código de verificación", MessageBoxButton.OK, MessageBoxImage.Information);
                     Navigation.NavigateTo<LoginViewModel>();
@@ -112,58 +123,72 @@ namespace SoundNest_Windows_Client.ViewModels
             
         }
 
-        private async Task UploadDefaultProfileImageAsync(string username, string password)
+        private async Task<bool> UploadDefaultProfileImageAsync(string username, string password)
         {
             try
             {
+                int userId = await GetNewUserId(username, password);
+
+                if (userId == -1)
+                {
+                    return false;
+                }
+
                 byte[] imageBytes = ImagesHelper.LoadEmbeddedImageAsByteArray("pack://application:,,,/Resources/Images/Icons/Default_ProfileImage_Icon.png");
 
                 string tempPath = Path.Combine(Path.GetTempPath(), $"default_profile_{Guid.NewGuid()}.png");
                 await File.WriteAllBytesAsync(tempPath, imageBytes);
 
-                var loginRequest = new LoginRequest
-                {
-                    Username = username,
-                    Password = password
-                };
-
-                var result = await ExecuteRESTfulApiCall(() => authService.LoginAsync(loginRequest));
-                if (!result.IsSuccess || string.IsNullOrWhiteSpace(result.Data))
-                {
-                    MessageBox.Show("No se pudo autenticar al nuevo usuario para asignar imagen de perfil.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                int userId = JwtHelper.GetUserIdFromToken(result.Data).Value;
 
                 bool uploadSuccess = await userImageService.UploadImageAsync(userId, tempPath);
+                
+                File.Delete(tempPath);
+
                 if (!uploadSuccess)
                 {
-                    MessageBox.Show("No se pudo subir la imagen de perfil por defecto.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return false;
                 }
 
-                //TODO Do this method SOLID
-                this.apiClient.SetAuthorizationToken(result.Data);
-
-                EditUserRequest editUserRequest = new EditUserRequest
-                {
-                    NameUser = username,
-                    AdditionalInformation = "Hola Soundnest, esta es mi cuenta"
-                };
-
-                var resultAditionalInfo = await userService.EditUserAsync(editUserRequest);
-
-                if (!resultAditionalInfo.IsSuccess)
-                {
-                    MessageBox.Show(result.Message ?? "Error al agregar información adicional al usuario", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-
-                File.Delete(tempPath);
+                return true;
+                
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al subir imagen por defecto: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
             }
+        }
+
+        private async Task<int> GetNewUserId(string username, string password)
+        {
+            var loginRequest = new LoginRequest
+            {
+                Username = username,
+                Password = password
+            };
+
+            var result = await ExecuteRESTfulApiCall(() => authService.LoginAsync(loginRequest));
+            if (!result.IsSuccess || string.IsNullOrWhiteSpace(result.Data))
+            {
+                MessageBox.Show("No se pudo autenticar al nuevo usuario para asignar imagen de perfil.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return -1;
+            }
+            this.apiClient.SetAuthorizationToken(result.Data);
+            App.ServiceProvider.GetRequiredService<IGrpcClientManager>().SetAuthorizationToken(result.Data);
+
+            return JwtHelper.GetUserIdFromToken(result.Data).Value;
+        }
+
+        private async Task<bool> UploadAditionalInformatcion(string username)
+        {
+            EditUserRequest editUserRequest = new EditUserRequest
+            {
+                NameUser = username,
+                AdditionalInformation = "Hola Soundnest, esta es mi cuenta"
+            };
+
+            var resultAditionalInfo = await userService.EditUserAsync(editUserRequest);
+
+            return resultAditionalInfo.IsSuccess;
         }
 
 

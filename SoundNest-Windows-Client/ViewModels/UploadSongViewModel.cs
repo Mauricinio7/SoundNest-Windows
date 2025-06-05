@@ -215,22 +215,34 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
+        private ValidationResult CanUploadSong()
+        {
+            if (string.IsNullOrWhiteSpace(PlaylistName))
+                return ValidationResult.Failure("Debes ingresar el nombre de la canción.");
+
+            if (string.IsNullOrWhiteSpace(SelectedFileName))
+                return ValidationResult.Failure("Debes seleccionar un archivo de audio.");
+
+            if (!File.Exists(SelectedFileName))
+                return ValidationResult.Failure("El archivo seleccionado no existe.");
+
+            if (SelectedGenre == null || SelectedGenre.IdSongGenre == -1)
+                return ValidationResult.Failure("Selecciona un género válido.");
+
+            if (SongCustomImage == null)
+                return ValidationResult.Failure("Debes seleccionar una imagen para la canción.");
+
+            return ValidationResult.Success();
+        }
+
 
         private async void UploadSong()
         {
-            if (string.IsNullOrWhiteSpace(PlaylistName) ||
-                string.IsNullOrWhiteSpace(SelectedFileName) ||
-                !File.Exists(SelectedFileName))
-            {
-                MessageBox.Show("Por favor completa todos los campos y selecciona un archivo válido.",
-                                "Campos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            ValidationResult validationResult = CanUploadSong();
 
-            if (SelectedGenre == null || SelectedGenre.IdSongGenre == -1)
+            if (!validationResult.Result)
             {
-                MessageBox.Show("Selecciona un género válido.",
-                                "Error de género", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(validationResult.Message, "Campos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -250,58 +262,25 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 if (result)
                 {
-                    //TODO do this methods SOLID
-                    var songIdResult = await songService.GetLatestSongByUserIdAsync(user.CurrentUser.Id);
+                    bool imageUploadResult = await UploadImageToSongInServer();
 
-                    if (songIdResult.IsSuccess)
+                    if (imageUploadResult)
                     {
-                        if (SongCustomImage is BitmapImage bmp)
-                        {
-                            var encoder = new PngBitmapEncoder();
-                            encoder.Frames.Add(BitmapFrame.Create(bmp));
-                            using var ms = new MemoryStream();
-                            encoder.Save(ms);
-                            var imageBytes = ms.ToArray();
-                            int songId = songIdResult.Data.IdSong;
-
-                            var base64 = $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
-
-                            var uploadImageResult = await songService.UploadSongImageAsync(songId, base64);
-
-                            if (uploadImageResult.IsSuccess)
-                            {
-                                MessageBox.Show("Canción publicada con éxito",
-                                "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-
-                                Navigation.NavigateTo<HomeViewModel>();
-
-                                PlaylistName = string.Empty;
-                                AdditionalInfo = string.Empty;
-                                SelectedFileName = null;
-                                SelectedGenre = null;
-                            }
-                            else {
-                                MessageBox.Show(uploadImageResult.ErrorMessage ?? "No se pudo subir la imagen de la canción", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
-                            }
-                        }
-                        else
-                        {
-                            MessageBox.Show("Canción publicada con éxito sin imagen, hubo un error al tratar de publicar la imagen",
-                                    "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-                            Navigation.NavigateTo<HomeViewModel>();
-                            PlaylistName = string.Empty;
-                            AdditionalInfo = string.Empty;
-                            SelectedFileName = null;
-                            SelectedGenre = null;
-                        }  
+                        MessageBox.Show("Canción publicada con éxito",
+                        "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
-                        MessageBox.Show("Ocurrió un error al subir la canción.",
-                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Canción publicada sin imagen, hubo un error al internar publicar la imagen",
+                        "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
 
-                    
+                    Navigation.NavigateTo<HomeViewModel>();
+
+                    PlaylistName = string.Empty;
+                    AdditionalInfo = string.Empty;
+                    SelectedFileName = null;
+                    SelectedGenre = null;
                 }
                 else
                 {
@@ -319,6 +298,47 @@ namespace SoundNest_Windows_Client.ViewModels
                 Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
 
             }
+        }
+
+        private async Task<bool> UploadImageToSongInServer()
+        {
+            var songIdResult = await songService.GetLatestSongByUserIdAsync(user.CurrentUser.Id);
+            if (!songIdResult.IsSuccess)
+                return false;
+
+            string base64 = ConvertImageToBase64();
+            if (string.IsNullOrWhiteSpace(base64))
+                return false;
+
+            var uploadImageResult = await songService.UploadSongImageAsync(songIdResult.Data.IdSong, base64);
+            return uploadImageResult.IsSuccess;
+        }
+
+
+        private string ConvertImageToBase64()
+        {
+            if (SongCustomImage is BitmapImage bmp)
+            {
+                PngBitmapEncoder encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(bmp));
+                using MemoryStream ms = new MemoryStream();
+                encoder.Save(ms);
+                byte[] imageBytes = ms.ToArray();
+
+                string imageExtension = ".png";
+                string mime = imageExtension switch
+                {
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".png" => "image/png",
+                    _ => throw new InvalidOperationException("Tipo de imagen no soportado")
+                };
+
+                return $"data:{mime};base64,{Convert.ToBase64String(imageBytes)}";
+            }
+            else
+            {
+                return string.Empty;
+            }      
         }
 
     }

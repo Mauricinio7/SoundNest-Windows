@@ -28,6 +28,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private readonly INotificationService notificationService;
         private readonly Account currentUser;
+        public bool HasNotifications => Notifications.Count > 0;
 
         public ObservableCollection<Notification> Notifications { get; set; } = new();
 
@@ -59,12 +60,19 @@ namespace SoundNest_Windows_Client.ViewModels
                     {
                         Notifications.Add(new Notification(notification.Title, notification.Sender, notification.Notification, notification.Relevance.Value, notification.Id));
                     }
+                    RefreshNotificationState();
                 }
                 else
                 {
                     MessageBox.Show(result.Message ?? "Error al cargar las notificaciones", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
         }
+
+        private void RefreshNotificationState()
+        {
+            OnPropertyChanged(nameof(HasNotifications));
+        }
+
 
         private void OnNotificationClick(object parameter)
         {
@@ -97,6 +105,7 @@ namespace SoundNest_Windows_Client.ViewModels
                     {
                         MessageBox.Show("Notificación eliminada exitosamente", "Eliminar Notificación", MessageBoxButton.OK, MessageBoxImage.Information);
                         Notifications.Remove(notification);
+                        RefreshNotificationState();
                     }
                     else
                     {

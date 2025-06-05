@@ -289,6 +289,7 @@ namespace SoundNest_Windows_Client.ViewModels
                 image.Freeze();
 
                 ProfilePhoto = image;
+                Mediator.Notify(MediatorKeys.UPLOAD_USER_IMAGE,null);
             }
             catch (Exception ex)
             {
