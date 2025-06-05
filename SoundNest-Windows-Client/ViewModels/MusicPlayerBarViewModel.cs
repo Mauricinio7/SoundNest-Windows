@@ -438,9 +438,17 @@ namespace SoundNest_Windows_Client.ViewModels
 
             var song = playlist[currentIndex];
             string fileName = song.FileName;
+            string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Songs", $"{fileName}.mp3");
+
+            if (_mediaPlayer.Source != null && _mediaPlayer.Source.LocalPath.Equals(fullPath, StringComparison.OrdinalIgnoreCase))
+            {
+                _mediaPlayer.Position = TimeSpan.Zero;
+                return;
+            }
+
             bool result = await SaveSongOnCacheAsync(song.IdSong, fileName);
 
-            if(!result)
+            if (!result)
             {
                 MessageBox.Show("Error al descargar la canción, intente más tarde.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
@@ -448,15 +456,24 @@ namespace SoundNest_Windows_Client.ViewModels
                 return;
             }
 
-            string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Songs", $"{fileName}.mp3");
-
             try
             {
                 var file = TagLib.File.Create(fullPath);
-                SongTittle = file.Tag.Title ?? song.SongName;
-                SongArtist = !string.IsNullOrWhiteSpace(file.Tag.JoinedPerformers) ? file.Tag.JoinedPerformers : song.UserName ?? "Artista desconocido";
+                SongTittle = !string.IsNullOrWhiteSpace(song.SongName)
+                    ? song.SongName
+                    : (file.Tag.Title ?? "Sin título");
 
-                if (file.Tag.Pictures.Length > 0)
+                SongArtist = !string.IsNullOrWhiteSpace(song.UserName)
+                    ? song.UserName
+                    : (!string.IsNullOrWhiteSpace(file.Tag.JoinedPerformers)
+                        ? file.Tag.JoinedPerformers
+                        : "Artista desconocido");
+
+                if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
+                {
+                    SongImage = await ImagesHelper.LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, song.PathImageUrl.AsSpan(1)));
+                }
+                else if (file.Tag.Pictures.Length > 0)
                 {
                     var picData = file.Tag.Pictures[0].Data.Data;
                     using var ms = new MemoryStream(picData);
@@ -468,27 +485,23 @@ namespace SoundNest_Windows_Client.ViewModels
                     img.Freeze();
                     SongImage = img;
                 }
-               else if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
-               {
-                    SongImage = await ImagesHelper.LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, song.PathImageUrl.AsSpan(1)));
-               }
                 else
                 {
                     SongImage = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
                 }
-
             }
             catch
             {
-                SongTittle = song.SongName;
+                SongTittle = song.SongName ?? "Sin título";
                 SongArtist = song.UserName ?? "Artista desconocido";
-                SongImage = null;
+                SongImage = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
             }
 
             _mediaPlayer.Open(new Uri(fullPath));
             isPlaying = false;
             TogglePlayPause();
         }
+
 
 
         private void UpdateVolumeIcon()
