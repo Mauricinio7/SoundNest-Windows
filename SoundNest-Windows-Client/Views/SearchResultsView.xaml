@@ -4,15 +4,40 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:SoundNest_Windows_Client.Views"
+             xmlns:converters="clr-namespace:SoundNest_Windows_Client.Resources.Converters"
              mc:Ignorable="d"
              Background="{StaticResource BackgroundyColor1}"
              d:DesignHeight="1080" d:DesignWidth="1920">
+    
     <UserControl.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <Style x:Key="SongItemStyle" TargetType="Border">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                        To="#333333" Duration="0:0:0.2"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                        To="Transparent" Duration="0:0:0.2"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+            </Style.Triggers>
         </Style>
+
     </UserControl.Resources>
+
 
     <Viewbox Stretch="Uniform">
         <Canvas Width="1920" Height="1080">
@@ -122,7 +147,17 @@
                                                    FontSize="12"
                                                    Foreground="Gray"/>
                                     </StackPanel>
-
+                                    <Button Grid.Column="3"
+                                        Content="Eliminar"
+                                        Background="#b00020"
+                                        Foreground="White"
+                                        BorderThickness="0"
+                                        Height="35"
+                                        Width="60"
+                                        HorizontalAlignment="Right"
+                                        Visibility="{Binding IsMineOrModerator, Converter={StaticResource BoolToVisibilityConverter}}"
+                                        Command="{Binding DataContext.DeleteSongCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"/>
                                     <TextBlock Grid.Column="4"
                                                Text="{Binding DurationFormatted}"
                                                Foreground="White"

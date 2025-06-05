@@ -24,6 +24,8 @@ namespace SoundNest_Windows_Client.Models
             public ImageSource Image { get; set; }
             public string DurationFormatted { get; set; }
             public int Index { get; set; }
+             public bool IsMineOrModerator { get; set; }
+
         public List<object> Visualizations { get; set; } = new(); // TODO get a real list
 
         

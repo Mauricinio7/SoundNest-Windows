@@ -18,22 +18,78 @@
                    FontSize="66"
                    FontWeight="Bold"
                    Foreground="{StaticResource ForegroundWhiteColor}"
-                   HorizontalAlignment="Left"
-                   Margin="245,107,0,0"
-                   VerticalAlignment="Top"/>
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Top" Canvas.Left="245" Canvas.Top="32"/>
 
-            <lvc:CartesianChart Series="{Binding SeriesCollection}"
+            <Label Content="Canciones más escuchadas del usuario: "
+               FontSize="35"
+               FontWeight="Bold"
+               Foreground="{StaticResource ForegroundWhiteColor}"
+               HorizontalAlignment="Left"
+               VerticalAlignment="Top" Canvas.Left="285" Canvas.Top="171"/>
+
+            <lvc:CartesianChart Series="{Binding TopSongsByUserCollection}"
                                 LegendLocation="Bottom"
-                                Width="1200" Height="600"
-                                Canvas.Left="300"
-                                Canvas.Top="250">
+                                Width="937" Height="294"
+                                Canvas.Left="244"
+                                Foreground="White"
+                                Canvas.Top="250" HorizontalAlignment="Left" VerticalAlignment="Center">
                 <lvc:CartesianChart.AxisX>
-                    <lvc:Axis Title="Mes" Labels="{Binding Labels}" />
+                    <lvc:Axis Title="Canciones"
+              Labels="{Binding TopSongsByUserLabels}"
+              Foreground="White"
+              LabelsRotation="15"
+              DisableAnimations="True"
+              ShowLabels="True"/>
                 </lvc:CartesianChart.AxisX>
                 <lvc:CartesianChart.AxisY>
-                    <lvc:Axis Title="Visitas" LabelFormatter="{Binding Formatter}" />
+                    <lvc:Axis Title="Visitas" LabelFormatter="{Binding TopSongsByUserFormatter}"
+                              Foreground="White"/>
                 </lvc:CartesianChart.AxisY>
             </lvc:CartesianChart>
+
+            <Label Content="Géneros más escuchados del mundo: "
+               FontSize="35"
+               FontWeight="Bold"
+               Foreground="{StaticResource ForegroundWhiteColor}"
+               HorizontalAlignment="Left"
+               VerticalAlignment="Top" Canvas.Left="1244" Canvas.Top="127"/>
+
+            <lvc:PieChart Series="{Binding GenresVisitCollection}"
+              LegendLocation="Bottom"
+              Foreground="White"
+              Width="521" Height="429"
+              Canvas.Left="1280"
+              Canvas.Top="189"
+              Hoverable="False"
+              DataTooltip="{x:Null}" HorizontalAlignment="Left" VerticalAlignment="Center">
+            </lvc:PieChart>
+
+            <Label Content="Canciones más escuchadas del mundo: "
+               FontSize="35"
+               FontWeight="Bold"
+               Foreground="{StaticResource ForegroundWhiteColor}"
+               HorizontalAlignment="Left"  
+               VerticalAlignment="Top" Canvas.Left="264" Canvas.Top="585"/>
+            <lvc:CartesianChart Series="{Binding GlobalTopSongsCollection}"
+                    LegendLocation="Bottom"
+                    Width="1497" Height="313"
+                    Canvas.Left="244"
+                    Canvas.Top="655"
+                    Foreground="White"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top">
+                <lvc:CartesianChart.AxisX>
+                    <lvc:Axis Title="Canciones" Labels="{Binding GlobalTopSongsLabels}"
+                              Foreground="White"/>
+                </lvc:CartesianChart.AxisX>
+                <lvc:CartesianChart.AxisY>
+                    <lvc:Axis Title="Reproducciones" LabelFormatter="{Binding GlobalTopSongsFormatter}"
+                              Foreground="White"/>
+                </lvc:CartesianChart.AxisY>
+            </lvc:CartesianChart>
+
+
 
         </Canvas>
     </Viewbox>

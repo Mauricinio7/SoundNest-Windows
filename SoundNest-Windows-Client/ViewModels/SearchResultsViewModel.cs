@@ -12,6 +12,7 @@ using Services.Infrestructure;
 using Services.Communication.RESTful.Models.User;
 using System.Security.Principal;
 using Services.Communication.RESTful.Models.Search;
+using System.Threading.Tasks;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -19,11 +20,14 @@ namespace SoundNest_Windows_Client.ViewModels
     {
         private readonly IApiClient apiClient;
         private readonly ISongService songService;
+        private readonly IAccountService accountService;
         private readonly INavigationService navigation;
 
         public ObservableCollection<Models.Song> SearchResults { get; set; } = new();
 
         public RelayCommand PlaySongCommand { get; }
+        public AsyncRelayCommand DeleteSongCommand { get; }
+
         private Search search;
         private string resultLabelText;
         public string ResultLabelText
@@ -32,14 +36,15 @@ namespace SoundNest_Windows_Client.ViewModels
             set { resultLabelText = value; OnPropertyChanged(); }
         }
 
-        public SearchResultsViewModel(IApiClient apiClient, ISongService songService, INavigationService navigation)
+        public SearchResultsViewModel(IApiClient apiClient, ISongService songService, INavigationService navigation, IAccountService account)
         {
             this.apiClient = apiClient;
             this.songService = songService;
             this.navigation = navigation;
+            this.accountService = account;
 
             PlaySongCommand = new RelayCommand(PlaySong);
-            
+            DeleteSongCommand = new AsyncRelayCommand(async (param) => await DeleteSong(param));
         }
 
         public void ReceiveParameter(object parameter)
@@ -104,6 +109,8 @@ namespace SoundNest_Windows_Client.ViewModels
                         DurationFormatted = TimeSpan.FromSeconds(song.DurationSeconds).ToString(@"m\:ss"),
                         Index = index++
                     };
+                    realSong.IsMineOrModerator = song.UserName == accountService.CurrentUser.Name || accountService.CurrentUser.Role == 2;
+
 
                     if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
                     {
@@ -124,6 +131,43 @@ namespace SoundNest_Windows_Client.ViewModels
                 MessageBox.Show(result.Message ?? "Error al obtener canciones recientes", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private async Task DeleteSong(object parameter)
+        {
+            if (parameter is Models.Song song)
+            {
+                var confirm = MessageBox.Show(
+                    $"¿Estás seguro de que deseas eliminar la canción \"{song.SongName}\"?",
+                    "Confirmar eliminación",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question
+                );
+
+                if (confirm != MessageBoxResult.Yes)
+                    return;
+
+                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
+                var result = await songService.DeleteSongAsync(song.IdSong);
+
+                if (result.IsSuccess)
+                {
+                    SearchResults.Remove(song);
+                    ResultLabelText = SearchResults.Count == 0
+                        ? "No se han encontrado resultados de la búsqueda"
+                        : string.Empty;
+
+                    MessageBox.Show("Canción eliminada correctamente", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show(result.Message ?? "Error al eliminar la canción", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+            }
+        }
+
+
+
         private void PlaySong(object parameter)
         {
             if (parameter is Models.Song song)

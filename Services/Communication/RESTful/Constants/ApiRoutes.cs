@@ -66,5 +66,8 @@ namespace Services.Communication.RESTful.Constants
 
         //Visualizaations
         public const string AddVisitToSong = "api/visit/{idSong}/increment";
+        public const string GetTopSongsByUser = "api/visit/user/{idUser}/top-songs";
+        public const string GetTopSongsGlobaly = "api/visit/global/top-songs";
+        public const string GetTopGenresGlobaly = "api/visit/global/top-genres";
     }
 }

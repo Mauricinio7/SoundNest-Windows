@@ -21,6 +21,8 @@ namespace Services.Communication.RESTful.Services
         Task<ApiResult<List<SongResponse>>> GetPopularSongsByMonthAsync(int amount, int year, int month);
         Task<ApiResult<bool>> UploadSongImageAsync(int songId, string imageBase64);
         Task<ApiResult<SongResponse>> GetLatestSongByUserIdAsync(int userId);
+        Task<ApiResult<bool>> DeleteSongAsync(int songId);
+
 
     }
 
@@ -176,6 +178,20 @@ namespace Services.Communication.RESTful.Services
                 result.StatusCode ?? HttpStatusCode.ServiceUnavailable);
         }
 
+        public async Task<ApiResult<bool>> DeleteSongAsync(int songId)
+        {
+            var url = ApiRoutes.SongsDeleteSong.Replace("{idsong}", songId.ToString());
+            var result = await _apiClient.DeleteAsync(url);
+
+            if (result.IsSuccess)
+                return ApiResult<bool>.Success(true, "Canción eliminada correctamente", result.StatusCode.GetValueOrDefault(HttpStatusCode.OK));
+
+            return ApiResult<bool>.Failure(
+                result.ErrorMessage ?? $"No se pudo eliminar la canción con ID {songId}",
+                result.Message,
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)
+            );
+        }
 
 
 

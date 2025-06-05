@@ -61,7 +61,6 @@
                                                 Width="70" Margin="0,10,0,0"/>
                                         </StackPanel>
 
-                                        <!-- Respuestas con ScrollViewer y altura máxima -->
                                         <ItemsControl ItemsSource="{Binding Replies}" Visibility="{Binding IsRepliesVisible, Converter={StaticResource BoolToVisibilityConverter}}">
                                             <ItemsControl.Template>
                                                 <ControlTemplate>
