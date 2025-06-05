@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using static Song.SongService;
+using Grpc.Core;
 
 namespace Services.Communication.gRPC.Http
 {
@@ -26,6 +27,14 @@ namespace Services.Communication.gRPC.Http
             _handler = new HttpClientHandler();
             _httpClient = new HttpClient(_handler);
             CreateChannelAndClient();
+        }
+        public SongGrpcClient(GrpcChannel channel)
+        {
+            Client = new SongServiceClient(channel);
+        }
+        public SongGrpcClient(CallInvoker callInvoker)
+        {
+            Client = new SongServiceClient(callInvoker);
         }
 
         private void CreateChannelAndClient()

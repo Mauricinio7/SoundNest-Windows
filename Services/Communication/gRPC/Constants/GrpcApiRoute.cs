@@ -11,6 +11,7 @@ namespace Services.Communication.gRPC.Constants
         public const string PORT = "50051";
         //https://localhost
         public const string BaseUrl = $"http://100.65.158.22:{PORT}";
+        public const string BaseUrlTest = $"http://localhost:{PORT}";
 
     }
 }
