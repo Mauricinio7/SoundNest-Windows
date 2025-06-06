@@ -28,7 +28,7 @@ namespace SoundNest_Windows_Client.Views
         }
         private void OnDeleteButtonClick(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.DataContext is SongResponse song)
+            if (sender is Button btn && btn.DataContext is Models.Song song)
             {
                 var vm = DataContext as PlaylistDetailViewModel;
                 vm.SelectedSong = song;

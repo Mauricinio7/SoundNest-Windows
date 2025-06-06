@@ -8,7 +8,7 @@ using System.Windows.Media;
 
 namespace SoundNest_Windows_Client.Models
 {
-    class Song
+    public class Song
     {
             public int IdSong { get; set; }
             public string SongName { get; set; }

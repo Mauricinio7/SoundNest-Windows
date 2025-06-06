@@ -12,16 +12,123 @@
 
     <UserControl.Resources>
         <conv:PlaylistImageConverter x:Key="PlaylistImageConverter" />
+        <Style x:Key="SongItemStyle" TargetType="Border">
+            <Setter Property="Background" Value="#222222"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                        To="#333333" Duration="0:0:0.2"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"
+                                        To="#222222" Duration="0:0:0.2"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="CircularButtonStyle" TargetType="Button">
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <Setter.Value>
+                    <TransformGroup>
+                        <ScaleTransform x:Name="ButtonScale"/>
+                        <TranslateTransform x:Name="ButtonTranslate"/>
+                    </TransformGroup>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="45"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        BorderBrush="{TemplateBinding BorderBrush}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      />
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"
+                                                     To="-5" Duration="0:0:0.2"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[1].(TranslateTransform.Y)"
+                                                     To="0" Duration="0:0:0.2"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+
+                            <EventTrigger RoutedEvent="Button.Click">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleX)"
+                                                 To="0.9" Duration="0:0:0.1" AutoReverse="True"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TransformGroup.Children)[0].(ScaleTransform.ScaleY)"
+                                                 To="0.9" Duration="0:0:0.1" AutoReverse="True"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+
     </UserControl.Resources>
 
     <Viewbox Stretch="Uniform">
         <Canvas Width="1920" Height="1080">
+            <Label Content="Reproducir Playlist"
+        FontSize="45" FontWeight="Bold"
+        Foreground="{StaticResource ForegroundWhiteColor}"
+        Canvas.Left="444" Canvas.Top="241" HorizontalAlignment="Left" VerticalAlignment="Top" Width="734" Height="64"/>
+            <Button Width="90"
+        Height="90"
+        Canvas.Left="349"
+        Canvas.Top="230"
+        FontFamily="Segoe MDL2 Assets"
+        FontSize="40"
+        Content="&#xF5B0;"
+        Command="{Binding PlayPlaylistCommand}"
+        Background="#FFA500"
+        BorderThickness="0"
+        Foreground="Black"
+        Cursor="Hand"
+        ToolTip="Reproducir playlist"
+        HorizontalAlignment="Left"
+        VerticalAlignment="Top"
+        Padding="0"
+        BorderBrush="Transparent"
+        Style="{StaticResource CircularButtonStyle}"/>
+
 
             <TextBlock FontSize="66"
                        FontWeight="Bold"
                        Foreground="{StaticResource ForegroundWhiteColor}"
-                       Canvas.Left="432"
-                       Canvas.Top="117">
+                       Canvas.Left="441"
+                       Canvas.Top="62">
                 <Run Text="Playlist -> "/>
                 <Run Text="{Binding PlaylistName}"/>
             </TextBlock>
@@ -31,8 +138,8 @@
                     FontWeight="Bold"
                     Style="{StaticResource PrimaryButtonStyle}"
                     Command="{Binding EditPlaylistCommand}"
-                    Canvas.Left="1334"
-                    Canvas.Top="122"
+                    Canvas.Left="1332"
+                    Canvas.Top="228"
                     Width="261"
                     Height="78"/>
 
@@ -41,78 +148,122 @@
                     FontWeight="Bold"
                     Style="{StaticResource NegativeButtonStyle}"
                     Command="{Binding DeletePlaylistCommand}"
-                    Canvas.Left="1623"
-                    Canvas.Top="123"
+                    Canvas.Left="1621"
+                    Canvas.Top="230"
                     Width="243"
                     Height="76"/>
 
-            <ScrollViewer Height="615"
+            <ScrollViewer Height="520"
                           Width="1427"
                           Canvas.Left="349"
-                          Canvas.Top="263"
+                          Canvas.Top="358"
                           VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled">
+                          HorizontalScrollBarVisibility="Disabled" HorizontalAlignment="Center" VerticalAlignment="Top">
                 <ItemsControl ItemsSource="{Binding Songs}" Width="1427">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Margin="10"
-                                    Padding="10"
-                                    Background="#222"
-                                    CornerRadius="8">
-                                <Grid>
+                            <Border Height="70"
+                Style="{StaticResource SongItemStyle}"
+                Margin="0,0,0,10">
+                                <Border.Triggers>
+                                    <EventTrigger RoutedEvent="MouseEnter">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="IndexText" Storyboard.TargetProperty="Visibility">
+                                                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Collapsed}" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PlayButton" Storyboard.TargetProperty="Visibility">
+                                                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                    <EventTrigger RoutedEvent="MouseLeave">
+                                        <BeginStoryboard>
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="IndexText" Storyboard.TargetProperty="Visibility">
+                                                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Visible}" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="PlayButton" Storyboard.TargetProperty="Visibility">
+                                                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="{x:Static Visibility.Collapsed}" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </BeginStoryboard>
+                                    </EventTrigger>
+                                </Border.Triggers>
+
+                                <Grid Margin="10,0">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="40"/>
+                                        <ColumnDefinition Width="60"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="80"/>
                                     </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="IndexText"
+               Text="{Binding Index}"
+               Foreground="White"
+               VerticalAlignment="Center"
+               HorizontalAlignment="Center"
+               Visibility="Visible"/>
 
-                                    <Image Grid.Column="0"
-                                           Width="60"
-                                           Height="60"
-                                           Margin="0,0,10,0"
-                                           Source="{Binding PathImageUrl,
-                                                            Converter={StaticResource PlaylistImageConverter}}"/>
+                                    <Button x:Name="PlayButton"
+            Grid.Column="0"
+            Visibility="Collapsed"
+            Width="24" Height="24"
+            Background="Transparent"
+            BorderThickness="0"
+            Foreground="White"
+            FontFamily="Segoe MDL2 Assets"
+            FontSize="16"
+            Content="&#xE768;"
+            Command="{Binding DataContext.PlaySongCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            CommandParameter="{Binding}" />
 
-                                    <StackPanel Grid.Column="1"
-                                                VerticalAlignment="Center">
+                                    <Image Grid.Column="1"
+           Width="50"
+           Height="50"
+           Stretch="UniformToFill"
+           Margin="10,0"
+           Source="{Binding PathImageUrl, Converter={StaticResource PlaylistImageConverter}}"/>
+
+                                    <StackPanel Grid.Column="2"
+                Orientation="Vertical"
+                VerticalAlignment="Center"
+                Margin="10,0">
                                         <TextBlock Text="{Binding SongName}"
-                                                   FontSize="20"
-                                                   FontWeight="Bold"
-                                                   Foreground="White"/>
-                                        <TextBlock Text="{Binding UserName}"
-                                                   FontSize="16"
-                                                   Foreground="LightGray"
-                                                   Margin="0,5,0,0"/>
+                   FontWeight="Bold"
+                   FontSize="14"
+                   Foreground="White"/>
+                                        <TextBlock Text="{Binding UserName, TargetNullValue='Artista desconocido'}"
+                   FontSize="12"
+                   Foreground="Gray"/>
                                     </StackPanel>
 
-                                    <Button Grid.Column="2"
-                                            Content="▶"
-                                            Width="40"
-                                            Height="40"
-                                            Command="{Binding PlaySongCommand, ElementName=RootControl}"
-                                            CommandParameter="{Binding}"
-                                            Background="Transparent"
-                                            BorderThickness="0"
-                                            FontSize="24"
-                                            Foreground="White"
-                                            Cursor="Hand"
-                                            VerticalAlignment="Center"/>
+                                    <Button Grid.Column="3"
+            Content="Eliminar"
+            Background="Transparent"
+            Foreground="LightGray"
+            BorderThickness="0"
+            FontSize="14"
+            Click="OnDeleteButtonClick"
+            Cursor="Hand"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Left"
+            Margin="10,0,0,0"/>
 
-                                    <Button x:Name="DeleteButton"
-                                            Grid.Column="3"
-                                            Content="Eliminar"
-                                            FontSize="16"
-                                            Background="Transparent"
-                                            BorderThickness="0"
-                                            Foreground="LightGray"
-                                            Click="OnDeleteButtonClick"
-                                            Cursor="Hand"
-                                            VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="4"
+            Text="{Binding DurationFormatted}"
+            Foreground="White"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Right"
+            Margin="0,0,10,0"/>
                                 </Grid>
+
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
+
                 </ItemsControl>
             </ScrollViewer>
 

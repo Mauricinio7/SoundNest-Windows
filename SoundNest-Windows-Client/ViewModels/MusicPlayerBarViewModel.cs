@@ -196,9 +196,7 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             if (parameter is List<Models.Song> SongsList && SongsList.Count > 0)
             {
-                playlist = SongsList;
-                currentIndex = 0;
-                await LoadAndPlayCurrentSongAsync();
+               await SetPlaylist(SongsList,0);
             }
             else if (parameter is Models.Song singleSong)
             {
@@ -206,6 +204,10 @@ namespace SoundNest_Windows_Client.ViewModels
                 currentIndex = 0;
                 await LoadAndPlayCurrentSongAsync();
                 
+            }
+            else if (parameter is Models.SongOfPlaylist songOfPlaylist)
+            {
+                await SetPlaylist(songOfPlaylist.Playlist, songOfPlaylist.Index);
             }
             else
             {
@@ -289,7 +291,7 @@ namespace SoundNest_Windows_Client.ViewModels
                 if (File.Exists(destPath))
                 {
                     //TODO remember, this is just for testing purposes, remove this later
-                    MessageBox.Show("La canción ya existe en la caché.", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
+                    //MessageBox.Show("La canción ya existe en la caché.", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
                     return true;
                 }
 
@@ -306,7 +308,7 @@ namespace SoundNest_Windows_Client.ViewModels
                             App.Current.Dispatcher.Invoke(() =>
                             {
                                 //TODO remember, this is just for testing purposes, remove this later
-                                MessageBox.Show($"Se eliminó la canción más antigua de la caché: {deletedSong}", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
+                                //MessageBox.Show($"Se eliminó la canción más antigua de la caché: {deletedSong}", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
                             });
                         }
                         catch (Exception ex)
@@ -323,14 +325,14 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 if (response.Success && File.Exists(destPath))
                 {
-                    MessageBox.Show("La canción se descargó correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                    //MessageBox.Show("La canción se descargó correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                     flag = true;
 
                     var visitResutl = await _visualizationsService.AddVisitToSongAsync(idSong);
 
                     if (visitResutl.IsSuccess) //TODO remember, is just for testing purposes, remove this later
                     {
-                        MessageBox.Show("Visita incrementada exitosamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                        //MessageBox.Show("Visita incrementada exitosamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
@@ -388,10 +390,10 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-        public async Task SetPlaylist(List<Models.Song> songs)
+        public async Task SetPlaylist(List<Models.Song> songs, int index)
         {
             playlist = songs;
-            currentIndex = 0;
+            currentIndex = index;
             await LoadAndPlayCurrentSongAsync();
         }
 
@@ -409,6 +411,10 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
+                _mediaPlayer.Pause();
+                _timer.Stop();
+                PlayPauseIcon = "\uf5b0";
+                isPlaying = false;
                 SetProgress(0);
                 currentIndex++;
                 await LoadAndPlayCurrentSongAsync();
@@ -421,6 +427,10 @@ namespace SoundNest_Windows_Client.ViewModels
 
             if (_mediaPlayer.Position.TotalSeconds < 3)
             {
+                _mediaPlayer.Pause();
+                _timer.Stop();
+                PlayPauseIcon = "\uf5b0";
+                isPlaying = false;
                 SetProgress(0);
                 currentIndex = Math.Max(0, currentIndex - 1);
                 await LoadAndPlayCurrentSongAsync();
