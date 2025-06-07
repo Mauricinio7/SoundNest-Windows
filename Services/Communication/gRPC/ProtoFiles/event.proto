@@ -11,6 +11,7 @@ enum EventType {
   HANDSHAKE_FINISH = 5;
   COMMENT_REPLY_SEND = 6;
   COMMENT_REPLY_RECIVE = 7;
+  SONG_VISITS_NOTIFICATION = 8;
 }
 
 message EventMessageRequest {

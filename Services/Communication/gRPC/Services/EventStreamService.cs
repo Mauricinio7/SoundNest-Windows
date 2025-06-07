@@ -95,7 +95,7 @@ namespace Services.Communication.gRPC.Services
                         Payload = "HANDSHAKE"
                     });
 
-                    await foreach (var response in _eventStream.ResponseStream.ReadAllAsync(_startToken))
+                    await foreach (EventMessageReturn response in _eventStream.ResponseStream.ReadAllAsync(_startToken))
                     {
                         await _onMessageReceived!(response);
                     }

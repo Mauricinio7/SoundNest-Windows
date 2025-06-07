@@ -1,4 +1,5 @@
-﻿using Grpc.Net.Client;
+﻿#if DEBUG
+using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -53,3 +54,5 @@ namespace Services.Communication.gRPC.Utils
         }
     }
 }
+
+#endif

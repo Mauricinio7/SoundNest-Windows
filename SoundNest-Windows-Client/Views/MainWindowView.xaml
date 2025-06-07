@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SoundNest_Windows_Client.Views"
+        xmlns:controls="clr-namespace:SoundNest_Windows_Client.Notifications.Controls"
         mc:Ignorable="d"
         Background="Black"
         Title="MainWindowView" Height="450" Width="800">
@@ -15,7 +16,7 @@
             <ContentControl Content="{Binding MusicPlayerBar}" Margin="140,965,0,0"/>
             <ContentControl Content="{Binding SideBar}" Margin="-50,0,1309,0" />
             <ContentControl Content="{Binding LoadingScreen}"/>
-            
+            <controls:NotificationArea x:Name="WindowArea" Position="TopRight" MaxItems="3"/>
         </Grid>
     </Viewbox>
 </Window>

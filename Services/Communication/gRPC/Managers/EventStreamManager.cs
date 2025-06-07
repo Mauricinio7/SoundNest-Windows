@@ -20,6 +20,7 @@ namespace Services.Communication.gRPC.Managers
         Task StartAsync(CancellationToken cancellationToken);
         Task StopAsync();
         Task ReconnectAsync();
+        event Action<EventMessageReturn>? OnEventReceived;
     }
     public class EventStreamManager : IEventStreamManager
     {
@@ -28,6 +29,7 @@ namespace Services.Communication.gRPC.Managers
         public event Action? OnReconnection;
         public bool IsConnectedManager => _eventStreamService.IsConnected;
         private readonly ILogger<EventStreamManager> _logger;
+        public event Action<EventMessageReturn> OnEventReceived;
         public EventStreamManager(IEventStreamService eventStreamService, ILogger<EventStreamManager> logger)
         {
             _eventStreamService = eventStreamService;
@@ -38,7 +40,11 @@ namespace Services.Communication.gRPC.Managers
         {
             OnDisconnected?.Invoke(e);
         }
-
+        /// <summary>
+        /// Only call one time
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task StartAsync(CancellationToken cancellationToken) //Implements subscription from methods on events
         {
             await _eventStreamService.StartAsync(OnMessageReceivedAsync, cancellationToken);
@@ -77,12 +83,17 @@ namespace Services.Communication.gRPC.Managers
                 case EventType.CommentReplyRecive:
                     _logger.LogInformation("[Stream] CommentReplyRecive received.");
                     break;
+                case EventType.SongVisitsNotification:
+                    _logger.LogError("[Stream] SongVisitsNotification received: {Message}", msg.Message);
+                    break;
                 default:
                     _logger.LogDebug(
                           "[Stream] Evento {Type} / {Custom} / \"{Msg}\"",
                           msg.EventTypeRespose, msg.CustomEventType, msg.Message);
                     break;
             }
+            if (OnEventReceived != null)
+                OnEventReceived?.Invoke(msg);
         }
         public async Task ReconnectAsync()
         {

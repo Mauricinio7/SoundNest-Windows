@@ -9,6 +9,7 @@ using Services.Navigation;
 using SoundNest_Windows_Client.Views;
 using SoundNest_Windows_Client.Resources.Controls;
 using Microsoft.Extensions.DependencyInjection;
+using Notifications.Wpf;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -77,7 +78,6 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand HideSearchBarCommand { get; set; }
         public RelayCommand ShowLoadingScreenCommand { get; set; }
         public RelayCommand HideLoadingScreenCommand { get; set; }
-
         public MainWindowViewModel(INavigationService navigationService)
         {
             Navigation = navigationService;

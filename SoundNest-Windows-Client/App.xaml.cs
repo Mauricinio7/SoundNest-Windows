@@ -17,6 +17,7 @@ using Services.Communication.gRPC.Managers;
 using Microsoft.Extensions.Logging;
 using Services.Communication.gRPC.Utils;
 using Services.Communication.gRPC.Services.Services.Communication.gRPC.Services;
+using SoundNest_Windows_Client.Notifications;
 
 namespace SoundNest_Windows_Client;
 
@@ -38,6 +39,7 @@ public partial class App : Application
         {
             DataContext = provider.GetRequiredService<MainWindowViewModel>()
         });
+        //Streaming gRPC
         service.AddSingleton<EventGrpcClient>(sp =>
         {
             var logger = sp.GetRequiredService<ILogger<GrpcChannelMonitor>>();
@@ -69,7 +71,10 @@ public partial class App : Application
         service.AddTransient<StatisticsViewModel>();
 
         service.AddSingleton<IAccountService, AccountService>();
-
+        //Notifications
+        service.AddSingleton<INotificationManager, NotificationManager>();
+        service.AddSingleton<INotificationsGrpc, NotificationsGrpc>();
+        //Navigation
         service.AddSingleton<INavigationService, Services.Navigation.NavigationService>();
         service.AddSingleton<Func<Type, ViewModel>>(provider =>
             viewModelType => (ViewModel)provider.GetRequiredService(viewModelType));

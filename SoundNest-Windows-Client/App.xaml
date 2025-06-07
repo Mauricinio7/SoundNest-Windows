@@ -2,13 +2,23 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:viewModel="clr-namespace:SoundNest_Windows_Client.ViewModels"
-             xmlns:view="clr-namespace:SoundNest_Windows_Client.Views">
+             xmlns:view="clr-namespace:SoundNest_Windows_Client.Views"
+             xmlns:viewModelNotifications="clr-namespace:SoundNest_Windows_Client.Notifications.ViewModels"
+             xmlns:viewNotifications="clr-namespace:SoundNest_Windows_Client.Notifications.Views"
+             xmlns:controls="clr-namespace:SoundNest_Windows_Client.Notifications.Controls"
+             >
     <Application.Resources>
-    <ResourceDictionary>
+        <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml"/>
                 <ResourceDictionary Source="Resources/Styles/Animations.xaml"/>
-                
+                <!--
+                TODO: If Theme/generic.xaml does not exist in root this will cause a silence exception with the "private IList _items;" in NotificationArea.
+                search for a way to indicate the generic.xaml location.
+                Not sure where is the root of the problema
+                DONT DO  <ResourceDictionary Source="PATH OR NOT PATH /Theme/Generic.xaml"/> will cause the same problem
+
+                -->
             </ResourceDictionary.MergedDictionaries>
 
             <DataTemplate DataType="{x:Type viewModel:InitViewModel}">
@@ -58,7 +68,22 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type viewModel:StatisticsViewModel}">
                 <view:StatisticsView/>
+
+                <!--
+                TODO: If Theme/generic.xaml does not exist in root this will cause a silence exception with the "private IList _items;" in NotificationArea.
+                search for a way to indicate the generic.xaml location.
+                Not sure where is the root of the problema
+
+                -->
             </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModelNotifications:WelcomeViewModel }">
+                <viewNotifications:WelcomeView/>
+            </DataTemplate>
+            
+            
+            <Style TargetType="controls:NotificationArea">
+                <Setter Property="MaxItems" Value="7" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
