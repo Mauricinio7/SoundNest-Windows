@@ -38,7 +38,7 @@ public partial class App : Application
         {
             DataContext = provider.GetRequiredService<MainWindowViewModel>()
         });
-        //Streaming gRPC
+
         service.AddSingleton<EventGrpcClient>(sp =>
         {
             var logger = sp.GetRequiredService<ILogger<GrpcChannelMonitor>>();

@@ -35,6 +35,8 @@ namespace SoundNest_Windows_Client.ViewModels
         private readonly IAuthService authService;
         private readonly IAccountService user;
         private readonly IUserService userService;
+        private readonly EventGrpcClient _client;
+        private readonly INotificationsGrpc _notificationsGrpc;
 
         private string username;
         public string Username
@@ -49,8 +51,7 @@ namespace SoundNest_Windows_Client.ViewModels
             get => password;
             set { password = value; OnPropertyChanged(); }
         }
-        private readonly EventGrpcClient _client;
-        private readonly INotificationsGrpc _notificationsGrpc;
+        
         public LoginViewModel(INavigationService navigationService, IAuthService authService, IAccountService newUser, IUserService userService,INotificationsGrpc notificationsGrpc , EventGrpcClient client)
         {
             Navigation = navigationService;
@@ -80,10 +81,10 @@ namespace SoundNest_Windows_Client.ViewModels
             if (result.IsSuccess)
             {
                 TokenStorageHelper.SaveToken(token);
-                _ = SaveUserToMemory(token);
                 _client.SetAuthorizationToken(token);
                 _client.InitializeClient();
                 _notificationsGrpc.init();
+                _ = SaveUserToMemory(token);
             }
             else
             {

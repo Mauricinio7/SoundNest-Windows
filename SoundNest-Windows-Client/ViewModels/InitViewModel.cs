@@ -23,6 +23,8 @@ namespace SoundNest_Windows_Client.ViewModels
         private readonly IAccountService accountService;
         private readonly IUserService userService;
         private readonly IApiClient apiClient;
+        private readonly EventGrpcClient _client;
+        private readonly INotificationsGrpc _notificationsGrpc;
 
         public INavigationService Navigation
         {
@@ -40,16 +42,14 @@ namespace SoundNest_Windows_Client.ViewModels
             set { profileImage = value; OnPropertyChanged(); }
         }
 
-        public InitViewModel(
-            INavigationService navigationService,
-            IAccountService accountService,
-            IUserService userService,
-            IApiClient apiClient)
+        public InitViewModel(INavigationService navigationService, IAccountService accountService, IUserService userService, IApiClient apiClient, INotificationsGrpc notificationsGrpc, EventGrpcClient client)
         {
             Navigation = navigationService;
             this.accountService = accountService;
             this.userService = userService;
             this.apiClient = apiClient;
+            _client = client;
+            _notificationsGrpc = notificationsGrpc;
 
             LoginCommand = new RelayCommand(ExecuteLoginCommand);
             RegisterCommand = new RelayCommand(ExecuteRegisterCommand);
@@ -74,6 +74,9 @@ namespace SoundNest_Windows_Client.ViewModels
             var token = TokenStorageHelper.LoadToken();
             if (!string.IsNullOrWhiteSpace(token))
             {
+                _client.SetAuthorizationToken(token);
+                _client.InitializeClient();
+                _notificationsGrpc.init();
                 await SaveUserToMemory(token);
                 Clipboard.SetText(token); // TODOO the best form to force a postman test lol
             }
