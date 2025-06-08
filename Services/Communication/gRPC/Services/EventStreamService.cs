@@ -49,6 +49,10 @@ namespace Services.Communication.gRPC.Services
         Task StopAsync();
         Task RestartAsync();
         void StartReaderLoop();
+        /// <summary>
+        /// El estado actual del canal gRPC (Idle, Connecting, Ready,…).
+        /// </summary>
+        ConnectivityState CurrentState { get; }
     }
     /// <summary>
     /// Implementation of the IEventStreamService interface, providing
@@ -68,7 +72,7 @@ namespace Services.Communication.gRPC.Services
         public event EventHandler<StreamErrorEventArgs>? OnError;
         private Func<EventMessageReturn, Task>? _onMessageReceived;
         private CancellationToken _startToken;
-
+        public ConnectivityState CurrentState => _grpcClient.Channel.State;
         public EventStreamService(EventGrpcClient grpcClient, ILogger<EventStreamService> logger)
         {
             _grpcClient = grpcClient;
@@ -100,9 +104,10 @@ namespace Services.Communication.gRPC.Services
                         await _onMessageReceived!(response);
                     }
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException ex)
                 {
                     _logger.LogInformation("[EventStreamService] StartReaderLoop: Operación cancelada.");
+                    OnError?.Invoke(this, new StreamErrorEventArgs(ex, "Se cancelo la conexion bidireccional"));
                 }
                 catch (RpcException ex) when (ex.StatusCode == StatusCode.Unauthenticated || ex.StatusCode == StatusCode.Cancelled)
                 {

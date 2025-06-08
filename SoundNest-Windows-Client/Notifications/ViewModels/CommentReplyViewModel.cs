@@ -6,17 +6,13 @@ using System.Threading.Tasks;
 
 namespace SoundNest_Windows_Client.Notifications.ViewModels
 {
-    public class WelcomeViewModel
+    public class CommentReplyViewModel
     {
-        private readonly INotificationManager _manager;
-
         public string Title { get; set; }
         public string Message { get; set; }
 
-        public WelcomeViewModel(INotificationManager manager)
+        public CommentReplyViewModel()
         {
-            _manager = manager;
         }
-
     }
 }

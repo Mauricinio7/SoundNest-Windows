@@ -64,6 +64,7 @@
                         <Setter TargetName="Border" Property="Background" Value="OrangeRed"/>
                     </DataTrigger>
                 </DataTemplate.Triggers>
+
             </DataTemplate>
         </ControlTemplate.Resources>
         <Border Background="{TemplateBinding Background}"

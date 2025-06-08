@@ -6,6 +6,7 @@
              xmlns:viewModelNotifications="clr-namespace:SoundNest_Windows_Client.Notifications.ViewModels"
              xmlns:viewNotifications="clr-namespace:SoundNest_Windows_Client.Notifications.Views"
              xmlns:controls="clr-namespace:SoundNest_Windows_Client.Notifications.Controls"
+             ShutdownMode="OnMainWindowClose"
              >
     <Application.Resources>
         <ResourceDictionary>
@@ -68,19 +69,27 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type viewModel:StatisticsViewModel}">
                 <view:StatisticsView/>
+            </DataTemplate>
 
-                <!--
+            <!--
                 TODO: If Theme/generic.xaml does not exist in root this will cause a silence exception with the "private IList _items;" in NotificationArea.
                 search for a way to indicate the generic.xaml location.
                 Not sure where is the root of the problema
-
                 -->
-            </DataTemplate>
             <DataTemplate DataType="{x:Type viewModelNotifications:WelcomeViewModel }">
                 <viewNotifications:WelcomeView/>
             </DataTemplate>
-            
-            
+            <DataTemplate DataType="{x:Type viewModelNotifications:CommentReplyViewModel }">
+                <viewNotifications:CommentReplyView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModelNotifications:DisconnectedViewModel }">
+                <viewNotifications:DisconnectedView/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type viewModelNotifications:ViewsThresholdViewModel }">
+                <viewNotifications:ViewsThresholdView/>
+            </DataTemplate>
+
+
             <Style TargetType="controls:NotificationArea">
                 <Setter Property="MaxItems" Value="7" />
             </Style>

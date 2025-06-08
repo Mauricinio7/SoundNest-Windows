@@ -24,7 +24,6 @@ namespace SoundNest_Windows_Client;
 public partial class App : Application
 {
     public static ServiceProvider ServiceProvider { get; private set; }
-    public CancellationTokenSource CancellationTokenEventStreaming { get; private set; }  //Delete its a example
     public App()
     {
         IServiceCollection service = new ServiceCollection();
@@ -141,15 +140,14 @@ public partial class App : Application
     }
     protected override async void OnStartup(StartupEventArgs e)
     {
-        var logInWindow = ServiceProvider.GetRequiredService<MainWindowView>();
-        logInWindow.Show();
+        MainWindowView window = ServiceProvider.GetRequiredService<MainWindowView>();
+        Application.Current.MainWindow = window;
+        window.Show();
         base.OnStartup(e);
     }
 
     protected override async void OnExit(ExitEventArgs e)
     {
-        CancellationTokenEventStreaming?.Cancel();
-
         var manager = ServiceProvider.GetService<IEventStreamManager>();
         if (manager is not null)
         {

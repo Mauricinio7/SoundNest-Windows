@@ -15,21 +15,26 @@ namespace Services.Communication.gRPC.Managers
 {
     public interface IEventStreamManager
     {
+        /// <summary>
+        /// Fired whenever el stream de gRPC reporta un error (p.ej. desconexión, fallo de RPC, etc).
+        /// </summary>
+        event Action<StreamErrorEventArgs>? OnDisconnected;
         bool IsConnectedManager { get; }
         Task SendCommentReplyEventAsync(CommentReply commentReply);
         Task StartAsync(CancellationToken cancellationToken);
         Task StopAsync();
         Task ReconnectAsync();
         event Action<EventMessageReturn>? OnEventReceived;
+        event Action? OnReconnection;
     }
     public class EventStreamManager : IEventStreamManager
     {
         private readonly IEventStreamService _eventStreamService;
-        public event Action<StreamErrorEventArgs>? OnDisconnected;
-        public event Action? OnReconnection;
         public bool IsConnectedManager => _eventStreamService.IsConnected;
         private readonly ILogger<EventStreamManager> _logger;
         public event Action<EventMessageReturn> OnEventReceived;
+        public event Action<StreamErrorEventArgs>? OnDisconnected;
+        public event Action? OnReconnection;
         public EventStreamManager(IEventStreamService eventStreamService, ILogger<EventStreamManager> logger)
         {
             _eventStreamService = eventStreamService;

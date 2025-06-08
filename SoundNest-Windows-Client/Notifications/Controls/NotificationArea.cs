@@ -53,11 +53,27 @@ namespace SoundNest_Windows_Client.Notifications.Controls
             _items = itemsControl?.Children;
         }
 
-#if NET40
-        public void Show(object content, TimeSpan expirationTime, Action onClick, Action onClose)
-#else
+        /// <summary>
+        /// Creates and displays a new notification with the specified content,
+        /// lifetime, and click/close callbacks.
+        /// </summary>
+        /// <param name="content">
+        /// The content to display in the notification. Can be a <see cref="string"/>,
+        /// a <see cref="NotificationContent"/> instance, or any other object
+        /// that your <see cref="NotificationTemplateSelector"/> knows how to render.
+        /// </param>
+        /// <param name="expirationTime">
+        /// The time to wait before automatically closing the notification.
+        /// Use <see cref="TimeSpan.MaxValue"/> to disable auto‐close.
+        /// </param>
+        /// <param name="onClick">
+        /// An optional callback invoked when the user clicks the notification.
+        /// </param>
+        /// <param name="onClose">
+        /// An optional callback invoked when the notification has finished closing.
+        /// </param>
         public async void Show(object content, TimeSpan expirationTime, Action onClick, Action onClose)
-#endif
+
         {
             var notification = new Notification
             {
@@ -98,22 +114,13 @@ namespace SoundNest_Windows_Client.Notifications.Controls
                           .Close();
                 }
             }
-
-
-#if NET40
-            DelayExecute(expirationTime, () =>
-            {
-#else
             if (expirationTime == TimeSpan.MaxValue)
             {
                 return;
             }
             await Task.Delay(expirationTime);
-#endif
+
             notification.Close();
-#if NET40
-            });
-#endif
         }
 
         private void OnNotificationClosed(object sender, RoutedEventArgs routedEventArgs)
@@ -121,25 +128,6 @@ namespace SoundNest_Windows_Client.Notifications.Controls
             var notification = sender as Notification;
             _items.Remove(notification);
         }
-
-#if NET40
-        private static void DelayExecute(TimeSpan delay, Action actionToExecute)
-        {
-            if (actionToExecute != null)
-            {
-                var timer = new DispatcherTimer
-                {
-                    Interval = delay
-                };
-                timer.Tick += (sender, args) =>
-                {
-                    timer.Stop();
-                    actionToExecute();
-                };
-                timer.Start();
-            }
-        }
-#endif
     }
 
     public enum NotificationPosition

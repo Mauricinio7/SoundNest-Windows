@@ -13,7 +13,7 @@ namespace ConsoleApp
     internal class Program
     {
         public static CancellationToken CancellationToken { get; set; } = new CancellationToken();
-        public static string Token { get; set; }  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlcm5hbWUiOiIxIiwiZW1haWwiOiJ6czIyMDEzNjk4cGVwcGVncmnDscOxcEBlc3R1ZGlhbnRlcy51di5teCIsInJvbGUiOjEsImlhdCI6MTc0NzUzOTY4MiwiZXhwIjoxNzQ3NjIyNDgyfQ.mvT_Ue_pLAhr8mrds95xOD_N3fvNm4KB49gUXAomR_4";
+        public static string Token { get; set; }  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywidXNlcm5hbWUiOiJuYXZpX21vZCIsImVtYWlsIjoienMyMjAxMzY5OEBlc3R1ZGlhbnRlcy51di5teCIsInJvbGUiOjIsImlhdCI6MTc0OTM5NDQ1OCwiZXhwIjoxNzQ5NDc3MjU4fQ.pcWxSFx2P7iphZ9kChNsFk0LhjUwefBa06DWl2eNwHg";
 
         static async Task Main(string[] args)
         {
@@ -43,7 +43,6 @@ namespace ConsoleApp
 
             var serviceProvider = services.BuildServiceProvider();
             var eventGrpcClient = serviceProvider.GetRequiredService<EventGrpcClient>();
-            eventGrpcClient?.ChannelMonitor.StartMonitoring();
 
             var eventStreamService = serviceProvider.GetRequiredService<IEventStreamService>();
             IEventStreamManager eventStreamManager = serviceProvider.GetRequiredService<IEventStreamManager>();
@@ -65,9 +64,8 @@ namespace ConsoleApp
                 Console.WriteLine("Seleccione una opción:");
                 Console.WriteLine("  c -> checar conexion");
                 Console.WriteLine("  d -> desconectar conexion");
-                Console.WriteLine("  1 -> Enviar notificación a ti mismo");
+                Console.WriteLine("  1 -> Reiniciar canal");
                 Console.WriteLine("  7 -> Enviar respuesta a comentario");
-                Console.WriteLine("  0 ->  ");
                 Console.WriteLine("  salir -> Salir del programa");
                 Console.WriteLine("-----------------------------------------");
                 Console.Write("Ingrese opción: ");
@@ -76,25 +74,14 @@ namespace ConsoleApp
                 switch (input)
                 {
                     case "c":
-                        if (eventStreamManager.IsConnectedManager)
-                        {
-                            Console.WriteLine("[INFO] Conexión activa.");
-                        }
-                        else
-                        {
-                            Console.WriteLine("[WARN] Conexión inactiva.");
-                        }
+                        Console.WriteLine("[INFO] :" + eventStreamService.CurrentState);
                         break;
                     case "d":
                         await eventStreamManager.StopAsync();
                         break;
-                    case "0":
-                        break;
-
                     case "1":
-                        Console.WriteLine("[INFO] Enviando notificación (no implementado aún)");
+                        await eventStreamManager.ReconnectAsync();
                         break;
-
                     case "7":
                         Console.WriteLine("[INFO] Enviando respuesta a comentario...");
                         await eventStreamManager.SendCommentReplyEventAsync(

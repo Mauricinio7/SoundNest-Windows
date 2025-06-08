@@ -8,6 +8,31 @@ using SoundNest_Windows_Client.Notifications.Controls;
 
 namespace SoundNest_Windows_Client.Notifications
 {
+    public interface INotificationManager
+    {
+        /// <summary>
+        /// Shows a notification with the specified content and optional callbacks.
+        /// </summary>
+        /// <param name="content">
+        /// The object to display. Can be a <see cref="string"/>, a view‐model, or any type
+        /// that your <see cref="NotificationTemplateSelector"/> knows how to render.
+        /// </param>
+        /// <param name="areaName">
+        /// The name of the target notification area.  
+        /// Use an empty string ("") to route to the default overlay window.
+        /// </param>
+        /// <param name="expirationTime">
+        /// How long the notification stays visible before auto‐closing.  
+        /// If <c>null</c>, defaults to 5 seconds.
+        /// </param>
+        /// <param name="onClick">
+        /// Optional callback invoked when the user clicks the notification.
+        /// </param>
+        /// <param name="onClose">
+        /// Optional callback invoked when the notification has finished closing.
+        /// </param>
+        void Show(object content, string areaName = "", TimeSpan? expirationTime = null, Action onClick = null, Action onClose = null);
+    }
     public class NotificationManager : INotificationManager
     {
         private readonly Dispatcher _dispatcher;
@@ -24,6 +49,7 @@ namespace SoundNest_Windows_Client.Notifications
             _dispatcher = dispatcher;
         }
 
+        /// <inheritdoc/>
         public void Show(object content, string areaName = "", TimeSpan? expirationTime = null, Action onClick = null,
             Action onClose = null)
         {

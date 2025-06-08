@@ -95,7 +95,6 @@ namespace SoundNest_Windows_Client.Notifications.Controls
             Close();
         }
 
-        //TODO: .NET40
         public async void Close()
         {
             if (IsClosing)
