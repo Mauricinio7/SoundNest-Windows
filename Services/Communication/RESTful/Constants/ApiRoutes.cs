@@ -9,8 +9,10 @@ namespace Services.Communication.RESTful.Constants
 {
     public class ApiRoutes
     {
-        public const string BaseUrl = "http://localhost:6970/";
+        //public const string BaseUrl = "http://localhost:6970/";
         //public const string BaseUrl = "https://allowing-walrus-classic.ngrok-free.app/restful/";
+        //public const string BaseUrl = "https://allowing-walrus-classic.ngrok-free.app/restful/";
+        public const string BaseUrl = "http://100.65.158.22/";
 
         // Auth endpoints:
         public const string AuthValidateJWT = "api/auth/validateJWT";
