@@ -80,22 +80,30 @@ namespace SoundNest_Windows_Client.ViewModels
             Navigation.NavigateTo<ProfileViewModel>();
         }
 
+        private ValidationResult CanSubmitPasswordChange()
+        {
+            if (string.IsNullOrWhiteSpace(Password) || string.IsNullOrWhiteSpace(ConfirmPassword))
+                return ValidationResult.Failure("Por favor, complete todos los campos.", ValidationErrorType.IncompleteData);
+
+            if (Password != ConfirmPassword)
+                return ValidationResult.Failure("Las contraseñas no coinciden.", ValidationErrorType.GeneralError);
+
+            if (string.IsNullOrWhiteSpace(ConfirmCode))
+                return ValidationResult.Failure("Por favor, ingrese el código de verificación.", ValidationErrorType.IncompleteData);
+
+            //TODO can add a password enforce
+
+            return ValidationResult.Success();
+        }
+
+
         private async void ExecuteSubmitChangePasswordCommand(object parameter)
         {
-            if (string.IsNullOrEmpty(Password) || string.IsNullOrEmpty(ConfirmPassword))
-            {
-                MessageBox.Show("Por favor, complete todos los campos.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-            if (Password != ConfirmPassword)
-            {
-                MessageBox.Show("Las contraseñas no coinciden.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
+            var validation = CanSubmitPasswordChange();
 
-            if (string.IsNullOrEmpty(ConfirmCode))
+            if (!validation.Result)
             {
-                MessageBox.Show("Por favor, ingrese el código de verificación.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(validation.Message, validation.Tittle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -108,7 +116,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
             var result = await userService.EditUserPasswordAsync(editPasswordRequest);
 
-            if(result.IsSuccess)
+            if (result.IsSuccess)
             {
                 MessageBox.Show("Se ha cambiado la contraseña exitosamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
 
@@ -129,8 +137,8 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 MessageBox.Show(result.Message ?? "No se pudo cambiar la contraseña.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
         }
+
 
 
     }
