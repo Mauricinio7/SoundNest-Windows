@@ -96,7 +96,7 @@ namespace SoundNest_Windows_Client.ViewModels
                 return ValidationResult.Failure("Debes ingresar un nombre para la playlist.", ValidationErrorType.IncompleteData);
 
             if (PreviewImage == null || string.IsNullOrEmpty(_selectedImagePath))
-                return ValidationResult.Failure("Debes seleccionar una imagen válida para la playlist.", ValidationErrorType.IncompleteData;
+                return ValidationResult.Failure("Debes seleccionar una imagen válida para la playlist.", ValidationErrorType.IncompleteData);
 
             return ValidationResult.Success();
         }

@@ -74,8 +74,8 @@ namespace SoundNest_Windows_Client.ViewModels
             if (string.IsNullOrWhiteSpace(Password))
                 return ValidationResult.Failure("Debes ingresar tu contraseña.", ValidationErrorType.IncompleteData);
 
-            if (Password.Length < 6)
-                return ValidationResult.Failure("La contraseña debe tener al menos 6 caracteres.",ValidationErrorType.IncompleteData);
+            //if (Password.Length < 6)
+                //return ValidationResult.Failure("La contraseña debe tener al menos 6 caracteres.",ValidationErrorType.IncompleteData);
 
             return ValidationResult.Success();
         }
