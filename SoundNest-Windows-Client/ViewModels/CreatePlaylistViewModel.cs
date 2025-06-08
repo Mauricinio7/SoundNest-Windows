@@ -90,12 +90,23 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
+        private ValidationResult CanCreatePlaylist()
+        {
+            if (string.IsNullOrWhiteSpace(PlaylistName))
+                return ValidationResult.Failure("Debes ingresar un nombre para la playlist.", ValidationErrorType.IncompleteData);
+
+            if (PreviewImage == null || string.IsNullOrEmpty(_selectedImagePath))
+                return ValidationResult.Failure("Debes seleccionar una imagen válida para la playlist.", ValidationErrorType.IncompleteData;
+
+            return ValidationResult.Success();
+        }
+
         private async Task ExecuteCreatePlaylistAsync()
         {
-            if (string.IsNullOrWhiteSpace(PlaylistName) || PreviewImage == null || string.IsNullOrEmpty(_selectedImagePath))
+            ValidationResult validation = CanCreatePlaylist();
+            if (!validation.Result)
             {
-                MessageBox.Show("Por favor, completa todos los campos.",
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(validation.Message, validation.Tittle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -123,16 +134,15 @@ namespace SoundNest_Windows_Client.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show(result.ErrorMessage,
-                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(result.ErrorMessage ?? "Error desconocido.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al procesar la imagen: {ex.Message}",
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Error al procesar la imagen: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
 
 
         private void ExecuteCancelCommand()

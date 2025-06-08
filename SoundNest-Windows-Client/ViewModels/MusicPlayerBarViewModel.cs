@@ -52,7 +52,7 @@ namespace SoundNest_Windows_Client.ViewModels
         private readonly IPlaylistService _playlistService;
         private readonly IAccountService _accountService;
         private readonly IVisualizationsService _visualizationsService;
-        private static readonly MediaPlayer _mediaPlayer = new MediaPlayer();
+        private static MediaPlayer _mediaPlayer;
         private readonly DispatcherTimer _timer;
 
         private List<Models.Song> playlist = new();
@@ -148,6 +148,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
         public MusicPlayerBarViewModel(INavigationService navigation, ISongDownloader songDownloaderService, IGrpcClientManager grpcClient, IPlaylistService playlistService, IAccountService accountService, IVisualizationsService visualizationsService)
         {
+            _mediaPlayer = new MediaPlayer();
             _navigation = navigation;
             _songService = songDownloaderService;
             _playlistService = playlistService;

@@ -218,19 +218,19 @@ namespace SoundNest_Windows_Client.ViewModels
         private ValidationResult CanUploadSong()
         {
             if (string.IsNullOrWhiteSpace(PlaylistName))
-                return ValidationResult.Failure("Debes ingresar el nombre de la canción.");
+                return ValidationResult.Failure("Debes ingresar el nombre de la canción.", ValidationErrorType.IncompleteData);
 
             if (string.IsNullOrWhiteSpace(SelectedFileName))
-                return ValidationResult.Failure("Debes seleccionar un archivo de audio.");
+                return ValidationResult.Failure("Debes seleccionar un archivo de audio.", ValidationErrorType.IncompleteData);
 
             if (!File.Exists(SelectedFileName))
-                return ValidationResult.Failure("El archivo seleccionado no existe.");
+                return ValidationResult.Failure("El archivo seleccionado no existe.", ValidationErrorType.InvalidData);
 
             if (SelectedGenre == null || SelectedGenre.IdSongGenre == -1)
-                return ValidationResult.Failure("Selecciona un género válido.");
+                return ValidationResult.Failure("Selecciona un género válido.", ValidationErrorType.IncompleteData);
 
             if (SongCustomImage == null)
-                return ValidationResult.Failure("Debes seleccionar una imagen para la canción.");
+                return ValidationResult.Failure("Debes seleccionar una imagen para la canción.", ValidationErrorType.IncompleteData);
 
             return ValidationResult.Success();
         }
@@ -242,7 +242,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
             if (!validationResult.Result)
             {
-                MessageBox.Show(validationResult.Message, "Campos incompletos", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(validationResult.Message, validationResult.Tittle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

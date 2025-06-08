@@ -1,6 +1,7 @@
 ﻿using Services.Communication.RESTful.Models.Auth;
 using Services.Infrestructure;
 using Services.Navigation;
+using SoundNest_Windows_Client.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,8 +53,28 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             Navigation.NavigateTo<LoginViewModel>();
         }
+
+        private ValidationResult ValidateEmail()
+        {
+            if (string.IsNullOrWhiteSpace(Email))
+                return ValidationResult.Failure("El correo electrónico no puede estar vacío.", ValidationErrorType.IncompleteData);
+
+            if (!Email.Contains("@") || !Email.Contains(".")) //TODO do a better validation
+                return ValidationResult.Failure("El correo electrónico ingresado no es válido.", ValidationErrorType.InvalidData);
+
+            return ValidationResult.Success();
+        }
+
+
         private async void ExecuteSubmitRecoveryCommand(object parameter)
         {
+            ValidationResult validationResult = ValidateEmail();
+            if (!validationResult.Result)
+            {
+                MessageBox.Show(validationResult.Message, validationResult.Tittle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             SendCodeRequest requestCode = new SendCodeRequest
             {
                 Email = Email
@@ -65,7 +86,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
             if (response.IsSuccess)
             {
-                MessageBox.Show("Se ha enviado un código de verficación a tu correo electrónico", "Código de verificación", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Se ha enviado un código de verificación a tu correo electrónico", "Código de verificación", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
                 Mediator.Notify(MediatorKeys.HIDE_SIDE_BAR, null);
@@ -78,6 +99,7 @@ namespace SoundNest_Windows_Client.ViewModels
                 Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
             }
         }
+
 
 
 

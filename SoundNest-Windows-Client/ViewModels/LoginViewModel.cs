@@ -61,9 +61,32 @@ namespace SoundNest_Windows_Client.ViewModels
             ForgottenPasswordCommand = new RelayCommand(ExecuteForgottenPasswordCommand);
         }
 
+        private ValidationResult ValidateLogin()
+        {
+            if (string.IsNullOrWhiteSpace(Username))
+                return ValidationResult.Failure("Debes ingresar tu nombre de usuario.", ValidationErrorType.IncompleteData);
+
+            if (string.IsNullOrWhiteSpace(Password))
+                return ValidationResult.Failure("Debes ingresar tu contraseña.", ValidationErrorType.IncompleteData);
+
+            if (Password.Length < 6)
+                return ValidationResult.Failure("La contraseña debe tener al menos 6 caracteres.",ValidationErrorType.IncompleteData);
+
+            return ValidationResult.Success();
+        }
+
+
         private async Task ExecuteLoginCommand()
         {
-                LoginRequest loginRequest = new LoginRequest
+            var validationResult = ValidateLogin();
+
+            if (!validationResult.Result)
+            {
+                MessageBox.Show(validationResult.Message, validationResult.Tittle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            LoginRequest loginRequest = new LoginRequest
                 {
                     Username = this.Username,
                     Password = this.Password
