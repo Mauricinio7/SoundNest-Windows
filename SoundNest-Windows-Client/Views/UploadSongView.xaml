@@ -23,7 +23,7 @@
            Canvas.Left="396" Canvas.Top="203"/>
 
             <controls:PlaceholderTextBoxControl
-        Text="{Binding PlaylistName, UpdateSourceTrigger=PropertyChanged}"
+        Text="{Binding SongName, UpdateSourceTrigger=PropertyChanged}"
         PlaceholderText=""
         PaddingValue="30,5,0,0"
         Style="{StaticResource PrimarySimpleTextBoxStyle}"
@@ -35,18 +35,37 @@
            FontSize="35" FontWeight="Bold"
            Foreground="{StaticResource ForegroundWhiteColor}"
            Canvas.Left="409" Canvas.Top="345" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+            <Label Content="(Opcional)"
+                FontSize="25" FontWeight="Bold"
+                Foreground="{StaticResource ForegroundWhiteColor}"
+                Canvas.Left="409" Canvas.Top="402" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+
 
             <TextBox Text="{Binding AdditionalInfo, UpdateSourceTrigger=PropertyChanged}"
-             Background="{StaticResource BackgroundyColor2}"
-             Foreground="White"
-             AcceptsReturn="True"
-             TextWrapping="Wrap"
-             VerticalScrollBarVisibility="Auto"
-             FontSize="25"
-             Padding="10"
-             BorderBrush="Transparent"
-             Width="1023" Height="179"
-             Canvas.Left="790" Canvas.Top="345" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+         Background="{StaticResource BackgroundyColor2}"
+         Foreground="White"
+         AcceptsReturn="True"
+         TextWrapping="Wrap"
+         VerticalScrollBarVisibility="Auto"
+         FontSize="25"
+         Padding="10"
+         BorderBrush="Transparent"
+         Width="1023" Height="179"
+         MaxLength="200"
+         Canvas.Left="790" Canvas.Top="345"
+         HorizontalAlignment="Left"
+         VerticalAlignment="Center"/>
+
+            <Label Content="{Binding CharacterCountText}"
+       FontSize="20"
+       Foreground="Gray"
+       Canvas.Left="790" Canvas.Top="530"
+       Width="1023"
+       HorizontalAlignment="Center"
+       VerticalAlignment="Top"
+       HorizontalContentAlignment="Right" Height="60"/>
+
+
 
             <Label Content="Género:"
                 FontSize="35" FontWeight="Bold"
@@ -69,7 +88,7 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
                     <Image Source="{Binding SongImage}" Width="80" Height="80" Margin="0,0,10,0"/>
                     <StackPanel>
-                        <TextBlock Text="{Binding SongTitle, UpdateSourceTrigger=PropertyChanged}" FontWeight="Bold" FontSize="24" Foreground="Black"/>
+                        <TextBlock Text="{Binding SongTittle, UpdateSourceTrigger=PropertyChanged}" FontWeight="Bold" FontSize="24" Foreground="Black"/>
                         <TextBlock Text="{Binding SongArtist, UpdateSourceTrigger=PropertyChanged}" FontSize="18" Foreground="Gray"/>
                     </StackPanel>
                 </StackPanel>

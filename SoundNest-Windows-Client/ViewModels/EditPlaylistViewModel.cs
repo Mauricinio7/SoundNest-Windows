@@ -3,6 +3,7 @@ using Services.Communication.RESTful.Models.Playlist;
 using Services.Communication.RESTful.Services;
 using Services.Infrestructure;
 using Services.Navigation;
+using SoundNest_Windows_Client.Models;
 using SoundNest_Windows_Client.Utilities;
 using System;
 using System.IO;
@@ -16,11 +17,26 @@ namespace SoundNest_Windows_Client.ViewModels
     {
         private readonly INavigationService _navigation;
         private readonly IPlaylistService _playlistService;
-        private PlaylistResponse _playlist;
+        private Models.Playlist _playlist;
         private string _selectedImagePath = "";
 
         public string PlaylistName { get; set; } = "";
-        public string Description { get; set; } = "";
+
+        private string description;
+        public string Description
+        {
+            get => description;
+            set
+            {
+                if (value.Length <= 200)
+                {
+                    description = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(DescriptionLengthDisplay));
+                }
+            }
+        }
+        public string DescriptionLengthDisplay => $"{Description?.Length ?? 0} / 200 caracteres";
         public BitmapImage? PreviewImage { get; private set; }
 
         public RelayCommand SavePlaylistCommand { get; }
@@ -37,9 +53,9 @@ namespace SoundNest_Windows_Client.ViewModels
             CancelCommand = new RelayCommand(_ => ExecuteCancel());
         }
 
-        public void ReceiveParameter(object parameter)
+        public async void ReceiveParameter(object parameter)
         {
-            if (parameter is PlaylistResponse pr)
+            if (parameter is Models.Playlist pr)
             {
                 _playlist = pr;
                 PlaylistName = pr.PlaylistName;
@@ -51,18 +67,46 @@ namespace SoundNest_Windows_Client.ViewModels
                 {
                     var uri = new Uri(Path.Combine(ApiRoutes.BaseUrl, pr.ImagePath.TrimStart('/')));
                     PreviewImage = new BitmapImage(uri);
+
+                    if (!string.IsNullOrEmpty(pr.ImagePath) && pr.ImagePath.Length > 1)
+                    {
+                        PreviewImage = (BitmapImage)await ImagesHelper.LoadImageFromUrlAsync($"{ApiRoutes.BaseUrl}{pr.ImagePath[1..]}");
+                    }
+                    else
+                    {
+                        PreviewImage = (BitmapImage)ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
+                    }
                     OnPropertyChanged(nameof(PreviewImage));
                 }
                 catch { /* ignora si falla */ }
             }
         }
 
+        private ValidationResult CanSavePlaylist()
+        {
+            if (string.IsNullOrWhiteSpace(PlaylistName))
+                return ValidationResult.Failure("El nombre no puede quedar vacío.", ValidationErrorType.IncompleteData);
+
+            if (PlaylistName.Length > 50)
+                return ValidationResult.Failure("El nombre de la playlist no debe tener más de 50 caracteres.", ValidationErrorType.InvalidData);
+
+            if (string.IsNullOrWhiteSpace(Description))
+                return ValidationResult.Failure("La descripción no puede estar vacía", ValidationErrorType.IncompleteData);
+
+            if ((Description ?? "").Length > 200)
+                return ValidationResult.Failure("La descripción no puede superar los 200 caracteres.", ValidationErrorType.InvalidData);
+
+            return ValidationResult.Success();
+        }
+
+
 
         private async Task ExecuteSavePlaylistAsync()
         {
-            if (string.IsNullOrWhiteSpace(PlaylistName))
+            var validation = CanSavePlaylist();
+            if (!validation.Result)
             {
-                MessageBox.Show("El nombre no puede quedar vacío", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(validation.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -89,9 +133,12 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 if (result.IsSuccess)
                 {
-                    var playlistUpdated = result.Data;
+                    _playlist.PlaylistName = PlaylistName;
+                    _playlist.Description = Description;
+
+                    //TODO Message of updated playlist
                     Mediator.Notify(MediatorKeys.REFRESH_PLAYLISTS, null);
-                    _navigation.NavigateTo<PlaylistDetailViewModel>(playlistUpdated);
+                    _navigation.NavigateTo<PlaylistDetailViewModel>(_playlist);
                 }
                 else
                 {
@@ -103,6 +150,7 @@ namespace SoundNest_Windows_Client.ViewModels
                 MessageBox.Show($"Error al guardar playlist: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
 
         private void ExecuteCancel()
         {

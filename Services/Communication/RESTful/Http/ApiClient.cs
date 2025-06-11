@@ -342,10 +342,10 @@ namespace Services.Communication.RESTful.Http
         {
             HttpStatusCode.BadRequest => "La solicitud es inválida. Verifica los datos ingresados.",
             HttpStatusCode.Unauthorized => "No autorizado. Verifica tus credenciales.",
-            HttpStatusCode.Forbidden => "No tienes permiso para realizar esta acción.",
+            HttpStatusCode.Forbidden => "Tu sesión ha caducado, cierra sesión e inicia de nuevo",
             HttpStatusCode.NotFound => "El recurso solicitado no fue encontrado.",
             HttpStatusCode.Conflict => "Conflicto. Es posible que el recurso ya exista.",
-            HttpStatusCode.InternalServerError => "Error interno del servidor. Inténtalo más tarde.",
+            HttpStatusCode.InternalServerError => "Ha ocurrido un error desconocido. Inténtalo más tarde.",
             _ => "Ocurrió un error inesperado. Intenta nuevamente."
         };
     }

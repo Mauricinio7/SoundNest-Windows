@@ -29,8 +29,9 @@ namespace SoundNest_Windows_Client.Views
         private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
-                this.DragMove(); 
+                this.DragMove();
         }
+
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {

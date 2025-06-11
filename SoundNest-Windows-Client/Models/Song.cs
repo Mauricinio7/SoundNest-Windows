@@ -26,8 +26,6 @@ namespace SoundNest_Windows_Client.Models
             public int Index { get; set; }
              public bool IsMineOrModerator { get; set; }
 
-        public List<object> Visualizations { get; set; } = new(); // TODO get a real list
-
         
     }
 }

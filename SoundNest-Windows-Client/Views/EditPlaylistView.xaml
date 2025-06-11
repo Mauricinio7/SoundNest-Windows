@@ -43,20 +43,30 @@
                  Canvas.Left="409" 
                  Canvas.Top="351"/>
 
-            <controls:PlaceholderTextBoxControl
-                  Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
-                  Style="{StaticResource PrimarySimpleTextBoxStyle}"
-                  FontSizeValue="30"
-                  PlaceholderText=""
-                  BackgroundColorValue="{StaticResource BackgroundyColor2}"
-                  Canvas.Left="386"
-                  Canvas.Top="411"
-                  Width="928" 
-                  Height="130"/>
+            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                Background="{StaticResource BackgroundyColor2}"
+                Foreground="White"
+                AcceptsReturn="True"
+                TextWrapping="Wrap"
+                VerticalScrollBarVisibility="Auto"
+                FontSize="20"
+                Padding="15,5,5,5"
+                BorderBrush="Transparent"
+                Width="928" Height="172"
+                Canvas.Left="386" Canvas.Top="448"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"/>
+
+            <TextBlock
+                Text="{Binding DescriptionLengthDisplay}"
+                FontSize="20"
+                Foreground="LightGray"
+                Canvas.Left="386"
+                Canvas.Top="630"/>
 
             <Image Source="{Binding PreviewImage}"
-                 Canvas.Left="510" 
-                 Canvas.Top="580"
+                 Canvas.Left="395" 
+                 Canvas.Top="720"
                  Width="292" 
                  Height="235"
                  Stretch="UniformToFill"/>

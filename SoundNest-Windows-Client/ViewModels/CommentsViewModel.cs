@@ -1,4 +1,5 @@
 ﻿using Services.Communication.RESTful.Constants;
+using Services.Communication.RESTful.Models;
 using Services.Communication.RESTful.Models.Comment;
 using Services.Communication.RESTful.Models.Songs;
 using Services.Communication.RESTful.Services;
@@ -6,10 +7,13 @@ using Services.Infrestructure;
 using Services.Navigation;
 using Song;
 using SoundNest_Windows_Client.Models;
+using SoundNest_Windows_Client.Notifications;
+using SoundNest_Windows_Client.Resources.Controls;
 using SoundNest_Windows_Client.Utilities;
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
@@ -68,6 +72,14 @@ namespace SoundNest_Windows_Client.ViewModels
             set { comments = value; OnPropertyChanged(); }
         }
 
+        private bool isCommentsEmpty;
+        public bool IsCommentsEmpty
+        {
+            get => isCommentsEmpty;
+            set { isCommentsEmpty = value; OnPropertyChanged(); }
+        }
+
+
         public string CurrentUsername { get; set; }
         public string SongId { get; set; }
         public bool IsReplying => ReplyingToComment != null;
@@ -94,8 +106,19 @@ namespace SoundNest_Windows_Client.ViewModels
         public string CommentText
         {
             get => commentText;
-            set { commentText = value; OnPropertyChanged(); }
+            set
+            {
+                if (value.Length <= 200)
+                {
+                    commentText = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(CommentCharacterCountText));
+                }
+            }
         }
+
+        public string CommentCharacterCountText => $"{CommentText?.Length ?? 0} / 200";
+
 
         private Models.Song CurrentSong;
 
@@ -119,10 +142,11 @@ namespace SoundNest_Windows_Client.ViewModels
         private async void LoadComments()
         {
             Comments.Clear();
+            IsCommentsEmpty = true;
 
             var result = await ExecuteRESTfulApiCall(() => commentService.GetCommentsBySongIdAsync(SongId));
 
-            if (result.IsSuccess && result.Data != null)
+            if (result.IsSuccess)
             {
                 foreach (var comment in result.Data)
                 {
@@ -137,10 +161,16 @@ namespace SoundNest_Windows_Client.ViewModels
                         CommentId = comment.Id
                     });
                 }
+
+                IsCommentsEmpty = false;
+            }
+            else if (result.StatusCode == HttpStatusCode.NotFound)
+            {
+                ToastHelper.ShowToast("Aun no hay comentarios en esta canción", NotificationType.Warning, "Sin comentarios");
             }
             else
             {
-                MessageBox.Show($"Hubo un error al cargar los comentarios" ?? "Error", result.Message, MessageBoxButton.OK, MessageBoxImage.Warning);
+                ToastHelper.ShowToast("Se ha perdido la conexión a internet, inetente nuevamente más tarde", NotificationType.Error, "Error de conexión");
             }
         }
 
@@ -154,7 +184,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show("Comentario inválido.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ToastHelper.ShowToast("Hubo un error al intentar contestar el comentario, intentelo más tarde", NotificationType.Warning, "Error en carga");
                 return;
             }
           
@@ -173,9 +203,11 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 if (comment.IsRepliesVisible)
                 {
-                    comment.Replies.Clear(); 
+                    comment.Replies.Clear();
+                    Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
                     var result = await commentService.GetRepliesByCommentIdAsync(comment.CommentId);
-                    if (result.IsSuccess && result.Data != null)
+                    Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+                    if (result.IsSuccess)
                     {
                         var orderedReplies = result.Data.OrderBy(r => DateTime.Parse(r.Timestap));
                         foreach (var reply in orderedReplies)
@@ -191,9 +223,13 @@ namespace SoundNest_Windows_Client.ViewModels
                             });
                         }
                     }
+                    else if(result.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        ToastHelper.ShowToast("Aun no hay respuestas para este comentario", NotificationType.Warning, "Sin respuestas");
+                    }
                     else
                     {
-                        MessageBox.Show($"No se pudieron cargar las respuestas: {result.Message ?? "Error desconocido"}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        ToastHelper.ShowToast("Se ha perdido la conexión a internet, inetente nuevamente más tarde", NotificationType.Error, "Error de conexión");
                     }
                 }
 
@@ -207,32 +243,31 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             if (parameter is not Comment comment)
             {
-                MessageBox.Show("Comentario inválido.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ToastHelper.ShowToast("El comentario seleccionado es inválido, intentelo de nuevo más tarde", NotificationType.Error, "Error en carga");
                 return;
             }
 
             if (!comment.IsMine)
             {
-                MessageBox.Show("No puedes eliminar este comentario.", "Acceso denegado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                DialogHelper.ShowAcceptDialog("Error", "No puedes eliminar un comentario que no es tuyo", AcceptDialogType.Error);
                 return;
             }
 
-            var confirm = MessageBox.Show("¿Estás seguro de que deseas eliminar este comentario?", "Confirmar eliminación",
-                                          MessageBoxButton.YesNo, MessageBoxImage.Question);
+            bool confirm = DialogHelper.ShowConfirmation("Eliminar comentario", "¿Seguro que deseas eliminar este comentario?");
 
-            if (confirm != MessageBoxResult.Yes)
+            if (!confirm)
                 return;
 
             var result = await ExecuteRESTfulApiCall(() => commentService.DeleteCommentAsync(comment.CommentId));
 
             if (result.IsSuccess)
             {
-                LoadComments();
-                MessageBox.Show("Comentario eliminado correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                ToastHelper.ShowToast("Se ha eliminado el comentario correctamente", NotificationType.Success, "Éxito");
+                LoadComments();   
             }
             else
             {
-                MessageBox.Show($"No se pudo eliminar el comentario" ?? "Error desconocido.", result.Message, MessageBoxButton.OK, MessageBoxImage.Error);
+                ToastHelper.ShowToast(result.Message, NotificationType.Error, "Error al eliminar el comentario");
             }
         }
 
@@ -240,9 +275,16 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             if (string.IsNullOrWhiteSpace(CommentText))
             {
-                MessageBox.Show("El comentario no puede estar vacío.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ToastHelper.ShowToast("El comentario no puede estar vacío", NotificationType.Warning, "Comentario sin texto");
                 return;
             }
+
+            if(CommentText.Length > 200)
+            {
+                ToastHelper.ShowToast("El comentario no puede exceder los 200 caracteres", NotificationType.Warning, "El comentario es demasiado largo");
+                return;
+            }
+
 
             if (IsReplying)
             {
@@ -256,46 +298,87 @@ namespace SoundNest_Windows_Client.ViewModels
                 SongId = int.Parse(SongId),
             };
 
+            Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
             var result = await  commentService.CreateCommentAsync(commentRequest);
+            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
 
             if (result.IsSuccess)
             {
                 LoadComments();
                 CommentText = string.Empty;
+                ToastHelper.ShowToast("Se ha enviado el comentario de forma exitosa", NotificationType.Success, "Éxito");
             }
             else
             {
-                MessageBox.Show($"No se pudo enviar el comentario" ?? "Error desconocido",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowCommentError(result);
             }
+
         }
+
+        private void ShowCommentError(ApiResult<bool> result)
+        {
+            string title = "Error al comentar";
+
+            string message = result.StatusCode switch
+            {
+                HttpStatusCode.BadRequest => "El comentario no es válido. Asegúrate de que cumpla con los requisitos.",
+                HttpStatusCode.Unauthorized => "Tu sesión ha caducado. Cierra sesión y vuelve a iniciarla.",
+                HttpStatusCode.Forbidden => "Tu sesión ha caducado. Cierra sesión y vuelve a iniciarla.",
+                HttpStatusCode.NotFound => "No se encontró la canción. Intenta con otra.",
+                HttpStatusCode.InternalServerError => "Hubo un problema procesando tu comentario. Intenta más tarde.",
+                _ => result.Message ?? "No se pudo enviar tu comentario debido a un error.  Inténtalo nuevamente."
+            };
+
+            ToastHelper.ShowToast(message, NotificationType.Error, title);
+        }
+
+
+
 
         private async Task SendCommentResponse()
         {
-            MessageBox.Show($"Comentando: '{CommentText}'\nRespondiendo a: '{ReplyingToComment.Text}'", "Responder", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (ReplyingToComment == null)
+                return;
 
-            if (ReplyingToComment != null)
+            var replyRequest = new RespondCommentRequest
             {
-                var replyRequest = new RespondCommentRequest
-                {
-                    Message = CommentText,
-                    CommentId = ReplyingToComment.CommentId,
-                };
+                Message = CommentText,
+                CommentId = ReplyingToComment.CommentId,
+            };
 
-                var response = await commentService.RespondToCommentAsync(replyRequest);
+            Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
+            var response = await commentService.RespondToCommentAsync(replyRequest);
+            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
 
-                if (response.IsSuccess)
-                {
-                    ToggleReplies(ReplyingToComment);
-                    CommentText = string.Empty;
-                }
-                else
-                {
-                    MessageBox.Show($"No se pudo enviar el comentario" ?? "Error desconocido",
-                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+            if (response.IsSuccess)
+            {
+                ToggleReplies(ReplyingToComment);
+                CommentText = string.Empty;
+                ToastHelper.ShowToast("Se ha enviado la respuesta al comentario de forma exitosa", NotificationType.Success, "Éxito");
+            }
+            else
+            {
+                ShowCommentReplyError(response);
             }
         }
+        private void ShowCommentReplyError(ApiResult<bool> result)
+        {
+            string title = "Error al responder comentario";
+
+            string message = result.StatusCode switch
+            {
+                HttpStatusCode.BadRequest => "El comentario no es válido. Asegúrate de que cumpla con los requisitos.",
+                HttpStatusCode.Unauthorized => "Tu sesión ha caducado. Cierra sesión y vuelve a iniciarla.",
+                HttpStatusCode.Forbidden => "Tu sesión ha caducado. Cierra sesión y vuelve a iniciarla.",
+                HttpStatusCode.NotFound => "El comentario ya no está disponible.",
+                HttpStatusCode.InternalServerError => "El comentario ya no está disponible.",
+                _ => result.Message ?? "No se pudo enviar tu comentario debido a un error.  Inténtalo nuevamente."
+            };
+
+            DialogHelper.ShowAcceptDialog(title, message, AcceptDialogType.Error);
+        }
+
+
 
         public void ReceiveParameter(object parameter)
         {
@@ -308,7 +391,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show("Error al cargar la canción");
+                ToastHelper.ShowToast("Hubo un error al intentar cargar la canción, intentelo más tarde", NotificationType.Warning, "Error en carga");
             }
         }
 
@@ -318,14 +401,25 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 string songFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Songs", $"{CurrentSong.FileName}.mp3");
 
-                TagLib.File file = TagLib.File.Create(songFilePath);
+                TagLib.File file = null;
 
-                SongTittle = file.Tag.Title ?? CurrentSong.SongName;
-                SongArtist = !string.IsNullOrWhiteSpace(file.Tag.JoinedPerformers) ? file.Tag.JoinedPerformers : CurrentSong.UserName ?? "Artista desconocido";
-                SongDuration = file.Properties.Duration.ToString(@"m\:ss");
-                SongId = CurrentSong.IdSong.ToString();
+                SongTittle = !string.IsNullOrWhiteSpace(CurrentSong.SongName)
+                    ? CurrentSong.SongName
+                    : file?.Tag.Title ?? "Sin título";
 
-                if (file.Tag.Pictures.Length > 0)
+                SongArtist = !string.IsNullOrWhiteSpace(CurrentSong.UserName)
+                    ? CurrentSong.UserName
+                    : (!string.IsNullOrWhiteSpace(file?.Tag.JoinedPerformers)
+                        ? file.Tag.JoinedPerformers
+                        : "Artista desconocido");
+
+                SongDuration = file?.Properties.Duration.ToString(@"m\:ss") ?? TimeSpan.FromSeconds(CurrentSong.DurationSeconds).ToString(@"m\:ss");
+
+                if (!string.IsNullOrEmpty(CurrentSong.PathImageUrl) && CurrentSong.PathImageUrl.Length > 1)
+                {
+                    SongImage = await ImagesHelper.LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, CurrentSong.PathImageUrl.AsSpan(1)));
+                }
+                else if (file?.Tag.Pictures.Length > 0)
                 {
                     var picData = file.Tag.Pictures[0].Data.Data;
                     using var ms = new MemoryStream(picData);
@@ -337,10 +431,6 @@ namespace SoundNest_Windows_Client.ViewModels
                     img.Freeze();
                     SongImage = img;
                 }
-                else if (!string.IsNullOrEmpty(CurrentSong.PathImageUrl) && CurrentSong.PathImageUrl.Length > 1)
-                {
-                    SongImage = await ImagesHelper.LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, CurrentSong.PathImageUrl.AsSpan(1)));
-                }
                 else
                 {
                     SongImage = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
@@ -348,10 +438,12 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             catch
             {
-                SongTittle = CurrentSong.SongName;
+                SongTittle = CurrentSong.SongName ?? "Sin título";
                 SongArtist = CurrentSong.UserName ?? "Artista desconocido";
-                SongImage = null;
+                SongDuration = TimeSpan.FromSeconds(CurrentSong.DurationSeconds).ToString(@"m\:ss");
+                SongImage = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
             }
         }
+
     }
 }

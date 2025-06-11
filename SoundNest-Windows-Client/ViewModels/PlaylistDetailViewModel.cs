@@ -46,6 +46,13 @@ namespace SoundNest_Windows_Client.ViewModels
             set { _playlistName = value; OnPropertyChanged(); }
         }
 
+        private bool _isPlaylistEmpty;
+        public bool IsPlaylistEmpty
+        {
+            get => _isPlaylistEmpty;
+            set { _isPlaylistEmpty = value; OnPropertyChanged(); }
+        }
+
         public ObservableCollection<Models.Song> Songs { get; set; } = new();
 
         public RelayCommand BackCommand { get; }
@@ -108,6 +115,11 @@ namespace SoundNest_Windows_Client.ViewModels
             Songs.Clear();
             int index = 1;
 
+            if(playlist.Songs == null || playlist.Songs.Count == 0) 
+            {
+                IsPlaylistEmpty = true;
+            }
+
             foreach (var song in playlist.Songs)
             {
                 var parsedSong = new Models.Song
@@ -123,7 +135,6 @@ namespace SoundNest_Windows_Client.ViewModels
                     FileName = song.FileName,
                     DurationSeconds = song.DurationSeconds,
                     Description = song.Description,
-                    Visualizations = song.Visualizations,
                     DurationFormatted = TimeSpan.FromSeconds(song.DurationSeconds).ToString(@"m\:ss"),
                     Index = index++
                 };
@@ -140,6 +151,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 Songs.Add(parsedSong);
             }
+            IsPlaylistEmpty = Songs.Count == 0;
         }
 
         private void ExecutePlayPlaylistCommand()

@@ -32,25 +32,33 @@
                 Height="110" 
                 Width="928" />
 
-            <Label Content="Descripción de la playlist:"
+            <Label Content="Descripción de la playlist: "
                FontSize="35" FontWeight="Bold"
                Foreground="{StaticResource ForegroundWhiteColor}"
                Canvas.Left="409" 
                Canvas.Top="370"/>
 
-            <controls:PlaceholderTextBoxControl
-                Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
-                PlaceholderText=""
-                PaddingValue="30,5,0,0"
-                Style="{StaticResource PrimarySimpleTextBoxStyle}"
-                FontSizeValue="35"
-                BackgroundColorValue="{StaticResource BackgroundyColor2}"
-                Canvas.Left="386" 
-                Canvas.Top="448" 
-                Height="172" 
-                Width="928" 
-                HorizontalAlignment="Center" 
-                VerticalAlignment="Top" />
+            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
+                 Background="{StaticResource BackgroundyColor2}"
+                 Foreground="White"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto"
+                 FontSize="20"
+                 Padding="15,5,5,5"
+                 BorderBrush="Transparent"
+                 Width="928" Height="172"
+                 Canvas.Left="386" Canvas.Top="448"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Top"/>
+
+            <TextBlock
+                Text="{Binding DescriptionLengthDisplay}"
+                FontSize="20"
+                Foreground="LightGray"
+                Canvas.Left="386"
+                Canvas.Top="630"/>
+
 
 
             <Button Content="Subir imagen"
@@ -67,8 +75,8 @@
                 Height="235"
                 VerticalAlignment="Top" 
                 Stretch="UniformToFill" 
-                Canvas.Left="510" 
-                Canvas.Top="637"
+                Canvas.Left="481" 
+                Canvas.Top="700"
                 Width="292" />
 
             <Button Content="Crear playlist"

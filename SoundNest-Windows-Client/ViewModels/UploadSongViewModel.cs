@@ -39,7 +39,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
-        private string playlistName;
+        private string songName;
         private string additionalInfo;
 
         private string selectedFileName;
@@ -47,17 +47,26 @@ namespace SoundNest_Windows_Client.ViewModels
         private readonly IAccountService user;
         private readonly ISongService songService;
 
-        public string PlaylistName
+        public string SongName
         {
-            get => playlistName;
-            set { playlistName = value; OnPropertyChanged(); }
+            get => songName;
+            set { songName = value; OnPropertyChanged(); }
         }
-
         public string AdditionalInfo
         {
             get => additionalInfo;
-            set { additionalInfo = value; OnPropertyChanged(); }
+            set
+            {
+                if (value.Length <= 200)
+                {
+                    additionalInfo = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(CharacterCountText));
+                }
+            }
         }
+
+        public string CharacterCountText => $"{AdditionalInfo?.Length ?? 0} / 200";
 
         private string songTitle;
         public string SongTitle
@@ -156,6 +165,16 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 SelectedFileName = Path.GetFullPath(ofd.FileName);
 
+
+                if (!IsValidAudioFile(SelectedFileName))
+                {
+                    MessageBox.Show("El archivo seleccionado no es un archivo de audio válido o está dañado.", "Archivo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+
+
+
                 try
                 {
                     var file = TagLib.File.Create(SelectedFileName);
@@ -217,11 +236,17 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private ValidationResult CanUploadSong()
         {
-            if (string.IsNullOrWhiteSpace(PlaylistName))
+            if (string.IsNullOrWhiteSpace(SongName))
                 return ValidationResult.Failure("Debes ingresar el nombre de la canción.", ValidationErrorType.IncompleteData);
+
+            if(songName.Length > 50)
+                return ValidationResult.Failure("El nombre de la canción no debe tener más de 50 caracteres.", ValidationErrorType.InvalidData);
 
             if (string.IsNullOrWhiteSpace(SelectedFileName))
                 return ValidationResult.Failure("Debes seleccionar un archivo de audio.", ValidationErrorType.IncompleteData);
+
+            if (!IsValidAudioFile(SelectedFileName))
+                return ValidationResult.Failure("El archivo seleccionado no es un archivo de audio válido o está dañado.", ValidationErrorType.InvalidData);
 
             if (!File.Exists(SelectedFileName))
                 return ValidationResult.Failure("El archivo seleccionado no existe.", ValidationErrorType.InvalidData);
@@ -232,8 +257,28 @@ namespace SoundNest_Windows_Client.ViewModels
             if (SongCustomImage == null)
                 return ValidationResult.Failure("Debes seleccionar una imagen para la canción.", ValidationErrorType.IncompleteData);
 
+            if ((AdditionalInfo ?? "").Length > 200)
+                return ValidationResult.Failure("La información adicional no debe de contener más de 200 caracteres", ValidationErrorType.InvalidData);
+
             return ValidationResult.Success();
         }
+
+        private bool IsValidAudioFile(string path)
+        {
+            try
+            {
+                if (!File.Exists(path)) return false;
+                if (Path.GetExtension(path).ToLower() != ".mp3") return false;
+
+                var file = TagLib.File.Create(path);
+                return file.Properties.Duration.TotalSeconds > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
 
 
         private async void UploadSong()
@@ -253,7 +298,7 @@ namespace SoundNest_Windows_Client.ViewModels
                 var extension = Path.GetExtension(SelectedFileName).TrimStart('.');
 
                 bool result = await songUploaderService.UploadFullAsync(
-                    songName: PlaylistName,
+                    songName: SongName,
                     fileBytes: fileBytes,
                     genreId: SelectedGenre.IdSongGenre,
                     description: AdditionalInfo ?? string.Empty,
@@ -277,7 +322,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
                     Navigation.NavigateTo<HomeViewModel>();
 
-                    PlaylistName = string.Empty;
+                    SongName = string.Empty;
                     AdditionalInfo = string.Empty;
                     SelectedFileName = null;
                     SelectedGenre = null;

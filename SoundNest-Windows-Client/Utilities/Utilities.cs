@@ -23,5 +23,10 @@ namespace SoundNest_Windows_Client.Utilities
         public const string TEXT_BOX_WIDTH = "TextBoxWidth";
         public const string TEXT_BOX_HEIGHT = "TextBoxHeight";
         public const string CHECK_BOX_MARGIN = "CheckBoxMargin";
+        public const string PASSWORD_REGEX = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,25}$";
+        public const string USERNAME_REGEX = @"^[a-zA-Z0-9_]{3,25}$";
+        public const string EMAIL_REGEX = @"^(?=.{1,100}$)[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$";
+
+
     }
 }

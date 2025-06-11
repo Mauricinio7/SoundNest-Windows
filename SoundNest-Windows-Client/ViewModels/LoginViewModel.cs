@@ -6,10 +6,12 @@ using Services.Communication.RESTful.Services;
 using Services.Infrestructure;
 using Services.Navigation;
 using SoundNest_Windows_Client.Models;
+using SoundNest_Windows_Client.Notifications;
 using SoundNest_Windows_Client.Utilities;
 using System;
 using System.IO;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -71,14 +73,19 @@ namespace SoundNest_Windows_Client.ViewModels
             if (string.IsNullOrWhiteSpace(Username))
                 return ValidationResult.Failure("Debes ingresar tu nombre de usuario.", ValidationErrorType.IncompleteData);
 
+            if (!Regex.IsMatch(Username, Utilities.Utilities.USERNAME_REGEX))
+                return ValidationResult.Failure("El nombre no es válido", ValidationErrorType.InvalidData);
+
             if (string.IsNullOrWhiteSpace(Password))
                 return ValidationResult.Failure("Debes ingresar tu contraseña.", ValidationErrorType.IncompleteData);
 
-            //if (Password.Length < 6)
-                //return ValidationResult.Failure("La contraseña debe tener al menos 6 caracteres.",ValidationErrorType.IncompleteData);
+            if (!Regex.IsMatch(Password, Utilities.Utilities.PASSWORD_REGEX))
+                return ValidationResult.Failure("La contraseña es inválida.", ValidationErrorType.InvalidData);
 
             return ValidationResult.Success();
         }
+
+
 
 
         private async Task ExecuteLoginCommand()
@@ -135,19 +142,16 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 aditionalInformation = aditionalInformationResult.Data.Info;
 
-                //MessageBox.Show($"¡Bienvenido {username}! Has iniciado sesión con el correo: {email}", "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
-
+                ToastHelper.ShowToast($"Has iniciado sesión con el usuario:  {username}", NotificationType.Information, "Inicio de sesión");
                 user.SaveUser(username, email, role.Value, userId.Value, aditionalInformation);
 
                 GoHome();
             }
             else
             {
-                //TODO its just for test
-                //MessageBox.Show($"Se ha forzado el inicio de sesión back door hot fix", "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
-
                 user.SaveUser(username, email, role.Value, userId.Value, "Hubo un error al cargar la información adicional, se aplicó una por defecto");
-
+                ToastHelper.ShowToast($"Has iniciado sesión con el usuario:  {username}", NotificationType.Information, "Inicio de sesión");
+                ToastHelper.ShowToast("Hubo un error al cargar tu información adicional", NotificationType.Warning, "Error menor");
                 GoHome();
             }
         }

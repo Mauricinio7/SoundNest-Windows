@@ -16,6 +16,8 @@ using Services.Communication.gRPC.Http;
 using Services.Communication.gRPC.Constants;
 using UserImage;
 using Services.Communication.RESTful.Models.Auth;
+using System.Text.RegularExpressions;
+using System.Windows.Media;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -42,12 +44,25 @@ namespace SoundNest_Windows_Client.ViewModels
             set { username = value; OnPropertyChanged(); }
         }
 
-        private string additionalInfo;
+        private string additionalInfo = "";
         public string AdditionalInfo
         {
             get => additionalInfo;
-            set { additionalInfo = value; OnPropertyChanged(); }
+            set
+            {
+                if (value.Length <= 200)
+                {
+                    additionalInfo = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(AdditionalInfoCounter));
+                }
+            }
         }
+        public string AdditionalInfoCounter => $"{(AdditionalInfo?.Length ?? 0)} / 200";
+
+
+        public int AdditionalInfoLength => AdditionalInfo?.Length ?? 0;
+
 
         private BitmapImage profilePhoto;
         public BitmapImage ProfilePhoto
@@ -142,7 +157,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                ProfilePhoto = null; //TODO charge default image
+                ProfilePhoto = (BitmapImage)ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_ProfileImage_Icon.png");
             }
         }
 
@@ -187,10 +202,19 @@ namespace SoundNest_Windows_Client.ViewModels
 
             if (dialog.ShowDialog() == true)
             {
-                SelectedImagePath = dialog.FileName;
+                var selectedPath = dialog.FileName;
+
+                if (!IsValidImage(selectedPath))
+                {
+                    MessageBox.Show("El archivo seleccionado no es una imagen válida.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                SelectedImagePath = selectedPath;
                 LoadImageFromFile(SelectedImagePath);
             }
         }
+
 
         private async void ExecuteChangePasswordCommand(object parameter)
         {
@@ -214,7 +238,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show(response.Message, "Hubo un error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Se intentó cambiar la contraseña hace poco tiempo, espere un momento e inténtelo nuevamente más tarde", "Error al enviar el código", MessageBoxButton.OK, MessageBoxImage.Error);
                 Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
             }   
         }
@@ -234,8 +258,35 @@ namespace SoundNest_Windows_Client.ViewModels
             Navigation.NavigateTo<HomeViewModel>();
         }
 
+        private ValidationResult ValidateProfileChanges()
+        {
+            if (string.IsNullOrWhiteSpace(Username))
+                return ValidationResult.Failure("El nombre de usuario no puede estar vacío.", ValidationErrorType.IncompleteData);
+
+            if (!Regex.IsMatch(Username, Utilities.Utilities.USERNAME_REGEX))
+                return ValidationResult.Failure("El nombre debe tener entre 3 y 25 caracteres y solo puede contener letras, números y guiones bajos.", ValidationErrorType.InvalidData);
+
+            if (string.IsNullOrWhiteSpace(AdditionalInfo))
+                return ValidationResult.Failure("La información adicional no puede estar vacía.", ValidationErrorType.IncompleteData);
+
+            if (AdditionalInfo.Length > 200)
+                return ValidationResult.Failure("La información adicional no debe exceder los 200 caracteres.", ValidationErrorType.InvalidData);
+
+            return ValidationResult.Success();
+        }
+
+
+
+
         private async Task ExecuteSaveChangesCommand()
         {
+            var validationResult = ValidateProfileChanges();
+            if (!validationResult.Result)
+            {
+                MessageBox.Show(validationResult.Message, validationResult.Tittle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             if (!string.IsNullOrWhiteSpace(SelectedImagePath))
             {
                 var success = await userImageService.UploadImageAsync(currentUser.Id, SelectedImagePath);
@@ -271,6 +322,26 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
+        private bool IsValidImage(string path)
+        {
+            try
+            {
+                using var stream = File.OpenRead(path);
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad;
+                image.StreamSource = stream;
+                image.EndInit();
+                image.Freeze();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+
         private async Task LoadProfileImage()
         {
             try
@@ -293,7 +364,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"No se pudo cargar la imagen de perfil: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ProfilePhoto = (BitmapImage)ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_ProfileImage_Icon.png");
             }
         }
 

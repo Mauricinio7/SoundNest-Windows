@@ -84,6 +84,16 @@
                     </ItemsControl>
                 </ScrollViewer>
             </Border>
+            
+            <TextBlock Text="Aún no hay comentarios para esta canción."
+                    FontSize="28"
+                    Foreground="LightGray"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Canvas.Left="800"
+                    Canvas.Top="500"
+                    Visibility="{Binding IsCommentsEmpty, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
 
             <TextBlock Text="{Binding ReplyingToComment.Text, StringFormat='Responder a: {0}'}"
                        Visibility="{Binding IsReplying, Converter={StaticResource BoolToVisibilityConverter}}"
@@ -96,10 +106,27 @@
             <Border Background="#222" CornerRadius="10" Width="1273" Height="149"
                     Canvas.Left="426" Canvas.Top="792" HorizontalAlignment="Center" VerticalAlignment="Top">
                 <Grid Margin="10">
-                    <TextBox FontSize="18" Foreground="White" Background="#444" BorderThickness="0"
-                             VerticalScrollBarVisibility="Auto" Padding="10" AcceptsReturn="True"
-                             TextWrapping="Wrap" Margin="31,13,196,23"
-                             Text="{Binding CommentText}"/>
+                    <TextBox FontSize="18"
+                         Foreground="White"
+                         Background="#444"
+                         BorderThickness="0"
+                         VerticalScrollBarVisibility="Auto"
+                         Padding="10"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         Margin="31,13,196,23"
+                         MaxLength="200"
+                         Text="{Binding CommentText, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Text="{Binding CommentCharacterCountText}"
+                           FontSize="14"
+                           Foreground="Gray"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Bottom"
+                           Margin="0,0,196,3"/>
+                    
+
+
+
                     <Button Content="Enviar" Width="167" Background="#1DB954" Foreground="White" BorderThickness="0"
                             HorizontalAlignment="Right" Margin="0,34,10,43" FontSize="25"
                             Command="{Binding SendCommentCommand}"/>

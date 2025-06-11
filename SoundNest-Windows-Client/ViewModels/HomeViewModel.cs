@@ -13,6 +13,8 @@ using System.IO;
 using System.Net.Http;
 using Services.Communication.RESTful.Constants;
 using System.Windows.Input;
+using SoundNest_Windows_Client.Notifications;
+using SoundNest_Windows_Client.Resources.Controls;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -97,6 +99,16 @@ namespace SoundNest_Windows_Client.ViewModels
             ScrollRightPopularCommand = new RelayCommand(_ => _popularScrollViewer?.ScrollToHorizontalOffset(_popularScrollViewer.HorizontalOffset + 300));
 
             PlaySongCommand = new RelayCommand(PlaySong);
+            Mediator.Notify(MediatorKeys.REFRESH_PLAYLISTS, null);
+
+            //TODO Tests You can use this
+            //ToastHelper.ShowToast($"¡Bienvenido, {currentUser.CurrentUser.Name}!", NotificationType.Information, "Inicio de sesión");
+            //ToastHelper.ShowToast($"¡Bienvenido, {currentUser.CurrentUser.Name}!", NotificationType.Warning, "Inicio de sesión");
+
+            //bool confirmed = DialogHelper.ShowConfirmation("Eliminar playlist", "¿Seguro que deseas eliminar esta playlist?");
+            //MessageBox.Show(confirmed.ToString());
+            //DialogHelper.ShowAcceptDialog("Éxito", "La canción se subió correctamente. slkjuadlisahldoihaslodhaslkjdhaslkjjdhasldkjhasldkjashdlaksjdhlaskjdhaskdjasldkjashdlaksjhdñlkajsñlkajsñd", AcceptDialogType.Confirmation);
+            //DialogHelper.ShowAcceptDialog("Error", "No se pudo guardar la playlist.", AcceptDialogType.Error);
 
         }
 
@@ -132,7 +144,6 @@ namespace SoundNest_Windows_Client.ViewModels
                     realSong.DurationSeconds = song.DurationSeconds;
                     realSong.Description = song.Description;
                     realSong.DurationSeconds = song.DurationSeconds;
-                    realSong.Visualizations = song.Visualizations;
 
                     if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
                     {
@@ -178,7 +189,6 @@ namespace SoundNest_Windows_Client.ViewModels
                         FileName = song.FileName,
                         DurationSeconds = song.DurationSeconds,
                         Description = song.Description,
-                        Visualizations = song.Visualizations,
                         DurationFormatted = TimeSpan.FromSeconds(song.DurationSeconds).ToString(@"m\:ss")
                     };
 

@@ -8,7 +8,7 @@ using System.Windows.Input;
 
 namespace Services.Infrestructure
 {
-    class RelayCommand : ICommand, IRelayCommand
+    public class RelayCommand : ICommand, IRelayCommand
     {
         private readonly Action<object> execute;
         private readonly Predicate<object> canExecute;

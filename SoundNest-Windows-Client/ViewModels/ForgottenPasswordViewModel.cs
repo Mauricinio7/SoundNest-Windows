@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -59,11 +60,12 @@ namespace SoundNest_Windows_Client.ViewModels
             if (string.IsNullOrWhiteSpace(Email))
                 return ValidationResult.Failure("El correo electrónico no puede estar vacío.", ValidationErrorType.IncompleteData);
 
-            if (!Email.Contains("@") || !Email.Contains(".")) //TODO do a better validation
+            if (!Regex.IsMatch(Email, Utilities.Utilities.EMAIL_REGEX))
                 return ValidationResult.Failure("El correo electrónico ingresado no es válido.", ValidationErrorType.InvalidData);
 
             return ValidationResult.Success();
         }
+
 
 
         private async void ExecuteSubmitRecoveryCommand(object parameter)
@@ -83,6 +85,7 @@ namespace SoundNest_Windows_Client.ViewModels
             Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
 
             var response = await authService.SendCodeEmailAsync(requestCode);
+            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
 
             if (response.IsSuccess)
             {
@@ -90,13 +93,11 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
                 Mediator.Notify(MediatorKeys.HIDE_SIDE_BAR, null);
-                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
                 Navigation.NavigateTo<ChangePasswordViewModel>(Email);
             }
             else
             {
                 MessageBox.Show(response.Message, "Hubo un error", MessageBoxButton.OK, MessageBoxImage.Error);
-                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
             }
         }
 

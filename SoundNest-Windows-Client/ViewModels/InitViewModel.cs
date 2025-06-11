@@ -14,6 +14,7 @@ using System.Windows;
 using System.Windows.Media.Imaging;
 using Services.Communication.RESTful.Http;
 using Services.Communication.RESTful.Models.Songs;
+using SoundNest_Windows_Client.Notifications;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -112,7 +113,7 @@ namespace SoundNest_Windows_Client.ViewModels
                 {
                     aditionalInformation = aditionalInformationResult.Data.Info;
 
-                    MessageBox.Show($"¡Bienvenido {username}! Has iniciado sesión con el correo: {email}", "Inicio de sesión exitoso", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ToastHelper.ShowToast($"Has iniciado sesión con el usuario:  {username}", NotificationType.Information, "Inicio de sesión");
 
                     accountService.SaveUser(username, email, role, userId, aditionalInformation);
 

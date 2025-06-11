@@ -72,7 +72,7 @@ namespace Services.Communication.RESTful.Services
         public async Task<ApiResult<bool>> RespondToCommentAsync(RespondCommentRequest request)
         {
             var url = ApiRoutes.CommentRespondComment.Replace("{commentId}", request.CommentId.ToString());
-            var body = new { message = request.Message }; // Solo se envía el mensaje en el body
+            var body = new { message = request.Message }; 
             var result = await _apiClient.PostAsync<object, object>(url, body);
 
             if (result.IsSuccess)

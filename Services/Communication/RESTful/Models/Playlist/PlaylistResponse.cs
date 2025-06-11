@@ -33,5 +33,6 @@ namespace Services.Communication.RESTful.Models.Playlist
 
         [JsonPropertyName("__v")]
         public int Version { get; set; }
+
     }
 }

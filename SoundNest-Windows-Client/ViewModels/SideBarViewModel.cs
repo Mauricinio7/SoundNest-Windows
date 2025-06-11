@@ -13,6 +13,8 @@ using Services.Communication.RESTful.Models.Playlist;
 using UserImage;
 using Services.Communication.gRPC.Http;
 using Services.Communication.gRPC.Services;
+using Services.Communication.RESTful.Constants;
+using Song;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -48,7 +50,7 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand OpenPlaylistCommand { get; }
         public RelayCommand UploadSongCommand { get; set; }
 
-        public ObservableCollection<PlaylistResponse> Playlists { get; set; } = new();
+        public ObservableCollection<Models.Playlist> Playlists { get; set; } = new();
 
         private readonly IGrpcClientManager clientManager;
         private readonly IUserImageServiceClient userImageService;
@@ -71,15 +73,9 @@ namespace SoundNest_Windows_Client.ViewModels
             ViewNotificationsCommand = new RelayCommand(ExecuteViewNotificationsCommand);
             UploadSongCommand = new RelayCommand(ExecuteUploadSongCommand);
 
-            Mediator.Register(MediatorKeys.ADD_PLAYLIST, param =>
-            {
-                if (param is PlaylistResponse newPlaylist)
-                    App.Current.Dispatcher.Invoke(() => Playlists.Add(newPlaylist));
-            });
-
             Mediator.Register(MediatorKeys.REFRESH_PLAYLISTS, _ =>
             {
-                _ = LoadPlaylistsAsync();
+                ExecuteRefreshPlaylistsCommand(null);
             });
 
             Mediator.Register(MediatorKeys.UPLOAD_USER_IMAGE, _ =>
@@ -88,7 +84,6 @@ namespace SoundNest_Windows_Client.ViewModels
             });
 
             EnsureTokenIsConfigured();
-            _ = LoadPlaylistsAsync();
             _ = LoadProfileImage();
         }
 
@@ -122,7 +117,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"No se pudo cargar la imagen de perfil: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ProfilePhoto = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_ProfileImage_Icon.png");
             }
         }
 
@@ -142,15 +137,17 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async void ExecuteOpenPlaylistCommand(object parameter)
         {
-            Mediator.Notify(MediatorKeys.HIDE_SEARCH_BAR, null);
 
-            if (parameter is PlaylistResponse playlist)
+            if (parameter is Playlist playlist)
             {
-                var songIds = playlist.Songs.Select(s => s.SongId).ToList();
+                var songIds = playlist.PlaylistSongs.Select(s => s.SongId).ToList();
+
+                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
 
                 var songDetailsResult = await _playlistService.GetSongsDetailsAsync(songIds);
+                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
 
-                if (songDetailsResult.IsSuccess && songDetailsResult.Data != null)
+                if (songDetailsResult.IsSuccess || songDetailsResult.StatusCode == System.Net.HttpStatusCode.BadRequest)
                 {
                     var detailedPlaylist = new Playlist
                     {
@@ -164,6 +161,7 @@ namespace SoundNest_Windows_Client.ViewModels
                         Songs = songDetailsResult.Data
                     };
 
+                    Mediator.Notify(MediatorKeys.HIDE_SEARCH_BAR, null);
                     Navigation.NavigateTo<PlaylistDetailViewModel>(detailedPlaylist);
                 }
                 else
@@ -201,17 +199,54 @@ namespace SoundNest_Windows_Client.ViewModels
             var result = await _playlistService.GetPlaylistsByUserIdAsync(_userId);
             if (!result.IsSuccess || result.Data is null)
             {
-                MessageBox.Show(result.ErrorMessage);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Playlists.Clear();
+                    MessageBox.Show(result.ErrorMessage);
+                });
                 return;
             }
 
-            App.Current.Dispatcher.Invoke(() =>
+            var playlists = new List<Playlist>();
+
+            foreach (var playlistResponse in result.Data)
+            {
+                var playlist = new Playlist
+                {
+                    Id = playlistResponse.Id,
+                    CreatorId = playlistResponse.CreatorId,
+                    PlaylistName = playlistResponse.PlaylistName,
+                    Description = playlistResponse.Description,
+                    ImagePath = playlistResponse.ImagePath,
+                    CreatedAt = playlistResponse.CreatedAt,
+                    Version = playlistResponse.Version,
+                    PlaylistSongs = playlistResponse.Songs,
+                };
+
+                if (!string.IsNullOrEmpty(playlist.ImagePath) && playlist.ImagePath.Length > 1)
+                {
+                    playlist.Image = await ImagesHelper.LoadImageFromUrlAsync($"{ApiRoutes.BaseUrl}{playlist.ImagePath[1..]}");
+                }
+                else
+                {
+                    playlist.Image = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
+                }
+
+                playlists.Add(playlist);
+            }
+
+            Application.Current.Dispatcher.Invoke(() =>
             {
                 Playlists.Clear();
-                foreach (var dto in result.Data)
-                    Playlists.Add(dto);
+                foreach (var playlist in playlists)
+                {
+                    Playlists.Add(playlist);
+                }
             });
         }
 
+
     }
+
 }
+

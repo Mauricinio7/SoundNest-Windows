@@ -105,7 +105,6 @@ namespace SoundNest_Windows_Client.ViewModels
                         FileName = song.FileName,
                         DurationSeconds = song.DurationSeconds,
                         Description = song.Description,
-                        Visualizations = song.Visualizations,
                         DurationFormatted = TimeSpan.FromSeconds(song.DurationSeconds).ToString(@"m\:ss"),
                         Index = index++
                     };
