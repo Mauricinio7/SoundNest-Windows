@@ -15,6 +15,8 @@ using Services.Communication.RESTful.Constants;
 using System.Windows.Input;
 using SoundNest_Windows_Client.Notifications;
 using SoundNest_Windows_Client.Resources.Controls;
+using Services.Communication.RESTful.Models;
+using System.Net;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -75,6 +77,21 @@ namespace SoundNest_Windows_Client.ViewModels
         public RelayCommand ScrollLeftPopularCommand { get; set; }
         public RelayCommand ScrollRightPopularCommand { get; set; }
 
+        private bool _noRecentSongs;
+        public bool NoRecentSongs
+        {
+            get => _noRecentSongs;
+            set { _noRecentSongs = value; OnPropertyChanged(); }
+        }
+
+        private bool _noPopularSongs;
+        public bool NoPopularSongs
+        {
+            get => _noPopularSongs;
+            set { _noPopularSongs = value; OnPropertyChanged(); }
+        }
+
+
 
 
 
@@ -101,15 +118,6 @@ namespace SoundNest_Windows_Client.ViewModels
             PlaySongCommand = new RelayCommand(PlaySong);
             Mediator.Notify(MediatorKeys.REFRESH_PLAYLISTS, null);
 
-            //TODO Tests You can use this
-            //ToastHelper.ShowToast($"¡Bienvenido, {currentUser.CurrentUser.Name}!", NotificationType.Information, "Inicio de sesión");
-            //ToastHelper.ShowToast($"¡Bienvenido, {currentUser.CurrentUser.Name}!", NotificationType.Warning, "Inicio de sesión");
-
-            //bool confirmed = DialogHelper.ShowConfirmation("Eliminar playlist", "¿Seguro que deseas eliminar esta playlist?");
-            //MessageBox.Show(confirmed.ToString());
-            //DialogHelper.ShowAcceptDialog("Éxito", "La canción se subió correctamente. slkjuadlisahldoihaslodhaslkjdhaslkjjdhasldkjhasldkjashdlaksjdhlaskjdhaskdjasldkjashdlaksjhdñlkajsñlkajsñd", AcceptDialogType.Confirmation);
-            //DialogHelper.ShowAcceptDialog("Error", "No se pudo guardar la playlist.", AcceptDialogType.Error);
-
         }
 
         private void EnsureTokenIsConfigured()
@@ -131,36 +139,24 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 foreach (var song in result.Data)
                 {
-                    Models.Song realSong = new Models.Song();
-                    realSong.IdSong = song.IdSong;
-                    realSong.IdSongExtension = song.IdSongExtension;
-                    realSong.IdSongGenre = song.IdSongGenre;
-                    realSong.IsDeleted = song.IsDeleted;
-                    realSong.PathImageUrl = song.PathImageUrl;
-                    realSong.ReleaseDate = song.ReleaseDate;
-                    realSong.SongName = song.SongName;
-                    realSong.UserName = song.UserName;
-                    realSong.FileName = song.FileName;
-                    realSong.DurationSeconds = song.DurationSeconds;
-                    realSong.Description = song.Description;
-                    realSong.DurationSeconds = song.DurationSeconds;
+                    var realSong = CreateSongModel(song);
+                    RecentSongs.Add(realSong);
 
                     if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
                     {
-                        realSong.Image = await ImagesHelper.LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, song.PathImageUrl.AsSpan(1)));
+                        _ = Task.Run(async () =>
+                        {
+                            var image = await ImagesHelper.LoadImageFromUrlAsync($"{ApiRoutes.BaseUrl}{song.PathImageUrl[1..]}");
+                            Application.Current.Dispatcher.Invoke(() => realSong.Image = image);
+                        });
                     }
-                    else
-                    {
-                        realSong.Image = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
-                    }
-
-                    RecentSongs.Add(realSong);
                 }
             }
             else
             {
-                MessageBox.Show(result.Message ?? "Error al obtener canciones recientes", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowSongLoadError(result, "recientes");
             }
+            NoRecentSongs = RecentSongs.Count == 0;
         }
 
         private async Task LoadPopularSongsAsync()
@@ -174,41 +170,64 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 PopularSongs.Clear();
 
-                foreach (SongResponse song in result.Data)
+                foreach (var song in result.Data)
                 {
-                    var realSong = new Models.Song
-                    {
-                        IdSong = song.IdSong,
-                        IdSongExtension = song.IdSongExtension,
-                        IdSongGenre = song.IdSongGenre,
-                        IsDeleted = song.IsDeleted,
-                        PathImageUrl = song.PathImageUrl,
-                        ReleaseDate = song.ReleaseDate,
-                        SongName = song.SongName,
-                        UserName = song.UserName,
-                        FileName = song.FileName,
-                        DurationSeconds = song.DurationSeconds,
-                        Description = song.Description,
-                        DurationFormatted = TimeSpan.FromSeconds(song.DurationSeconds).ToString(@"m\:ss")
-                    };
+                    var realSong = CreateSongModel(song);
+                    PopularSongs.Add(realSong);
 
                     if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
                     {
-                        realSong.Image = await ImagesHelper.LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, song.PathImageUrl.AsSpan(1)));
+                        _ = Task.Run(async () =>
+                        {
+                            var image = await ImagesHelper.LoadImageFromUrlAsync($"{ApiRoutes.BaseUrl}{song.PathImageUrl[1..]}");
+                            Application.Current.Dispatcher.Invoke(() => realSong.Image = image);
+                        });
                     }
-                    else
-                    {
-                        realSong.Image = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
-                    }
-
-                    PopularSongs.Add(realSong);
                 }
             }
             else
             {
-                MessageBox.Show(result.Message ?? "Error al obtener canciones populares", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowSongLoadError(result, "populares");
             }
+            NoPopularSongs = PopularSongs.Count == 0;
         }
+
+        private void ShowSongLoadError(ApiResult<List<SongResponse>> result, string tipo)
+        {
+            string title = "Error al cargar canciones";
+
+            string message = result.StatusCode switch
+            {
+                HttpStatusCode.BadRequest => "La solicitud no es válida. Intenta recargar las canciones.",
+                HttpStatusCode.NotFound => $"No se encontraron canciones {tipo}.",
+                HttpStatusCode.InternalServerError => "Ocurrió un error interno en el servidor. Intenta más tarde.",
+                _ => result.Message ?? "No se pudieron obtener las canciones. Intenta de nuevo más tarde."
+            };
+
+            ToastHelper.ShowToast(message, NotificationType.Error, title);
+        }
+
+        private Models.Song CreateSongModel(SongResponse song)
+        {
+            return new Models.Song
+            {
+                IdSong = song.IdSong,
+                IdSongExtension = song.IdSongExtension,
+                IdSongGenre = song.IdSongGenre,
+                IsDeleted = song.IsDeleted,
+                PathImageUrl = song.PathImageUrl,
+                ReleaseDate = song.ReleaseDate,
+                SongName = song.SongName,
+                UserName = song.UserName,
+                FileName = song.FileName,
+                DurationSeconds = song.DurationSeconds,
+                Description = song.Description,
+                DurationFormatted = TimeSpan.FromSeconds(song.DurationSeconds).ToString(@"m\:ss"),
+                Image = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png")
+            };
+        }
+
+
 
 
 
@@ -223,7 +242,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show("Error al reproducir la canción", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ToastHelper.ShowToast("Error al reproducir la canción, intentelo de nuevo más tarde", NotificationType.Error, "Error");
             }   
         }
 

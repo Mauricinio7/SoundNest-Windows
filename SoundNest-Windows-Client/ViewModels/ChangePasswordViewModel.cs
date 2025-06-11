@@ -2,6 +2,7 @@
 using Services.Communication.RESTful.Services;
 using Services.Infrestructure;
 using Services.Navigation;
+using SoundNest_Windows_Client.Models;
 using SoundNest_Windows_Client.Notifications;
 using SoundNest_Windows_Client.Resources.Controls;
 using SoundNest_Windows_Client.Utilities;
@@ -52,16 +53,18 @@ namespace SoundNest_Windows_Client.ViewModels
         }
 
         private readonly IUserService userService;
+        private readonly IAccountService accountService;
 
         private string email;
 
         public RelayCommand CancelCommand { get; set; }
         public RelayCommand SubmitChangePasswordCommand { get; set; }
 
-        public ChangePasswordViewModel(INavigationService navigationService, IUserService userService)
+        public ChangePasswordViewModel(INavigationService navigationService, IUserService userService, IAccountService accountService)
         {
             Navigation = navigationService;
             this.userService = userService;
+            this.accountService = accountService;
 
             CancelCommand = new RelayCommand(ExecuteCancelCommand);
             SubmitChangePasswordCommand = new RelayCommand(ExecuteSubmitChangePasswordCommand);
@@ -81,8 +84,16 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private void ExecuteCancelCommand(object parameter)
         {
-            Mediator.Notify(MediatorKeys.SHOW_SIDE_BAR, null);
-            Navigation.NavigateTo<ProfileViewModel>();
+            if(accountService.CurrentUser != null)
+            {
+                Navigation.NavigateTo<ProfileViewModel>();
+                Mediator.Notify(MediatorKeys.SHOW_SIDE_BAR, null);
+            }
+            else
+            {
+                Navigation.NavigateTo<InitViewModel>();
+            }
+            
         }
 
         private ValidationResult CanSubmitPasswordChange()

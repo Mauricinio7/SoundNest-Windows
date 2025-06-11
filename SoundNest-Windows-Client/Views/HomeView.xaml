@@ -83,6 +83,16 @@
                     Visibility="{Binding CanScrollRightPopular, Converter={StaticResource BoolToVisibilityConverter}}" />
             </StackPanel>
 
+            <Label Content="Aún no hay canciones populares disponibles."
+       FontSize="24"
+       Foreground="LightGray"
+       VerticalAlignment="Top"
+       HorizontalAlignment="Left"
+       Visibility="{Binding NoPopularSongs, Converter={StaticResource BoolToVisibilityConverter}}"
+       Width="1495"
+       HorizontalContentAlignment="Center" Canvas.Left="259" Canvas.Top="353"/>
+
+
             <Label Content="Canciones recientes: "
                FontSize="45"
                FontWeight="Bold"
@@ -148,6 +158,15 @@
                         Command="{Binding ScrollRightCommand}"
                         Visibility="{Binding CanScrollRight, Converter={StaticResource BoolToVisibilityConverter}}" />
             </StackPanel>
+            <Label Content="Aún no hay canciones recientes disponibles."
+               FontSize="24"
+               Foreground="LightGray"
+               VerticalAlignment="Top"
+               HorizontalAlignment="Left"
+               Visibility="{Binding NoRecentSongs, Converter={StaticResource BoolToVisibilityConverter}}"
+               Width="1502"
+               HorizontalContentAlignment="Center" Canvas.Left="244" Canvas.Top="740"/>
+
 
 
         </Canvas>

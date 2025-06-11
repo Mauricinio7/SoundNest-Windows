@@ -9,10 +9,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="850" Width="611">
 
-    <UserControl.Resources>
-        <converters:PlaylistImageConverter x:Key="PlaylistImageConverter"/>
-    </UserControl.Resources>
-    
     <Viewbox Stretch="Fill" Margin="0,0,0,0">
 
         <Grid Background="#171717" x:Name="SidebarGrid"  Width="481" Height="850">

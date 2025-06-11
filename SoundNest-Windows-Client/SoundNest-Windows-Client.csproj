@@ -10,9 +10,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Resources\Converters\PlaylistImageConverter.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Resources\Images\Icons\Default_ProfileImage_Icon.png" />
     <None Remove="Resources\Images\Logos\SoundNestLogoWhite.png" />
     <None Remove="Resources\Images\Logos\SoundNestPureLogo.png" />
+    <None Remove="Resources\Images\Logos\SounNestLogo.png" />
     <None Remove="Resources\Images\PartyBackground.jpg" />
   </ItemGroup>
 
@@ -38,6 +43,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Images\Logos\SoundNestPureLogo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Images\Logos\SounNestLogo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Images\PartyBackground.jpg">

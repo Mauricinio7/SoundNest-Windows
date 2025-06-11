@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:SoundNest_Windows_Client.Views"
         xmlns:controls="clr-namespace:SoundNest_Windows_Client.Notifications.Controls"
         mc:Ignorable="d"
+        Icon="/Resources/Images/Logos/SoundNestLogoWhite.png"
         Background="Black"
         Title="MainWindowView" Height="450" Width="800">
     

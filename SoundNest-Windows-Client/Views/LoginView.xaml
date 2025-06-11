@@ -65,7 +65,7 @@
                            Foreground="{StaticResource ForegroundWhiteColor}"/>
 
                     <controls:PlaceholderTextBoxControl x:Name="TextBoxMail"
-                        PlaceholderText="Ingrese su correo electrónico"
+                        PlaceholderText="Ingrese su usuario"
                         PaddingValue="30,0,0,0"
                         Style="{StaticResource PrimaryTextBoxStyle}"
                         Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"

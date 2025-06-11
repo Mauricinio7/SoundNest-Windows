@@ -15,6 +15,9 @@ using System.Windows.Media.Imaging;
 using Services.Communication.RESTful.Http;
 using Services.Communication.RESTful.Models.Songs;
 using SoundNest_Windows_Client.Notifications;
+using SoundNest_Windows_Client.Resources.Controls;
+using Services.Communication.RESTful.Models;
+using System.Net;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -79,7 +82,6 @@ namespace SoundNest_Windows_Client.ViewModels
                 _client.InitializeClient();
                 _notificationsGrpc.init();
                 await SaveUserToMemory(token);
-                Clipboard.SetText(token); // TODOO the best form to force a postman test lol
             }
         }
 
@@ -89,11 +91,14 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 apiClient.SetAuthorizationToken(token);
                 Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
-                var result = await userService.ValidateJwtAsync();
+
+                ApiResult<ValidatedUserResponse> result = await userService.ValidateJwtAsync();
+
                 Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+
                 if (!result.IsSuccess)
                 {
-                    MessageBox.Show("Su sesión ha caducado, vuelva a inciar sesión" ?? "No se pudo validar el token.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ShowTokenValidationError(result.StatusCode.Value);
                     return;
                 }
 
@@ -103,17 +108,16 @@ namespace SoundNest_Windows_Client.ViewModels
                 int userId = userData.IdUser;
                 int role = userData.IdRole;
 
-
-
                 string aditionalInformation = "";
-
+                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
                 var aditionalInformationResult = await userService.GetAdditionalInformationAsync(token);
+                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
 
                 if (aditionalInformationResult.IsSuccess)
                 {
                     aditionalInformation = aditionalInformationResult.Data.Info;
 
-                    ToastHelper.ShowToast($"Has iniciado sesión con el usuario:  {username}", NotificationType.Information, "Inicio de sesión");
+                    ToastHelper.ShowToast($"Has iniciado sesión con el usuario: {username}", NotificationType.Information, "Inicio de sesión");
 
                     accountService.SaveUser(username, email, role, userId, aditionalInformation);
 
@@ -121,15 +125,47 @@ namespace SoundNest_Windows_Client.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show(aditionalInformationResult.Message ?? "Error al iniciar sesión, intentelo de nuevo más tarde", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ShowAdditionalInformationError(aditionalInformationResult.StatusCode.Value);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al iniciar sesión, intente más tarde: {ex.Message}",
-                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ToastHelper.ShowToast("Ocurrió un error desconocido, intentelo nuevamente", NotificationType.Error, "Error inesperado");
             }
         }
+
+        private void ShowTokenValidationError(HttpStatusCode status)
+        {
+            string title = "Error al validar sesión";
+
+            string message = status switch
+            {
+                HttpStatusCode.Unauthorized => "Tu sesión ha expirado. Vuelve a iniciar sesión.",
+                HttpStatusCode.Forbidden => "Tu sesión ha expirado. Vuelve a iniciar sesión.",
+                HttpStatusCode.InternalServerError => "Ocurrió un error al validar la sesión. Intentelo nuevamente",
+                _ => "Se ha perdido la conexión a internet, intente nuevamente más tarde."
+            };
+
+            ToastHelper.ShowToast(message, NotificationType.Warning, title);
+        }
+
+        private void ShowAdditionalInformationError(HttpStatusCode status)
+        {
+            string title = "Error al cargar información adicional";
+
+            string message = status switch
+            {
+                HttpStatusCode.Unauthorized => "Tu sesión ha expirado. Vuelve a iniciar sesión.",
+                HttpStatusCode.Forbidden => "Tu sesión ha expirado. Vuelve a iniciar sesión.",
+                HttpStatusCode.NotFound => "No se encontró información adicional para este usuario.",
+                HttpStatusCode.InternalServerError => "Ocurrió un error al recuperar la información adicional.",
+                _ => "Se ha perdido la conexión a internet, intente nuevamente más tarde."
+            };
+
+            ToastHelper.ShowToast(message, NotificationType.Warning, title);
+        }
+
+
 
         private void GoHome()
         {

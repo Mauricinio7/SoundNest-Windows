@@ -12,7 +12,6 @@
 
     <UserControl.Resources>
         <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-        <conv:PlaylistImageConverter x:Key="PlaylistImageConverter" />
         <Style x:Key="SongItemStyle" TargetType="Border">
             <Setter Property="Background" Value="#222222"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -226,7 +225,7 @@
            Height="50"
            Stretch="UniformToFill"
            Margin="10,0"
-           Source="{Binding PathImageUrl, Converter={StaticResource PlaylistImageConverter}}"/>
+           Source="{Binding Image}"/>
 
                                     <StackPanel Grid.Column="2"
                 Orientation="Vertical"

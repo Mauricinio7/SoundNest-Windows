@@ -4,9 +4,13 @@ using Services.Communication.RESTful.Services;
 using Services.Infrestructure;
 using Services.Navigation;
 using SoundNest_Windows_Client.Models;
+using SoundNest_Windows_Client.Notifications;
+using SoundNest_Windows_Client.Resources.Controls;
 using SoundNest_Windows_Client.Utilities;
 using System;
 using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -78,7 +82,7 @@ namespace SoundNest_Windows_Client.ViewModels
                     }
                     OnPropertyChanged(nameof(PreviewImage));
                 }
-                catch { /* ignora si falla */ }
+                catch { /* ignors if fails */ }
             }
         }
 
@@ -106,7 +110,7 @@ namespace SoundNest_Windows_Client.ViewModels
             var validation = CanSavePlaylist();
             if (!validation.Result)
             {
-                MessageBox.Show(validation.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                DialogHelper.ShowAcceptDialog(validation.Tittle, validation.Message, AcceptDialogType.Warning);
                 return;
             }
 
@@ -126,30 +130,56 @@ namespace SoundNest_Windows_Client.ViewModels
                     base64 = $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
                 }
 
+                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
                 var result = await _playlistService.EditPlaylistAsync(
                     _playlist.Id,
                     PlaylistName,
                     Description);
+                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
 
                 if (result.IsSuccess)
                 {
                     _playlist.PlaylistName = PlaylistName;
                     _playlist.Description = Description;
 
-                    //TODO Message of updated playlist
+                    ToastHelper.ShowToast("Se ha editado la Playlist correctamente", NotificationType.Success, "Éxito");
                     Mediator.Notify(MediatorKeys.REFRESH_PLAYLISTS, null);
                     _navigation.NavigateTo<PlaylistDetailViewModel>(_playlist);
                 }
                 else
                 {
-                    MessageBox.Show(result.ErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ShowEditPlaylistError(result.StatusCode);
                 }
             }
-            catch (Exception ex)
+            catch (HttpRequestException)
             {
-                MessageBox.Show($"Error al guardar playlist: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+                DialogHelper.ShowAcceptDialog("Error de conexión", "No se pudo conectar con el servidor. Verifica tu conexión a Internet.", AcceptDialogType.Error);
+            }
+            catch
+            {
+                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+                DialogHelper.ShowAcceptDialog("Error inesperado", "Ocurrió un error inesperado al guardar la playlist. Inténtalo más tarde.", AcceptDialogType.Error);
             }
         }
+
+        private void ShowEditPlaylistError(HttpStatusCode? statusCode)
+        {
+            string title = "Error al guardar playlist";
+
+            string message = statusCode switch
+            {
+                HttpStatusCode.BadRequest => "Faltan datos o alguno no es válido. Revisa el formulario e inténtalo de nuevo.",
+                HttpStatusCode.Unauthorized => "Tu sesión ha caducado. Cierra sesión y vuelve a iniciarla.",
+                HttpStatusCode.Forbidden => "Tu sesión ha caducado. Cierra sesión y vuelve a iniciarla.",
+                HttpStatusCode.NotFound => "No se encontró la playlist. Intenta abrirla nuevamente.",
+                HttpStatusCode.InternalServerError => "Ocurrió un problema al guardar los cambios. Intenta más tarde.",
+                _ => "Se perdió la conexión a internet, inténtalo más tarde"
+            };
+
+            DialogHelper.ShowAcceptDialog(title, message, AcceptDialogType.Error);
+        }
+
 
 
         private void ExecuteCancel()

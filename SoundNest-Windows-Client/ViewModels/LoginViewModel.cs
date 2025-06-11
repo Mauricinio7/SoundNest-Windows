@@ -1,12 +1,14 @@
 ﻿using Services.Communication.gRPC.Http;
 using Services.Communication.RESTful.Constants;
 using Services.Communication.RESTful.Http;
+using Services.Communication.RESTful.Models;
 using Services.Communication.RESTful.Models.Auth;
 using Services.Communication.RESTful.Services;
 using Services.Infrestructure;
 using Services.Navigation;
 using SoundNest_Windows_Client.Models;
 using SoundNest_Windows_Client.Notifications;
+using SoundNest_Windows_Client.Resources.Controls;
 using SoundNest_Windows_Client.Utilities;
 using System;
 using System.IO;
@@ -94,22 +96,22 @@ namespace SoundNest_Windows_Client.ViewModels
 
             if (!validationResult.Result)
             {
-                MessageBox.Show(validationResult.Message, validationResult.Tittle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                DialogHelper.ShowAcceptDialog(validationResult.Tittle, validationResult.Message, AcceptDialogType.Warning);
                 return;
             }
 
-            LoginRequest loginRequest = new LoginRequest
-                {
-                    Username = this.Username,
-                    Password = this.Password
-                };
+            var loginRequest = new LoginRequest
+            {
+                Username = this.Username,
+                Password = this.Password
+            };
 
             var result = await ExecuteRESTfulApiCall(() => authService.LoginAsync(loginRequest));
 
-            string? token = result.Data;
-
-            if (result.IsSuccess)
+            if (result.IsSuccess && result.Data is not null)
             {
+                string? token = result.Data;
+
                 TokenStorageHelper.SaveToken(token);
                 _client.SetAuthorizationToken(token);
                 _client.InitializeClient();
@@ -118,14 +120,26 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                if (result.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    result.Message = "Se ha ingresado un correo o una contraseña no valida";
-                }
-
-                MessageBox.Show(result.Message ?? "No se pudo iniciar sesión", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ShowLoginError(result);
             }
         }
+
+        private void ShowLoginError(ApiResult<string> result)
+        {
+            string title = "Error al iniciar sesión";
+
+            string message = result.StatusCode switch
+            {
+                HttpStatusCode.Unauthorized => "Se ha ingresado un correo o una contraseña no válidos. Verifique los datos ingresaods",
+                HttpStatusCode.ServiceUnavailable => "Parece que no hay conexión a internet. Intentelo más tarde.",
+                HttpStatusCode.InternalServerError => "Ha ocurrido un error inesperado. Intenta más tarde.",
+                _ => "Parece que no hay conexión a internet. Intentelo más tarde.",
+            };
+
+            DialogHelper.ShowAcceptDialog(title, message, AcceptDialogType.Warning);
+        }
+
+
 
         private async Task SaveUserToMemory(string token)
         {
@@ -136,25 +150,49 @@ namespace SoundNest_Windows_Client.ViewModels
 
             string aditionalInformation = "";
 
+            Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
             var aditionalInformationResult = await userService.GetAdditionalInformationAsync(token);
+            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
 
             if (aditionalInformationResult.IsSuccess)
             {
                 aditionalInformation = aditionalInformationResult.Data.Info;
 
-                ToastHelper.ShowToast($"Has iniciado sesión con el usuario:  {username}", NotificationType.Information, "Inicio de sesión");
-                user.SaveUser(username, email, role.Value, userId.Value, aditionalInformation);
+                ToastHelper.ShowToast($"Has iniciado sesión con el usuario: {username}", NotificationType.Information, "Inicio de sesión");
 
+                user.SaveUser(username, email, role.Value, userId.Value, aditionalInformation);
                 GoHome();
             }
             else
             {
                 user.SaveUser(username, email, role.Value, userId.Value, "Hubo un error al cargar la información adicional, se aplicó una por defecto");
-                ToastHelper.ShowToast($"Has iniciado sesión con el usuario:  {username}", NotificationType.Information, "Inicio de sesión");
-                ToastHelper.ShowToast("Hubo un error al cargar tu información adicional", NotificationType.Warning, "Error menor");
+
+                ToastHelper.ShowToast($"Has iniciado sesión con el usuario: {username}", NotificationType.Information, "Inicio de sesión");
+                ShowAdditionalInformationFallbackError(aditionalInformationResult.StatusCode);
                 GoHome();
             }
         }
+
+        private void ShowAdditionalInformationFallbackError(HttpStatusCode? status)
+        {
+            string title = "Error menor";
+
+            string message = status switch
+            {
+                HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden =>
+                    "Tu sesión ha expirado. Parte de la información no se cargó correctamente.",
+                HttpStatusCode.NotFound =>
+                    "No se encontró información adicional para tu cuenta.",
+                HttpStatusCode.InternalServerError =>
+                    "Ocurrió un error al recuperar tu información adicional.",
+                _ =>
+                    "Hubo un problema de conexión. Se usará información por defecto."
+            };
+
+            ToastHelper.ShowToast(message, NotificationType.Warning, title);
+        }
+
+
 
         private void GoHome()
         {

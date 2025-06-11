@@ -40,7 +40,6 @@ namespace SoundNest_Windows_Client.Utilities
             }
             catch
             {
-                MessageBox.Show("Error al cargar la imagen de la canción", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
         }

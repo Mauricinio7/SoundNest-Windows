@@ -1,10 +1,12 @@
 ﻿using Services.Communication.RESTful.Models.Auth;
 using Services.Infrestructure;
 using Services.Navigation;
+using SoundNest_Windows_Client.Resources.Controls;
 using SoundNest_Windows_Client.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -73,7 +75,7 @@ namespace SoundNest_Windows_Client.ViewModels
             ValidationResult validationResult = ValidateEmail();
             if (!validationResult.Result)
             {
-                MessageBox.Show(validationResult.Message, validationResult.Tittle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                DialogHelper.ShowAcceptDialog(validationResult.Tittle, validationResult.Message, AcceptDialogType.Error);
                 return;
             }
 
@@ -89,18 +91,30 @@ namespace SoundNest_Windows_Client.ViewModels
 
             if (response.IsSuccess)
             {
-                MessageBox.Show("Se ha enviado un código de verificación a tu correo electrónico", "Código de verificación", MessageBoxButton.OK, MessageBoxImage.Information);
-
+                DialogHelper.ShowAcceptDialog("Código de verificación", "Se ha enviado un código de verificación a tu correo electrónico", AcceptDialogType.Information);
                 Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
                 Mediator.Notify(MediatorKeys.HIDE_SIDE_BAR, null);
                 Navigation.NavigateTo<ChangePasswordViewModel>(Email);
             }
             else
             {
-                MessageBox.Show(response.Message, "Hubo un error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowSendCodeError(response.StatusCode);
             }
         }
 
+        private void ShowSendCodeError(HttpStatusCode? statusCode)
+        {
+            string title = "Error al enviar código";
+
+            string message = statusCode switch
+            {
+                HttpStatusCode.BadRequest => "Se ha enviado un correo de verificación recientemente a este mismo correo, espere un momento e intentelo nuevamente más tarde",
+                HttpStatusCode.InternalServerError => "Ocurrió un problema inesperado. Intenta más tarde.",
+                _ => "Se ha perdido la conexión a internet. Inténtalo nuevamente más tarde."
+            };
+
+            DialogHelper.ShowAcceptDialog(title, message, AcceptDialogType.Error);
+        }
 
 
 

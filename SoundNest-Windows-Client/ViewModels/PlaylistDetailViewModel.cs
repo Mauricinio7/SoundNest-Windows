@@ -115,7 +115,7 @@ namespace SoundNest_Windows_Client.ViewModels
             Songs.Clear();
             int index = 1;
 
-            if(playlist.Songs == null || playlist.Songs.Count == 0) 
+            if (playlist.Songs == null || playlist.Songs.Count == 0)
             {
                 IsPlaylistEmpty = true;
             }
@@ -136,20 +136,24 @@ namespace SoundNest_Windows_Client.ViewModels
                     DurationSeconds = song.DurationSeconds,
                     Description = song.Description,
                     DurationFormatted = TimeSpan.FromSeconds(song.DurationSeconds).ToString(@"m\:ss"),
-                    Index = index++
+                    Index = index++,
+                    Image = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png")
                 };
 
+                Songs.Add(parsedSong);
 
                 if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
                 {
-                    parsedSong.Image = await ImagesHelper.LoadImageFromUrlAsync($"{ApiRoutes.BaseUrl}{song.PathImageUrl[1..]}");
+                    var imageUrl = $"{ApiRoutes.BaseUrl}{song.PathImageUrl[1..]}";
+                    _ = Task.Run(async () =>
+                    {
+                        var image = await ImagesHelper.LoadImageFromUrlAsync(imageUrl);
+                        if (image != null)
+                        {
+                            Application.Current.Dispatcher.Invoke(() => parsedSong.Image = image);
+                        }
+                    });
                 }
-                else
-                {
-                    parsedSong.Image = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
-                }
-
-                Songs.Add(parsedSong);
             }
             IsPlaylistEmpty = Songs.Count == 0;
         }

@@ -11,6 +11,7 @@
         Background="Transparent"
         Width="450" 
         SizeToContent="Height"
+        Icon="/Resources/Images/Logos/SoundNestPureLogo.png"
         Topmost="True">
 
     <Border CornerRadius="20" Background="#1E1E1E" BorderBrush="#3CAEA3" BorderThickness="2" Padding="0">

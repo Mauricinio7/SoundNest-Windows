@@ -65,10 +65,10 @@
                 Canvas.Top="630"/>
 
             <Image Source="{Binding PreviewImage}"
-                 Canvas.Left="395" 
-                 Canvas.Top="720"
-                 Width="292" 
-                 Height="235"
+                 Canvas.Left="383" 
+                 Canvas.Top="691"
+                 Width="200" 
+                 Height="200"
                  Stretch="UniformToFill"/>
 
             <Button Content="Guardar cambios"

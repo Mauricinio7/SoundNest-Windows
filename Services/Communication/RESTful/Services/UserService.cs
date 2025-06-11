@@ -83,9 +83,10 @@ namespace Services.Communication.RESTful.Services
             return ApiResult<ValidatedUserResponse>.Failure(
                 result.ErrorMessage ?? "Token inválido",
                 result.Message,
-                result.StatusCode.GetValueOrDefault(HttpStatusCode.Unauthorized)
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)
             );
         }
+
 
         public async Task<ApiResult<bool>> EditUserPasswordAsync(EditUserPasswordRequest request)
         {
