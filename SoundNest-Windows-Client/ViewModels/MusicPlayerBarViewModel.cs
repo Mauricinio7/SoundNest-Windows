@@ -507,27 +507,9 @@ namespace SoundNest_Windows_Client.ViewModels
                         ? file.Tag.JoinedPerformers
                         : "Artista desconocido");
 
-                if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
-                {
+
                     var image = await ImagesHelper.LoadImageFromUrlAsync($"{ApiRoutes.BaseUrl}{song.PathImageUrl[1..]}");
                     SongImage = image ?? ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
-                }
-                else if (file.Tag.Pictures.Length > 0)
-                {
-                    var picData = file.Tag.Pictures[0].Data.Data;
-                    using var ms = new MemoryStream(picData);
-                    var img = new System.Windows.Media.Imaging.BitmapImage();
-                    img.BeginInit();
-                    img.StreamSource = ms;
-                    img.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                    img.EndInit();
-                    img.Freeze();
-                    SongImage = img;
-                }
-                else
-                {
-                    SongImage = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
-                }
             }
             catch
             {
