@@ -130,7 +130,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
             string message = result.StatusCode switch
             {
-                HttpStatusCode.Unauthorized => "Se ha ingresado un correo o una contraseña no válidos. Verifique los datos ingresaods",
+                HttpStatusCode.Unauthorized => "Se ha ingresado un usuario o una contraseña no válidos. Verifique los datos ingresaods",
                 HttpStatusCode.ServiceUnavailable => "Parece que no hay conexión a internet. Intentelo más tarde.",
                 HttpStatusCode.InternalServerError => "Ha ocurrido un error inesperado. Intenta más tarde.",
                 _ => "Parece que no hay conexión a internet. Intentelo más tarde.",
