@@ -13,6 +13,11 @@ using Services.Communication.RESTful.Models.User;
 using System.Security.Principal;
 using Services.Communication.RESTful.Models.Search;
 using System.Threading.Tasks;
+using SoundNest_Windows_Client.Resources.Controls;
+using System.Net;
+using SoundNest_Windows_Client.Notifications;
+using Services.Communication.RESTful.Models;
+using Song;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -57,13 +62,13 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show("Hubo un error al intentar buscar, intente nuevamente más tarde");
+                ToastHelper.ShowToast("Hubo un error inesperado al intentar buscar, intente nuevamente más tarde", NotificationType.Error, "Error");
             }
         }
 
         private async Task LoadSearchSongsAsync(Search searchSong)
         {
-            Services.Communication.RESTful.Models.ApiResult<List<SongResponse>> result;
+            ApiResult<List<SongResponse>> result;
 
             if (searchSong.IsRandom)
             {
@@ -71,22 +76,13 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                 result = await songService.SearchSongsAsync(searchSong);
+                result = await songService.SearchSongsAsync(searchSong);
             }
-
-            if (result.Data == null || result.Data.Count < 1)
-            {
-                ResultLabelText = "No se han encontrado resultados de la búsqueda";
-            }
-            else
-            {
-                ResultLabelText = string.Empty;
-            }
-
-
 
             if (result.IsSuccess && result.Data is not null)
             {
+                ResultLabelText = result.Data.Count > 0 ? string.Empty : "No se han encontrado resultados de la búsqueda";
+
                 SearchResults.Clear();
                 int index = 1;
 
@@ -106,66 +102,101 @@ namespace SoundNest_Windows_Client.ViewModels
                         DurationSeconds = song.DurationSeconds,
                         Description = song.Description,
                         DurationFormatted = TimeSpan.FromSeconds(song.DurationSeconds).ToString(@"m\:ss"),
-                        Index = index++
+                        Index = index++,
+                        IsMineOrModerator = song.UserName == accountService.CurrentUser.Name || accountService.CurrentUser.Role == 2,
+                        Image = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png")
                     };
-                    realSong.IsMineOrModerator = song.UserName == accountService.CurrentUser.Name || accountService.CurrentUser.Role == 2;
-
 
                     if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
                     {
-                        realSong.Image = await ImagesHelper.LoadImageFromUrlAsync($"{ApiRoutes.BaseUrl}{song.PathImageUrl[1..]}");
-                    }
-                    else
-                    {
-                        realSong.Image = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
+                        var imageUrl = $"{ApiRoutes.BaseUrl}{song.PathImageUrl[1..]}";
+                        _ = Task.Run(async () =>
+                        {
+                            var image = await ImagesHelper.LoadImageFromUrlAsync(imageUrl);
+                            if (image != null)
+                            {
+                                Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    realSong.Image = image;
+                                });
+                            }
+                        });
                     }
 
                     SearchResults.Add(realSong);
                 }
-
-                
             }
             else
             {
-                MessageBox.Show(result.Message ?? "Error al obtener canciones recientes", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowSearchSongsError(result.StatusCode);
             }
         }
+
+
+        private void ShowSearchSongsError(HttpStatusCode? statusCode)
+        {
+            string title = "Error al buscar canciones";
+
+            string message = statusCode switch
+            {
+                HttpStatusCode.BadRequest => "Faltan filtros obligatorios para realizar la búsqueda. Intenta agregar un género o un nombre de artista.",
+                HttpStatusCode.NotFound => "No se encontraron canciones con los criterios proporcionados.",
+                HttpStatusCode.InternalServerError => "Ocurrió un error inesperado al obtener las canciones. Intenta más tarde.",
+                _ => "No se pudo conectar con el servidor. Revisa tu conexión a internet."
+            };
+
+            ToastHelper.ShowToast(message, NotificationType.Error, title);
+        }
+
 
         private async Task DeleteSong(object parameter)
         {
-            if (parameter is Models.Song song)
+            if (parameter is not Models.Song song)
+                return;
+
+            bool confirm = DialogHelper.ShowConfirmation(
+                "Eliminar canción",
+                $"¿Estás seguro de que deseas eliminar la canción \"{song.SongName}\"?"
+            );
+
+            if (!confirm)
+                return;
+
+            Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
+            var result = await songService.DeleteSongAsync(song.IdSong);
+            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+
+            if (result.IsSuccess)
             {
-                var confirm = MessageBox.Show(
-                    $"¿Estás seguro de que deseas eliminar la canción \"{song.SongName}\"?",
-                    "Confirmar eliminación",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question
-                );
+                SearchResults.Remove(song);
+                ResultLabelText = SearchResults.Count == 0
+                    ? "No se han encontrado resultados de la búsqueda"
+                    : string.Empty;
 
-                if (confirm != MessageBoxResult.Yes)
-                    return;
-
-                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
-                var result = await songService.DeleteSongAsync(song.IdSong);
-
-                if (result.IsSuccess)
-                {
-                    SearchResults.Remove(song);
-                    ResultLabelText = SearchResults.Count == 0
-                        ? "No se han encontrado resultados de la búsqueda"
-                        : string.Empty;
-
-                    MessageBox.Show("Canción eliminada correctamente", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    MessageBox.Show(result.Message ?? "Error al eliminar la canción", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+                ToastHelper.ShowToast("Canción eliminada correctamente", NotificationType.Success, "Éxito");
+            }
+            else
+            {
+                ShowDeleteSongError(result.StatusCode);
             }
         }
 
+        private void ShowDeleteSongError(HttpStatusCode? statusCode)
+        {
+            string title = "Error al eliminar canción";
 
+            string message = statusCode switch
+            {
+                HttpStatusCode.BadRequest => "La canción que intentas eliminar ya no existe. Intenta con otra.",
+                HttpStatusCode.Unauthorized => "Tu sesión ha expirado. Inicia sesión nuevamente.",
+                HttpStatusCode.Forbidden => "Tu sesión ha expirado. Inicia sesión nuevamente.",
+                HttpStatusCode.NotFound => "La canción que intentas eliminar ya no existe. Intenta con otra.",
+                HttpStatusCode.InternalServerError => "Ocurrió un error inesperado al eliminar la canción. Intenta más tarde.",
+                _ => "No se pudo conectar con el servidor. Revisa tu conexión a internet."
+            };
+
+            DialogHelper.ShowAcceptDialog(title, message, AcceptDialogType.Error);
+        }
 
         private void PlaySong(object parameter)
         {

@@ -23,6 +23,9 @@ using Services.Communication.RESTful.Models.Songs;
 using Services.Communication.RESTful.Services;
 using System.Windows.Media;
 using Song;
+using SoundNest_Windows_Client.Notifications;
+using SoundNest_Windows_Client.Resources.Controls;
+using System.Net;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -153,7 +156,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show("No se pudieron cargar los géneros", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ToastHelper.ShowToast("No se pudieron cargar los géneros por un error de conexión", NotificationType.Warning, "Error");
             }
         }
 
@@ -168,11 +171,9 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 if (!IsValidAudioFile(SelectedFileName))
                 {
-                    MessageBox.Show("El archivo seleccionado no es un archivo de audio válido o está dañado.", "Archivo inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    DialogHelper.ShowAcceptDialog("Error archivo inválido", "El archivo seleccionado no es un archivo de audio válido o está dañado.", AcceptDialogType.Warning);
                     return;
                 }
-
-
 
 
                 try
@@ -229,7 +230,7 @@ namespace SoundNest_Windows_Client.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("No se pudo cargar la imagen: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    DialogHelper.ShowAcceptDialog("Error archivo inválido", "El archivo seleccionado no es una imagen válida.", AcceptDialogType.Warning);
                 }
             }
         }
@@ -287,7 +288,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
             if (!validationResult.Result)
             {
-                MessageBox.Show(validationResult.Message, validationResult.Tittle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                DialogHelper.ShowAcceptDialog(validationResult.Tittle, validationResult.Message, AcceptDialogType.Warning);
                 return;
             }
 
@@ -311,16 +312,16 @@ namespace SoundNest_Windows_Client.ViewModels
 
                     if (imageUploadResult)
                     {
-                        MessageBox.Show("Canción publicada con éxito",
-                        "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                        ToastHelper.ShowToast("Canción publicada con éxito", NotificationType.Success, "Éxito");
                     }
                     else
                     {
-                        MessageBox.Show("Canción publicada sin imagen, hubo un error al internar publicar la imagen",
-                        "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                        ToastHelper.ShowToast("Canción publicada, pero hubo un error al subir la imagen", NotificationType.Warning, "Publicado sin imagen");
                     }
 
+                    Mediator.Notify(MediatorKeys.SHOW_SEARCH_BAR, null);
                     Navigation.NavigateTo<HomeViewModel>();
+                    
 
                     SongName = string.Empty;
                     AdditionalInfo = string.Empty;
@@ -329,14 +330,12 @@ namespace SoundNest_Windows_Client.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show("Ocurrió un error al subir la canción.",
-                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    DialogHelper.ShowAcceptDialog("Error de conexión", "Al perecer se ha perdido la conexión a internet. Intenta nuevamente más tarde.", AcceptDialogType.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error inesperado: {ex.Message}",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                DialogHelper.ShowAcceptDialog("Error de conexión", "Al perecer se ha perdido la conexión a internet. Intenta nuevamente más tarde.", AcceptDialogType.Error);
             }
             finally
             {
@@ -344,6 +343,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
             }
         }
+
 
         private async Task<bool> UploadImageToSongInServer()
         {

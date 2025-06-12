@@ -3,12 +3,15 @@ using Microsoft.Win32;
 using Services.Communication.gRPC.Http;
 using Services.Communication.gRPC.Services;
 using Services.Communication.RESTful.Constants;
+using Services.Communication.RESTful.Models;
 using Services.Communication.RESTful.Models.Playlist;
 using Services.Communication.RESTful.Models.Songs;
 using Services.Communication.RESTful.Services;
 using Services.Infrestructure;
 using Services.Navigation;
 using SoundNest_Windows_Client.Models;
+using SoundNest_Windows_Client.Notifications;
+using SoundNest_Windows_Client.Resources.Controls;
 using SoundNest_Windows_Client.Utilities;
 using System;
 using System.Collections.Generic;
@@ -16,6 +19,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
@@ -52,8 +56,7 @@ namespace SoundNest_Windows_Client.ViewModels
         private readonly IPlaylistService _playlistService;
         private readonly IAccountService _accountService;
         private readonly IVisualizationsService _visualizationsService;
-        private static MediaPlayer _mediaPlayer;
-        private readonly DispatcherTimer _timer;
+        private static IMusicPlayer _mediaPlayer;
 
         private List<Models.Song> playlist = new();
         private int currentIndex = -1;
@@ -95,7 +98,7 @@ namespace SoundNest_Windows_Client.ViewModels
             set
             {
                 volume = value;
-                _mediaPlayer.Volume = volume;
+                _mediaPlayer.SetVolume(volume);
                 OnPropertyChanged();
                 UpdateVolumeIcon();
             }
@@ -146,38 +149,32 @@ namespace SoundNest_Windows_Client.ViewModels
         public ObservableCollection<PlaylistResponse> UserPlaylists { get; set; } = new();
 
 
-        public MusicPlayerBarViewModel(INavigationService navigation, ISongDownloader songDownloaderService, IGrpcClientManager grpcClient, IPlaylistService playlistService, IAccountService accountService, IVisualizationsService visualizationsService)
+        public MusicPlayerBarViewModel(INavigationService navigation, ISongDownloader songDownloaderService, IGrpcClientManager grpcClient, IPlaylistService playlistService, IAccountService accountService, IVisualizationsService visualizationsService, IMusicPlayer musicPlayer)
         {
-            _mediaPlayer = new MediaPlayer();
+            _mediaPlayer = musicPlayer;
+            _mediaPlayer.Close();
             _navigation = navigation;
             _songService = songDownloaderService;
             _playlistService = playlistService;
-            _mediaPlayer.Volume = volume;
+            _mediaPlayer.SetVolume(volume);
             _accountService = accountService;
             _visualizationsService = visualizationsService;
 
-            _mediaPlayer.MediaOpened += (s, e) =>
+            _mediaPlayer.OnMediaOpened += () =>
             {
-                MaxProgress = _mediaPlayer.NaturalDuration.TimeSpan.TotalSeconds;
-                TotalTime = _mediaPlayer.NaturalDuration.TimeSpan.ToString(@"m\:ss");
+                MaxProgress = _mediaPlayer.GetDuration();
+                TotalTime = TimeSpan.FromSeconds(MaxProgress).ToString(@"m\:ss");
                 Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
             };
 
-            _mediaPlayer.MediaEnded += (s, e) => PlayNextSong();
+            _mediaPlayer.OnMediaEnded += PlayNextSong;
 
-            _timer = new DispatcherTimer
+            _mediaPlayer.OnProgressChanged += (position) =>
             {
-                Interval = TimeSpan.FromSeconds(1)
+                Progress = position.TotalSeconds;
+                CurrentTime = position.ToString(@"m\:ss");
             };
 
-            _timer.Tick += (s, e) =>
-            {
-                if (_mediaPlayer.Source != null && _mediaPlayer.NaturalDuration.HasTimeSpan)
-                {
-                    Progress = _mediaPlayer.Position.TotalSeconds;
-                    CurrentTime = _mediaPlayer.Position.ToString(@"m\:ss");
-                }
-            };
 
             OpenCommentsCommand = new RelayCommand(_ => _navigation.NavigateTo<CommentsViewModel>());
             PlayPauseCommand = new RelayCommand(_ => TogglePlayPause());
@@ -197,14 +194,14 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             if (parameter is List<Models.Song> SongsList && SongsList.Count > 0)
             {
-               await SetPlaylist(SongsList,0);
+                await SetPlaylist(SongsList, 0);
             }
             else if (parameter is Models.Song singleSong)
             {
                 playlist = new List<Models.Song> { singleSong };
                 currentIndex = 0;
                 await LoadAndPlayCurrentSongAsync();
-                
+
             }
             else if (parameter is Models.SongOfPlaylist songOfPlaylist)
             {
@@ -212,20 +209,27 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show("Error al cargar la canción.");
+                ToastHelper.ShowToast("Ocurrió un error al reproducir la canción, intentelo de nuevo más tarde", NotificationType.Error, "Error");
+                Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
             }
         }
 
         private async void OpenPlaylistPopup()
         {
+            Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
+
             var result = await _playlistService.GetPlaylistsByUserIdAsync(_accountService.CurrentUser.Id.ToString());
+
+            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+
             if (!result.IsSuccess || result.Data == null)
             {
-                MessageBox.Show(result.ErrorMessage ?? "Error al cargar playlists", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ShowPlaylistLoadError(result);
                 return;
             }
 
             UserPlaylists.Clear();
+
             foreach (var playlist in result.Data)
             {
                 playlist.ImagePath = string.Concat(ApiRoutes.BaseUrl, playlist.ImagePath.AsSpan(1));
@@ -234,6 +238,23 @@ namespace SoundNest_Windows_Client.ViewModels
 
             IsPlaylistPopupVisible = true;
         }
+
+        private void ShowPlaylistLoadError(ApiResult<List<PlaylistResponse>> result)
+        {
+            string title = "Error al cargar playlists";
+
+            string message = result.StatusCode switch
+            {
+                HttpStatusCode.NotFound => "No se encontraron playlists para tu cuenta",
+                HttpStatusCode.InternalServerError => "Ocurrió un error inesperado al cargar tus playlists. Intentalo más tarde",
+                HttpStatusCode.ServiceUnavailable => "Parece que no hay conexión a internet, inténtalo más tarde",
+                _ => "Parece que no hay conexión a internet, inténtalo más tarde"
+            };
+
+            ToastHelper.ShowToast(message, NotificationType.Success, title);
+        }
+
+
 
         private void ClosePlaylistPopup()
         {
@@ -244,34 +265,57 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             if (param is not string playlistId)
             {
-                MessageBox.Show("Error: parámetro inválido.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ToastHelper.ShowToast("No se pudo agregar la canción por un error inesperado, intente nuevamente", NotificationType.Error, "Parámetro inválido");
                 return;
             }
 
             var playlistResponse = UserPlaylists.FirstOrDefault(p => p.Id == playlistId);
             var playlistName = playlistResponse?.PlaylistName ?? "Desconocida";
 
+            //TODO add limit of 10
+
+
             if (currentIndex < 0 || currentIndex >= playlist.Count)
             {
-                MessageBox.Show("No hay ninguna canción seleccionada.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ToastHelper.ShowToast("Debes seleccionar una canción para agregarla a la playlist.", NotificationType.Warning, "Ninguna canción seleccionada");
                 return;
             }
 
             var song = playlist[currentIndex];
-            MessageBox.Show($"Canción: {song.SongName}\nPlaylist: {playlistName}", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
 
+            Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
             var result = await _playlistService.AddSongToPlaylistAsync(song.IdSong.ToString(), playlistId);
+            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+
             if (result.IsSuccess)
             {
                 Mediator.Notify(MediatorKeys.REFRESH_PLAYLISTS, null);
-                MessageBox.Show("Canción agregada a la playlist.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                ToastHelper.ShowToast("Canción agregada a la playlist correctamente", NotificationType.Success, "Éxito");
                 IsPlaylistPopupVisible = false;
             }
             else
             {
-                MessageBox.Show(result.ErrorMessage ?? "Error al agregar canción.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowAddSongToPlaylistError(result);
             }
         }
+        private void ShowAddSongToPlaylistError(ApiResult<bool> result)
+        {
+            string title = "Error al agregar canción";
+
+            string message = result.StatusCode switch
+            {
+                HttpStatusCode.BadRequest => "No se pudo agregar la canción por un error desconocido. Intente nuevamente más tarde",
+                HttpStatusCode.Unauthorized => "Tu sesión ha expirado. Vuelve a iniciar sesión.",
+                HttpStatusCode.Forbidden => "Tu sesión ha expirado. Vuelve a iniciar sesión.",
+                HttpStatusCode.NotFound => "No se encontró la playlist o la canción. Intente nuevamente más tarde",
+                HttpStatusCode.Conflict => "La canción ya se encuentra en esta playlist",
+                HttpStatusCode.InternalServerError => "Ocurrió un error inesperado al agregar la canción. Inténtalo más tarde.",
+                _ => "No se pudo conectar al servidor. Verifica tu conexión a internet e inténtalo de nuevo."
+            };
+
+            ToastHelper.ShowToast(message, NotificationType.Warning, title);
+        }
+
 
 
         private async Task<bool> SaveSongOnCacheAsync(int idSong, string fileNameWithoutExtension)
@@ -282,42 +326,31 @@ namespace SoundNest_Windows_Client.ViewModels
             try
             {
                 string songsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Songs");
+
                 if (!Directory.Exists(songsFolder))
-                {
                     Directory.CreateDirectory(songsFolder);
-                }
 
                 string destPath = Path.Combine(songsFolder, $"{fileNameWithoutExtension}.mp3");
 
                 if (File.Exists(destPath))
                 {
-                    //TODO remember, this is just for testing purposes, remove this later
-                    //MessageBox.Show("La canción ya existe en la caché.", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
                     return true;
                 }
 
                 await Task.Run(() =>
                 {
                     var files = new DirectoryInfo(songsFolder).GetFiles("*.mp3").OrderBy(f => f.CreationTime).ToList();
+
                     if (files.Count >= 3)
                     {
                         var oldestFile = files.First();
                         try
                         {
-                            string deletedSong = Path.GetFileNameWithoutExtension(oldestFile.Name);
                             oldestFile.Delete();
-                            App.Current.Dispatcher.Invoke(() =>
-                            {
-                                //TODO remember, this is just for testing purposes, remove this later
-                                //MessageBox.Show($"Se eliminó la canción más antigua de la caché: {deletedSong}", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
-                            });
                         }
-                        catch (Exception ex)
+                        catch
                         {
-                            App.Current.Dispatcher.Invoke(() =>
-                            {
-                                MessageBox.Show($"Error al eliminar la canción más antigua:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            });
+                            ToastHelper.ShowToast("No se pudo limpiar la caché correctamente. Inténtalo más tarde.", NotificationType.Warning, "Aviso de caché");
                         }
                     }
                 });
@@ -326,26 +359,16 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 if (response.Success && File.Exists(destPath))
                 {
-                    //MessageBox.Show("La canción se descargó correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                     flag = true;
 
-                    var visitResutl = await _visualizationsService.AddVisitToSongAsync(idSong);
-
-                    if (visitResutl.IsSuccess) //TODO remember, is just for testing purposes, remove this later
-                    {
-                        //MessageBox.Show("Visita incrementada exitosamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Error al incrementar visita:\n{visitResutl.ErrorMessage}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                    
+                    _ = _visualizationsService.AddVisitToSongAsync(idSong);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show($"Error al descargar y guardar la canción:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ToastHelper.ShowToast("Ocurrió un error inesperado al guardar la canción en la caché.", NotificationType.Error, "Error");
             }
+
             return flag;
         }
 
@@ -362,7 +385,7 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             if (currentIndex < 0 || currentIndex >= playlist.Count)
             {
-                MessageBox.Show("No hay ninguna canción seleccionada para descargar.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ToastHelper.ShowToast("Debes seleccionar una canción para descargarla.", NotificationType.Warning, "Ninguna canción seleccionada");
                 return;
             }
 
@@ -382,14 +405,15 @@ namespace SoundNest_Windows_Client.ViewModels
                 try
                 {
                     File.Copy(sourcePath, dialog.FileName, overwrite: true);
-                    MessageBox.Show("Canción descargada correctamente.", "Descarga exitosa", MessageBoxButton.OK, MessageBoxImage.Information);
+                    ToastHelper.ShowToast("La canción se descargó correctamente.", NotificationType.Success, "Descarga exitosa");
                 }
-                catch (Exception ex)
+                catch
                 {
-                    MessageBox.Show($"Error al descargar la canción:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ToastHelper.ShowToast("Ocurrió un error al guardar la canción. Inténtalo más tarde.", NotificationType.Error, "Error al descargar");
                 }
             }
         }
+
 
         public async Task SetPlaylist(List<Models.Song> songs, int index)
         {
@@ -402,34 +426,30 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             if (playlist.Count == 0) return;
 
+            _mediaPlayer.Pause();
+            PlayPauseIcon = "\uf5b0";
+            isPlaying = false;
+
             if (currentIndex + 1 >= playlist.Count)
             {
-                _mediaPlayer.Pause();
-                _timer.Stop();
-                PlayPauseIcon = "\uf5b0";
-                isPlaying = false;
-                SetProgress(_mediaPlayer.NaturalDuration.TimeSpan.TotalSeconds);
+                SetProgress(_mediaPlayer.GetDuration());
             }
             else
             {
-                _mediaPlayer.Pause();
-                _timer.Stop();
-                PlayPauseIcon = "\uf5b0";
-                isPlaying = false;
                 SetProgress(0);
                 currentIndex++;
                 await LoadAndPlayCurrentSongAsync();
             }
         }
 
+
         private async void PlayPreviousSong()
         {
             if (playlist.Count == 0) return;
 
-            if (_mediaPlayer.Position.TotalSeconds < 3)
+            if (_mediaPlayer.GetPosition() < 3)
             {
                 _mediaPlayer.Pause();
-                _timer.Stop();
                 PlayPauseIcon = "\uf5b0";
                 isPlaying = false;
                 SetProgress(0);
@@ -442,6 +462,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
         }
 
+
         private async Task LoadAndPlayCurrentSongAsync()
         {
             if (currentIndex < 0 || currentIndex >= playlist.Count)
@@ -451,17 +472,18 @@ namespace SoundNest_Windows_Client.ViewModels
             string fileName = song.FileName;
             string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Songs", $"{fileName}.mp3");
 
-            if (_mediaPlayer.Source != null && _mediaPlayer.Source.LocalPath.Equals(fullPath, StringComparison.OrdinalIgnoreCase))
+            if (_mediaPlayer.IsSource(new Uri(fullPath)))
             {
-                _mediaPlayer.Position = TimeSpan.Zero;
+                _mediaPlayer.Reset(); 
                 return;
             }
+
 
             bool result = await SaveSongOnCacheAsync(song.IdSong, fileName);
 
             if (!result)
             {
-                MessageBox.Show("Error al descargar la canción, intente más tarde.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ToastHelper.ShowToast("No se pudo cargar la canción. Intenta nuevamente más tarde.", NotificationType.Error, "Error de reproducción");
                 Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
                 Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
                 return;
@@ -470,6 +492,7 @@ namespace SoundNest_Windows_Client.ViewModels
             try
             {
                 var file = TagLib.File.Create(fullPath);
+
                 SongTittle = !string.IsNullOrWhiteSpace(song.SongName)
                     ? song.SongName
                     : (file.Tag.Title ?? "Sin título");
@@ -482,7 +505,8 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 if (!string.IsNullOrEmpty(song.PathImageUrl) && song.PathImageUrl.Length > 1)
                 {
-                    SongImage = await ImagesHelper.LoadImageFromUrlAsync(string.Concat(ApiRoutes.BaseUrl, song.PathImageUrl.AsSpan(1)));
+                    var image = await ImagesHelper.LoadImageFromUrlAsync($"{ApiRoutes.BaseUrl}{song.PathImageUrl[1..]}");
+                    SongImage = image ?? ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
                 }
                 else if (file.Tag.Pictures.Length > 0)
                 {
@@ -515,6 +539,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
 
 
+
         private void UpdateVolumeIcon()
         {
             VolumeIcon = volume switch
@@ -530,35 +555,37 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             if (isPlaying)
             {
-                _mediaPlayer.Pause();
-                _timer.Stop();
+                _mediaPlayer.Pause(); 
                 PlayPauseIcon = "\uf5b0";
             }
             else
             {
-                _mediaPlayer.Play();
-                _timer.Start();
+                _mediaPlayer.Play(); 
                 PlayPauseIcon = "\uf8ae";
             }
+
             isPlaying = !isPlaying;
         }
 
+
         public void SetProgress(double seconds)
         {
-            _mediaPlayer.Position = TimeSpan.FromSeconds(seconds);
+            _mediaPlayer.SetPosition(seconds);
             Progress = seconds;
         }
+
+
 
         public void Cleanup()
         {
             try
             {
-                if (_mediaPlayer.HasAudio)
+                if (_mediaPlayer.HasAudio())
                 {
                     _mediaPlayer.Stop();
                 }
-                _timer.Stop();
-                _mediaPlayer.Close();
+                _mediaPlayer.Close(); 
+
                 isPlaying = false;
                 CurrentTime = "0:00";
                 TotalTime = "0:00";
@@ -571,11 +598,11 @@ namespace SoundNest_Windows_Client.ViewModels
                 playlist.Clear();
                 currentIndex = -1;
             }
-            catch (Exception ex)
+            catch
             {
-                MessageBox.Show($"Error al limpiar el reproductor:\n{ex.Message}", "Error de limpieza", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
+
 
         private async Task LoadUserPlaylistsAsync()
         {

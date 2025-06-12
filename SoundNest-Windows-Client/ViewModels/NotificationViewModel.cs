@@ -10,6 +10,10 @@ using SoundNest_Windows_Client.Views;
 using Services.Communication.RESTful.Services;
 using SoundNest_Windows_Client.Models;
 using Services.Communication.RESTful.Models.Notification;
+using Services.Communication.RESTful.Models;
+using SoundNest_Windows_Client.Notifications;
+using System.Net;
+using SoundNest_Windows_Client.Resources.Controls;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -64,9 +68,27 @@ namespace SoundNest_Windows_Client.ViewModels
                 }
                 else
                 {
-                    MessageBox.Show(result.Message ?? "Error al cargar las notificaciones", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                ShowNotificationLoadError(result);
+
+            }
         }
+
+        private void ShowNotificationLoadError(ApiResult<List<NotificationResponse>> result)
+        {
+            string title = "Error al cargar notificaciones";
+
+            string message = result.StatusCode switch
+            {
+                HttpStatusCode.BadRequest => "Ocurrió un error al procesar la solicitud de tus notificaciones. Inténtalo más tarde",
+                HttpStatusCode.Unauthorized => "Tu sesión ha expirado. Inicia sesión nuevamente.",
+                HttpStatusCode.Forbidden => "Tu sesión ha expirado. Inicia sesión nuevamente.",
+                HttpStatusCode.InternalServerError => "Ocurrió un error inesperado al obtener tus notificaciones. Inténtalo más tarde.",
+                _ => "Parece que no hay conexión a internet, inténtalo más tarde"
+            };
+
+            ToastHelper.ShowToast(message, NotificationType.Warning, title);
+        }
+
 
         private void RefreshNotificationState()
         {
@@ -91,27 +113,42 @@ namespace SoundNest_Windows_Client.ViewModels
         {
             if (parameter is Notification notification)
             {
-                MessageBoxResult resultMessage = MessageBox.Show(
-                    $"¿Estás seguro de que deseas eliminar la notificación: {notification.Title}?",
-                    "Eliminar Notificación", MessageBoxButton.YesNo, MessageBoxImage.Warning
-                );
+                bool resultMessage = DialogHelper.ShowConfirmation("Eliminar Notificación", $"¿Estás seguro de que deseas eliminar la notificación: {notification.Title}?");
 
-                if (resultMessage != MessageBoxResult.Yes)
+
+                if (!resultMessage)
                     return;
 
-                    var resultDelete = await ExecuteRESTfulApiCall(() => notificationService.DeleteNotificationAsync(notification.Id));
+                ApiResult<bool> resultDelete = await ExecuteRESTfulApiCall(() => notificationService.DeleteNotificationAsync(notification.Id));
 
                     if (resultDelete.IsSuccess)
                     {
-                        MessageBox.Show("Notificación eliminada exitosamente", "Eliminar Notificación", MessageBoxButton.OK, MessageBoxImage.Information);
-                        Notifications.Remove(notification);
+                    ToastHelper.ShowToast("Notificación eliminada correctamente", NotificationType.Success, "Éxito");
+                    Notifications.Remove(notification);
                         RefreshNotificationState();
                     }
                     else
                     {
-                        MessageBox.Show(resultDelete.Message ?? "Error al eliminar la notificación", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ShowNotificationDeleteError(resultDelete);
                     }
             }
         }
+
+        private void ShowNotificationDeleteError(ApiResult<bool> result)
+        {
+            string title = "Error al eliminar notificación";
+
+            string message = result.StatusCode switch
+            {
+                HttpStatusCode.Unauthorized => "Tu sesión ha expirado. Inicia sesión nuevamente.",
+                HttpStatusCode.Forbidden => "Tu sesión ha expirado. Inicia sesión nuevamente.",
+                HttpStatusCode.NotFound => "La notificación que intentas eliminar no fue encontrada. Inetente con otra",
+                HttpStatusCode.InternalServerError => "Ocurrió un error inesperado al eliminar la notificación. Inténtalo más tarde.",
+                _ => "Parece que no hay conexión a internet, inténtalo más tarde"
+            };
+
+            DialogHelper.ShowAcceptDialog(title, message, AcceptDialogType.Warning);
+        }
+
     }
 }

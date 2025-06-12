@@ -12,6 +12,10 @@ using System.Windows.Media;
 using System.Windows;
 using Services.Infrestructure;
 using System.Reflection;
+using SoundNest_Windows_Client.Resources.Controls;
+using SoundNest_Windows_Client.Utilities;
+using System.Net;
+using SoundNest_Windows_Client.Notifications;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -56,7 +60,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ocurrió un error al cargar las estadísticas.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                DialogHelper.ShowAcceptDialog("Error al cargar", "Ha courrido un error al cargar alguna de las estadísticas", AcceptDialogType.Error);
             }
             finally
             {
@@ -84,30 +88,31 @@ namespace SoundNest_Windows_Client.ViewModels
                 TopSongsByUserLabels = labels;
 
                 TopSongsByUserCollection = new SeriesCollection
-                {
-                    new ColumnSeries
-                    {
-                        Title = "Reproducciones",
-                        Values = values,
-                        Fill = new SolidColorBrush(Color.FromRgb(255, 166, 77)), 
-                        Stroke = Brushes.White,
-                        StrokeThickness = 1,
-                        MaxColumnWidth = 45,
-                        ColumnPadding = 10,
-                        DataLabels = true,
-                        LabelPoint = point => point.Y.ToString("N0"),
-                        Foreground = Brushes.White
-                    }
-                };
+        {
+            new ColumnSeries
+            {
+                Title = "Reproducciones",
+                Values = values,
+                Fill = new SolidColorBrush(Color.FromRgb(255, 166, 77)),
+                Stroke = Brushes.White,
+                StrokeThickness = 1,
+                MaxColumnWidth = 45,
+                ColumnPadding = 10,
+                DataLabels = true,
+                LabelPoint = point => point.Y.ToString("N0"),
+                Foreground = Brushes.White
+            }
+        };
 
                 OnPropertyChanged(nameof(TopSongsByUserLabels));
                 OnPropertyChanged(nameof(TopSongsByUserCollection));
             }
             else
             {
-                MessageBox.Show("No se pudieron cargar las estadísticas del usuario.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowStatisticsLoadError(result.StatusCode, "sus canciones más escuchadas");
             }
         }
+
 
         private async Task LoadGenresVisitChartAsync()
         {
@@ -130,15 +135,15 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 SolidColorBrush[] customPalette = new[]
                 {
-                    new SolidColorBrush(Color.FromRgb(178, 85, 247)),   
-                    new SolidColorBrush(Color.FromRgb(255, 111, 73)),   
-                    new SolidColorBrush(Color.FromRgb(146, 41, 179)),   
-                    new SolidColorBrush(Color.FromRgb(216, 80, 42)),    
-                    new SolidColorBrush(Color.FromRgb(255, 136, 0)),    
-                    new SolidColorBrush(Color.FromRgb(109, 48, 123)),  
-                    new SolidColorBrush(Color.FromRgb(234, 93, 120)),   
-                    new SolidColorBrush(Color.FromRgb(187, 85, 59)),    
-                };
+            new SolidColorBrush(Color.FromRgb(178, 85, 247)),
+            new SolidColorBrush(Color.FromRgb(255, 111, 73)),
+            new SolidColorBrush(Color.FromRgb(146, 41, 179)),
+            new SolidColorBrush(Color.FromRgb(216, 80, 42)),
+            new SolidColorBrush(Color.FromRgb(255, 136, 0)),
+            new SolidColorBrush(Color.FromRgb(109, 48, 123)),
+            new SolidColorBrush(Color.FromRgb(234, 93, 120)),
+            new SolidColorBrush(Color.FromRgb(187, 85, 59)),
+        };
 
                 int index = 0;
 
@@ -163,9 +168,10 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show("No se pudieron cargar las visitas por género.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowStatisticsLoadError(result.StatusCode, "los géneros más escuchados");
             }
         }
+
 
 
 
@@ -193,8 +199,8 @@ namespace SoundNest_Windows_Client.ViewModels
                 Title = "Reproducciones globales",
                 Values = values,
                 PointGeometry = DefaultGeometries.Circle,
-                Stroke = new SolidColorBrush(Color.FromRgb(255, 166, 77)), 
-                Fill = new SolidColorBrush(Color.FromArgb(50, 255, 166, 77)), 
+                Stroke = new SolidColorBrush(Color.FromRgb(255, 166, 77)),
+                Fill = new SolidColorBrush(Color.FromArgb(50, 255, 166, 77)),
                 PointForeground = Brushes.White,
                 LineSmoothness = 0.8
             }
@@ -205,10 +211,24 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show("No se pudieron cargar las canciones globales más escuchadas.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowStatisticsLoadError(result.StatusCode, "las canciones globales más escuchadas");
             }
         }
 
+
+        private void ShowStatisticsLoadError(HttpStatusCode? statusCode, string context)
+        {
+            string title = $"Error al cargar {context}";
+
+            string message = statusCode switch
+            {
+                HttpStatusCode.BadRequest => $"No se pudo obtener {context.ToLower()}. Intenta nuevamente más tarde.",
+                HttpStatusCode.InternalServerError => $"Ocurrió un error inesperado al obtener {context.ToLower()}. Intenta más tarde.",
+                _ => $"No se pudo conectar con el servidor. Verifica tu conexión a internet e intenta cargar {context.ToLower()} nuevamente."
+            };
+
+            ToastHelper.ShowToast(message, NotificationType.Warning, title);
+        }
 
 
 

@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Services.Communication.gRPC.Utils;
 using Services.Communication.gRPC.Services.Services.Communication.gRPC.Services;
 using SoundNest_Windows_Client.Notifications;
+using LiveCharts.Wpf;
 
 namespace SoundNest_Windows_Client;
 
@@ -53,6 +54,7 @@ public partial class App : Application
         service.AddTransient<HomeViewModel>();
         service.AddSingleton<SideBarViewModel>();
         service.AddTransient<MusicPlayerBarViewModel>();
+        service.AddSingleton<IMusicPlayer, MusicPlayerController>();
         service.AddTransient<SearchBarViewModel>();
         service.AddTransient<ProfileViewModel>();
         service.AddTransient<ChangePasswordViewModel>();

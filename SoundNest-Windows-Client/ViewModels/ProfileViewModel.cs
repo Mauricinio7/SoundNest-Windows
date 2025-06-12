@@ -18,6 +18,9 @@ using UserImage;
 using Services.Communication.RESTful.Models.Auth;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
+using SoundNest_Windows_Client.Resources.Controls;
+using System.Net;
+using SoundNest_Windows_Client.Notifications;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -168,14 +171,9 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private void ExecuteCloseSesion(object parameter)
         {
-            var result = MessageBox.Show(
-                "¿Está seguro que desea cerrar sesión?",
-                "Cerrar sesión",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning
-            );
+            bool confirm = DialogHelper.ShowConfirmation("Cerrar sesión", "¿Está seguro que desea cerrar sesión?");
 
-            if (result == MessageBoxResult.Yes)
+            if (confirm)
             {
                 Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
                 Mediator.Notify(MediatorKeys.HIDE_SIDE_BAR, null);
@@ -206,7 +204,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
                 if (!IsValidImage(selectedPath))
                 {
-                    MessageBox.Show("El archivo seleccionado no es una imagen válida.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    DialogHelper.ShowAcceptDialog("Error archivo inválido", "El archivo seleccionado no es una imagen válida.", AcceptDialogType.Warning);
                     return;
                 }
 
@@ -224,24 +222,37 @@ namespace SoundNest_Windows_Client.ViewModels
             };
 
             Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
-
             var response = await authService.SendCodeEmailAsync(requestCode);
+            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
 
             if (response.IsSuccess)
             {
-                MessageBox.Show("Se ha enviado un código de verficación a tu correo electrónico", "Código de verificación", MessageBoxButton.OK, MessageBoxImage.Information);
-
+                DialogHelper.ShowAcceptDialog("Código de verificación", "Se ha enviado un código de verificación a tu correo electrónico", AcceptDialogType.Information);
                 Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
                 Mediator.Notify(MediatorKeys.HIDE_SIDE_BAR, null);
-                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
                 Navigation.NavigateTo<ChangePasswordViewModel>(currentUser.Email);
             }
             else
             {
-                MessageBox.Show("Se intentó cambiar la contraseña hace poco tiempo, espere un momento e inténtelo nuevamente más tarde", "Error al enviar el código", MessageBoxButton.OK, MessageBoxImage.Error);
-                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
-            }   
+                ShowSendCodeError(response.StatusCode);
+            }
         }
+
+        private void ShowSendCodeError(HttpStatusCode? statusCode)
+        {
+            string title = "Error al enviar código";
+
+            string message = statusCode switch
+            {
+                HttpStatusCode.BadRequest => "Se ha enviado un correo de verificación recientemente a este mismo correo, espere un momento e inténtelo nuevamente más tarde.",
+                HttpStatusCode.InternalServerError => "Ocurrió un problema inesperado. Intenta más tarde.",
+                _ => "Se ha perdido la conexión a internet. Inténtalo nuevamente más tarde."
+            };
+
+            DialogHelper.ShowAcceptDialog(title, message, AcceptDialogType.Error);
+        }
+
+
 
         private void ExecuteCancelCommand(object parameter)
         {
@@ -280,24 +291,36 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async Task ExecuteSaveChangesCommand()
         {
-            var validationResult = ValidateProfileChanges();
+            ValidationResult validationResult = ValidateProfileChanges();
             if (!validationResult.Result)
             {
-                MessageBox.Show(validationResult.Message, validationResult.Tittle, MessageBoxButton.OK, MessageBoxImage.Warning);
+                DialogHelper.ShowAcceptDialog(validationResult.Tittle, validationResult.Message, AcceptDialogType.Warning);
                 return;
             }
 
             if (!string.IsNullOrWhiteSpace(SelectedImagePath))
             {
-                var success = await userImageService.UploadImageAsync(currentUser.Id, SelectedImagePath);
-
-                if (!success)
+                try
                 {
-                    MessageBox.Show("No se pudo subir la imagen de perfil", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
+                    bool success = await userImageService.UploadImageAsync(currentUser.Id, SelectedImagePath);
+                    Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
+
+                    if (!success)
+                    {
+                        ToastHelper.ShowToast("No se pudo subir la imagen de perfil ni se guardaron los cambios del perfil", NotificationType.Error, "Error de conexión");
+                        return;
+                    }
+
+                    SelectedImagePath = null;
+                }
+                catch
+                (Exception ex)
+                {
+                    ToastHelper.ShowToast("No se pudo subir la imagen de perfil ni se guardaron los cambios del perfil", NotificationType.Error, "Error de conexión");
                     return;
                 }
-                SelectedImagePath = null;
- 
+                
             }
 
             EditUserRequest editUserRequest = new EditUserRequest
@@ -306,11 +329,13 @@ namespace SoundNest_Windows_Client.ViewModels
                 AdditionalInformation = AdditionalInfo,
             };
 
-            var response = await  userService.EditUserAsync(editUserRequest);
+            Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
+            var response = await userService.EditUserAsync(editUserRequest);
+            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
 
             if (response.IsSuccess)
             {
-                MessageBox.Show("Usuario editado correctamente", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                ToastHelper.ShowToast("Usuario editado correctamente", NotificationType.Success, "Éxito");
                 _ = LoadProfileImage();
                 IsEditing = false;
                 accountService.CurrentUser.Name = Username;
@@ -318,9 +343,27 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show(response.Message ?? "Error al editar el usuario", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowEditUserError(response.StatusCode);
             }
         }
+
+
+        private void ShowEditUserError(HttpStatusCode? statusCode)
+        {
+            string title = "Error al editar usuario";
+
+            string message = statusCode switch
+            {
+                HttpStatusCode.BadRequest => "Algunos campos obligatorios no son válidos o están vacíos. Reviselos nuevamente",
+                HttpStatusCode.Unauthorized => "Tu sesión ha expirado. Inicia sesión nuevamente.",
+                HttpStatusCode.Forbidden => "Tu sesión ha expirado. Inicia sesión nuevamente.",
+                HttpStatusCode.InternalServerError => "Ocurrió un error inesperado al editar tu perfil. Intenta más tarde.",
+                _ => "Se ha perdido la conexión a internet. Inténtalo nuevamente más tarde."
+            };
+
+            DialogHelper.ShowAcceptDialog(title, message, AcceptDialogType.Error);
+        }
+
 
         private bool IsValidImage(string path)
         {
@@ -344,29 +387,36 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async Task LoadProfileImage()
         {
+            ProfilePhoto = (BitmapImage)ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_ProfileImage_Icon.png");
+
             try
             {
                 var response = await userImageService.DownloadImageAsync(accountService.CurrentUser.Id);
 
-                byte[] imageBytes = response.ImageData.ToByteArray();
+                if (response.ImageData != null)
+                {
+                    byte[] imageBytes = response.ImageData.ToByteArray();
 
-                using var stream = new MemoryStream(imageBytes);
+                    using var stream = new MemoryStream(imageBytes);
 
-                var image = new BitmapImage();
-                image.BeginInit();
-                image.CacheOption = BitmapCacheOption.OnLoad;
-                image.StreamSource = stream;
-                image.EndInit();
-                image.Freeze();
+                    var image = new BitmapImage();
+                    image.BeginInit();
+                    image.CacheOption = BitmapCacheOption.OnLoad;
+                    image.StreamSource = stream;
+                    image.EndInit();
+                    image.Freeze();
 
-                ProfilePhoto = image;
-                Mediator.Notify(MediatorKeys.UPLOAD_USER_IMAGE,null);
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        ProfilePhoto = image;
+                        Mediator.Notify(MediatorKeys.UPLOAD_USER_IMAGE, null);
+                    });
+                }
             }
-            catch (Exception ex)
-            {
-                ProfilePhoto = (BitmapImage)ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_ProfileImage_Icon.png");
-            }
+            catch
+            {}
         }
+
 
 
     }

@@ -15,6 +15,9 @@ using Services.Communication.gRPC.Http;
 using Services.Communication.gRPC.Services;
 using Services.Communication.RESTful.Constants;
 using Song;
+using SoundNest_Windows_Client.Notifications;
+using SoundNest_Windows_Client.Resources.Controls;
+using System.Net;
 
 namespace SoundNest_Windows_Client.ViewModels
 {
@@ -98,28 +101,39 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async Task LoadProfileImage()
         {
+            ProfilePhoto = (BitmapImage)ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_ProfileImage_Icon.png");
+
             try
             {
                 var response = await userImageService.DownloadImageAsync(_accountService.CurrentUser.Id);
 
-                byte[] imageBytes = response.ImageData.ToByteArray();
+                if (response.ImageData != null && response.ImageData.Length > 0)
+                {
+                    byte[] imageBytes = response.ImageData.ToByteArray();
 
-                using var stream = new MemoryStream(imageBytes);
+                    using var stream = new MemoryStream(imageBytes);
 
-                var image = new BitmapImage();
-                image.BeginInit();
-                image.CacheOption = BitmapCacheOption.OnLoad;
-                image.StreamSource = stream;
-                image.EndInit();
-                image.Freeze(); 
+                    var image = new BitmapImage();
+                    image.BeginInit();
+                    image.CacheOption = BitmapCacheOption.OnLoad;
+                    image.StreamSource = stream;
+                    image.EndInit();
+                    image.Freeze();
 
-                ProfilePhoto = image;
+                    if (image.PixelWidth > 0 && image.PixelHeight > 0)
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            ProfilePhoto = image;
+                        });
+                    }
+                }
             }
-            catch (Exception ex)
-            {
-                ProfilePhoto = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_ProfileImage_Icon.png");
-            }
+            catch
+            {}
         }
+
+
 
 
         private void ExecuteUploadSongCommand(object parameter)
@@ -137,39 +151,56 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async void ExecuteOpenPlaylistCommand(object parameter)
         {
-
-            if (parameter is Playlist playlist)
+            if (parameter is not Playlist playlist)
             {
+                ToastHelper.ShowToast("Ocurrió un error inesperado al abrir la playlist, inténtelo con otra.", NotificationType.Error, "Error");
+                return;
+            }
+
                 var songIds = playlist.PlaylistSongs.Select(s => s.SongId).ToList();
 
-                Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
+            Mediator.Notify(MediatorKeys.SHOW_LOADING_SCREEN, null);
+            var songDetailsResult = await _playlistService.GetSongsDetailsAsync(songIds);
+            Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
 
-                var songDetailsResult = await _playlistService.GetSongsDetailsAsync(songIds);
-                Mediator.Notify(MediatorKeys.HIDE_LOADING_SCREEN, null);
-
-                if (songDetailsResult.IsSuccess || songDetailsResult.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            if (songDetailsResult.IsSuccess || songDetailsResult.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var detailedPlaylist = new Playlist
                 {
-                    var detailedPlaylist = new Playlist
-                    {
-                        Id = playlist.Id,
-                        CreatorId = playlist.CreatorId,
-                        PlaylistName = playlist.PlaylistName,
-                        Description = playlist.Description,
-                        ImagePath = playlist.ImagePath,
-                        CreatedAt = playlist.CreatedAt,
-                        Version = playlist.Version,
-                        Songs = songDetailsResult.Data
-                    };
+                    Id = playlist.Id,
+                    CreatorId = playlist.CreatorId,
+                    PlaylistName = playlist.PlaylistName,
+                    Description = playlist.Description,
+                    ImagePath = playlist.ImagePath,
+                    CreatedAt = playlist.CreatedAt,
+                    Version = playlist.Version,
+                    Songs = songDetailsResult.Data
+                };
 
-                    Mediator.Notify(MediatorKeys.HIDE_SEARCH_BAR, null);
-                    Navigation.NavigateTo<PlaylistDetailViewModel>(detailedPlaylist);
-                }
-                else
-                {
-                    MessageBox.Show("No se pudieron cargar las canciones completas.");
-                }
+                Mediator.Notify(MediatorKeys.HIDE_SEARCH_BAR, null);
+                Navigation.NavigateTo<PlaylistDetailViewModel>(detailedPlaylist);
+            }
+            else
+            {
+                ShowPlaylistDetailsLoadError(songDetailsResult.StatusCode);
             }
         }
+
+        private void ShowPlaylistDetailsLoadError(HttpStatusCode? statusCode)
+        {
+            string title = "Error al cargar la Playlist";
+
+            string message = statusCode switch
+            {
+                HttpStatusCode.BadRequest => "Ocurrió un error al intentar cargar las canciones de la playlist. Inténtalo nuevamente más tarde.",
+                HttpStatusCode.InternalServerError => "Ocurrio un error inesperado al cargar la playlist. Por favor, intenta más tarde.",
+                _ => "No se pudo conectar con el servidor. Revisa tu conexión a internet."
+            };
+
+            DialogHelper.ShowAcceptDialog(title, message, AcceptDialogType.Error);
+        }
+
+
 
         private void ExecuteViewProfileCommand(object parameter)
         {
@@ -197,12 +228,13 @@ namespace SoundNest_Windows_Client.ViewModels
         private async Task LoadPlaylistsAsync()
         {
             var result = await _playlistService.GetPlaylistsByUserIdAsync(_userId);
+
             if (!result.IsSuccess || result.Data is null)
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     Playlists.Clear();
-                    MessageBox.Show(result.ErrorMessage);
+                    ShowUserPlaylistsLoadError(result.StatusCode);
                 });
                 return;
             }
@@ -221,18 +253,26 @@ namespace SoundNest_Windows_Client.ViewModels
                     CreatedAt = playlistResponse.CreatedAt,
                     Version = playlistResponse.Version,
                     PlaylistSongs = playlistResponse.Songs,
+                    Image = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png")
                 };
+
+                playlists.Add(playlist);
 
                 if (!string.IsNullOrEmpty(playlist.ImagePath) && playlist.ImagePath.Length > 1)
                 {
-                    playlist.Image = await ImagesHelper.LoadImageFromUrlAsync($"{ApiRoutes.BaseUrl}{playlist.ImagePath[1..]}");
+                    var imageUrl = $"{ApiRoutes.BaseUrl}{playlist.ImagePath[1..]}";
+                    _ = Task.Run(async () =>
+                    {
+                        var image = await ImagesHelper.LoadImageFromUrlAsync(imageUrl);
+                        if (image != null)
+                        {
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                playlist.Image = image;
+                            });
+                        }
+                    });
                 }
-                else
-                {
-                    playlist.Image = ImagesHelper.LoadDefaultImage("pack://application:,,,/Resources/Images/Icons/Default_Song_Icon.png");
-                }
-
-                playlists.Add(playlist);
             }
 
             Application.Current.Dispatcher.Invoke(() =>
@@ -243,6 +283,20 @@ namespace SoundNest_Windows_Client.ViewModels
                     Playlists.Add(playlist);
                 }
             });
+        }
+
+        private void ShowUserPlaylistsLoadError(HttpStatusCode? statusCode)
+        {
+            string title = "Error al cargar playlists";
+
+            string message = statusCode switch
+            {
+                HttpStatusCode.NotFound => "No se encontraron playlists para este usuario.",
+                HttpStatusCode.InternalServerError => "Ocurrió un error inesperado al obtener las playlists. Intenta más tarde.",
+                _ => "No se pudo conectar con el servidor. Revisa tu conexión a internet."
+            };
+
+            ToastHelper.ShowToast(message, NotificationType.Warning, title);
         }
 
 

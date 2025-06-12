@@ -5,6 +5,8 @@ using Services.Infrestructure;
 using Services.Navigation;
 using Song;
 using SoundNest_Windows_Client.Models;
+using SoundNest_Windows_Client.Notifications;
+using SoundNest_Windows_Client.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -120,7 +122,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show("No se pudieron cargar los géneros", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ToastHelper.ShowToast("No se pudieron cargar los géneros del buscador por un error de conexión", NotificationType.Warning, "Error");
             }
         }
 

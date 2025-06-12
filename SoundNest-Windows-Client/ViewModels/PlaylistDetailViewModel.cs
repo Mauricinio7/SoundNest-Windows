@@ -1,4 +1,5 @@
 ﻿using Services.Communication.RESTful.Constants;
+using Services.Communication.RESTful.Models;
 using Services.Communication.RESTful.Models.Playlist;
 using Services.Communication.RESTful.Models.Songs;
 using Services.Communication.RESTful.Services;
@@ -6,10 +7,13 @@ using Services.Infrestructure;
 using Services.Navigation;
 using Song;
 using SoundNest_Windows_Client.Models;
+using SoundNest_Windows_Client.Notifications;
+using SoundNest_Windows_Client.Resources.Controls;
 using SoundNest_Windows_Client.Utilities;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
@@ -105,7 +109,7 @@ namespace SoundNest_Windows_Client.ViewModels
             }
             else
             {
-                MessageBox.Show("Error al cargar la playlist seleccionada.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ToastHelper.ShowToast("Hubo un error al cargar la playlist seleccionada", NotificationType.Error, "Error");
             }
         }
 
@@ -160,6 +164,11 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private void ExecutePlayPlaylistCommand()
         {
+            if (IsPlaylistEmpty)
+            {
+                ToastHelper.ShowToast("No hay canciones para reproducir", NotificationType.Warning, "Playlist vacía");
+                return;
+            }
             Mediator.Notify(MediatorKeys.HIDE_MUSIC_PLAYER, null);
             Mediator.Notify(MediatorKeys.SHOW_MUSIC_PLAYER, Songs.ToList());
         }
@@ -185,47 +194,85 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async Task ExecuteDeletePlaylistAsync()
         {
-            if (_currentPlaylist == null) return;
-
-            var confirm = MessageBox.Show(
-                $"¿Seguro que quieres eliminar “{_currentPlaylist.PlaylistName}”?",
-                "Confirmar eliminación",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (confirm != MessageBoxResult.Yes)
+            if (_currentPlaylist == null)
                 return;
 
-            var result = await _playlistService.DeletePlaylistAsync(_currentPlaylist.Id);
+            bool confirm = DialogHelper.ShowConfirmation("Eliminar Playlist", $"¿Seguro que quieres eliminar la playlist: “{_currentPlaylist.PlaylistName}”?");
+
+            if (!confirm)
+                return;
+
+            var result = await ExecuteRESTfulApiCall(() => _playlistService.DeletePlaylistAsync(_currentPlaylist.Id));
+
             if (result.IsSuccess)
             {
-                MessageBox.Show("Playlist eliminada correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                ToastHelper.ShowToast("Playlist eliminada correctamente", NotificationType.Success, "Éxito");
                 _navigation.NavigateTo<HomeViewModel>();
             }
             else
             {
-                MessageBox.Show($"No se pudo eliminar la playlist:\n{result.ErrorMessage}",
-                                "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowPlaylistDeleteError(result);
             }
         }
+
+        private void ShowPlaylistDeleteError(ApiResult<bool> result)
+        {
+            string title = "Error al eliminar playlist";
+
+            string message = result.StatusCode switch
+            {
+                HttpStatusCode.BadRequest => "No se pudo procesar la solicitud para eliminar la playlist.",
+                HttpStatusCode.Unauthorized => "Tu sesión ha expirado. Inicia sesión nuevamente.",
+                HttpStatusCode.Forbidden => "Tu sesión ha expirado. Inicia sesión nuevamente.",
+                HttpStatusCode.NotFound => "La playlist que intentas eliminar no fue encontrada o ya fue eliminada.",
+                HttpStatusCode.InternalServerError => "Ocurrió un error inesperado al eliminar la playlist. Inténtalo más tarde.",
+                _ => "Parece que no hay conexión a internet. Inténtalo más tarde."
+            };
+
+            DialogHelper.ShowAcceptDialog(title, message, AcceptDialogType.Warning);
+        }
+
+
 
         private async Task ExecuteRemoveSongAsync(Models.Song song)
         {
             if (_currentPlaylist == null || song == null)
                 return;
 
-            var result = await _playlistService.RemoveSongFromPlaylistAsync(song.IdSong.ToString(), _currentPlaylist.Id);
+            var result = await ExecuteRESTfulApiCall(() =>
+                _playlistService.RemoveSongFromPlaylistAsync(song.IdSong.ToString(), _currentPlaylist.Id)
+            );
 
             if (result.IsSuccess)
             {
+                ToastHelper.ShowToast("Canción eliminada correctamente de la playlist", NotificationType.Success, "Éxito");
                 Mediator.Notify(MediatorKeys.REFRESH_PLAYLISTS, null);
                 Songs.Remove(song);
             }
             else
             {
-                MessageBox.Show($"Error al eliminar la canción: {result.ErrorMessage}", "Error",
-                                MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowRemoveSongFromPlaylistError(result);
             }
         }
+
+        private void ShowRemoveSongFromPlaylistError(ApiResult<bool> result)
+        {
+            string title = "Error al eliminar canción";
+
+            string message = result.StatusCode switch
+            {
+                HttpStatusCode.BadRequest => "La canción no pudo eliminarse debido a una solicitud inválida.",
+                HttpStatusCode.Unauthorized => "Tu sesión ha expirado. Inicia sesión nuevamente.",
+                HttpStatusCode.Forbidden => "No tienes permiso para modificar esta playlist.",
+                HttpStatusCode.NotFound => "La playlist no fue encontrada.",
+                HttpStatusCode.Conflict => "La canción no se encuentra en esta playlist.",
+                HttpStatusCode.InternalServerError => "Ocurrió un error inesperado al eliminar la canción. Inténtalo más tarde.",
+                _ => "No se pudo conectar con el servidor. Revisa tu conexión a internet."
+            };
+
+            DialogHelper.ShowAcceptDialog(title, message, AcceptDialogType.Warning);
+        }
+
+
     }
 }

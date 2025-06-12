@@ -10,7 +10,7 @@
         AllowsTransparency="True"
         WindowStyle="None"
         Background="Transparent"
-        Width="500" Height="280"
+        Width="500" SizeToContent="Height"
         Icon="/Resources/Images/Logos/SoundNestPureLogo.png"
         Topmost="True">
 
