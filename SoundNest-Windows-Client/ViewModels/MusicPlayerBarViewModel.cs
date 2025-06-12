@@ -272,7 +272,11 @@ namespace SoundNest_Windows_Client.ViewModels
             var playlistResponse = UserPlaylists.FirstOrDefault(p => p.Id == playlistId);
             var playlistName = playlistResponse?.PlaylistName ?? "Desconocida";
 
-            //TODO add limit of 10
+            if (playlistResponse?.Songs?.Count >= 10)
+            {
+                ToastHelper.ShowToast($"La playlist \"{playlistName}\" ya tiene 10 canciones. No puedes agregar más.", NotificationType.Warning, "Límite alcanzado");
+                return;
+            }
 
 
             if (currentIndex < 0 || currentIndex >= playlist.Count)
