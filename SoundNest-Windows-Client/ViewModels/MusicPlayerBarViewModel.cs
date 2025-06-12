@@ -263,6 +263,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async void AddSongToPlaylist(object param)
         {
+            IsPlaylistPopupVisible = false;
             if (param is not string playlistId)
             {
                 ToastHelper.ShowToast("No se pudo agregar la canción por un error inesperado, intente nuevamente", NotificationType.Error, "Parámetro inválido");
@@ -295,7 +296,6 @@ namespace SoundNest_Windows_Client.ViewModels
             {
                 Mediator.Notify(MediatorKeys.REFRESH_PLAYLISTS, null);
                 ToastHelper.ShowToast("Canción agregada a la playlist correctamente", NotificationType.Success, "Éxito");
-                IsPlaylistPopupVisible = false;
             }
             else
             {
