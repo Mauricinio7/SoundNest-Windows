@@ -358,6 +358,7 @@ namespace SoundNest_Windows_Client.ViewModels
                 HttpStatusCode.Unauthorized => "Tu sesión ha expirado. Inicia sesión nuevamente.",
                 HttpStatusCode.Forbidden => "Tu sesión ha expirado. Inicia sesión nuevamente.",
                 HttpStatusCode.InternalServerError => "Ocurrió un error inesperado al editar tu perfil. Intenta más tarde.",
+                HttpStatusCode.Conflict => "El nombre de usuario ya está en uso. Intenta con otro diferente.",
                 _ => "Se ha perdido la conexión a internet. Inténtalo nuevamente más tarde."
             };
 
