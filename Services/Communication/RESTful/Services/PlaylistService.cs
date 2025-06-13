@@ -22,6 +22,8 @@ namespace Services.Communication.RESTful.Services
         Task<ApiResult<PlaylistResponse>> CreatePlaylistAsync(string playlistName,string description,string imageBase64);
         Task<ApiResult<bool>> EditPlaylistAsync(string playlistId, string playlistName, string description);
         Task<ApiResult<List<SongResponse>>> GetSongsDetailsAsync(List<int> songIds);
+        Task<ApiResult<List<int>>> CleanDeletedSongsFromPlaylistAsync(string playlistId);
+
     }
 
     public class PlaylistService : IPlaylistService
@@ -178,6 +180,29 @@ namespace Services.Communication.RESTful.Services
 
             return ApiResult<List<SongResponse>>.Failure(result.ErrorMessage, result.Message, result.StatusCode.GetValueOrDefault());
         }
+
+        public async Task<ApiResult<List<int>>> CleanDeletedSongsFromPlaylistAsync(string playlistId)
+        {
+            var url = ApiRoutes.PlaylistCleanDeletedSongs.Replace("{idPlaylist}", playlistId);
+
+            var result = await _apiClient.PatchAsync<object, List<int>>(url, null);
+
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return ApiResult<List<int>>.Success(
+                    result.Data,
+                    "Canciones eliminadas de la playlist correctamente",
+                    result.StatusCode.GetValueOrDefault(HttpStatusCode.OK)
+                );
+            }
+
+            return ApiResult<List<int>>.Failure(
+                result.ErrorMessage ?? "Error al limpiar canciones eliminadas de la playlist",
+                result.Message,
+                result.StatusCode.GetValueOrDefault(HttpStatusCode.ServiceUnavailable)
+            );
+        }
+
 
 
     }

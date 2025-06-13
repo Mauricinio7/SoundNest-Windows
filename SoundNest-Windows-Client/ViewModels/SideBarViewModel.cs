@@ -227,6 +227,8 @@ namespace SoundNest_Windows_Client.ViewModels
 
         private async Task LoadPlaylistsAsync()
         {
+            
+
             var result = await _playlistService.GetPlaylistsByUserIdAsync(_userId);
 
             if (!result.IsSuccess || result.Data is null)
@@ -243,6 +245,7 @@ namespace SoundNest_Windows_Client.ViewModels
 
             foreach (var playlistResponse in result.Data)
             {
+                var cleanResponse = await _playlistService.CleanDeletedSongsFromPlaylistAsync(playlistResponse.Id);
                 var playlist = new Playlist
                 {
                     Id = playlistResponse.Id,

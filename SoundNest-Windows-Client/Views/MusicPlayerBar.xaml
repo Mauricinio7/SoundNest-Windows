@@ -8,13 +8,32 @@
              xmlns:controls="clr-namespace:SoundNest_Windows_Client.Resources.Controls"
              mc:Ignorable="d" 
              d:DesignWidth="800" d:DesignHeight="65">
-
+    
     <UserControl.Resources>
         <converters:ProgressToWidthConverter x:Key="ProgressToWidthConverter"/>
+        <Storyboard x:Key="SlideUpAnimation">
+            <DoubleAnimation
+            Storyboard.TargetName="RootCanvas"
+            Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+            From="100"
+            To="0"
+            Duration="0:0:0.3"
+            DecelerationRatio="0.9" />
+        </Storyboard>
     </UserControl.Resources>
+    
+    <UserControl.Triggers>
+    <EventTrigger RoutedEvent="Loaded">
+        <BeginStoryboard Storyboard="{StaticResource SlideUpAnimation}" />
+    </EventTrigger>
+    </UserControl.Triggers>
 
     <Viewbox Stretch="Fill">
-        <Canvas Width="1626" Height="109" Background="Black">
+        <Canvas x:Name="RootCanvas" Width="1626" Height="109" Background="Black">
+            <Canvas.RenderTransform>
+                <TranslateTransform Y="100"/>
+            </Canvas.RenderTransform>
+
 
             <Image Source="{Binding SongImage}" Height="55" Width="78" Canvas.Left="44" Canvas.Top="23"/>
 
