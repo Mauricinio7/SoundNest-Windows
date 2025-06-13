@@ -251,7 +251,7 @@ namespace SoundNest_Windows_Client.ViewModels
                 _ => "Parece que no hay conexión a internet, inténtalo más tarde"
             };
 
-            ToastHelper.ShowToast(message, NotificationType.Success, title);
+            ToastHelper.ShowToast(message, NotificationType.Warning, title);
         }
 
 

@@ -138,7 +138,6 @@ namespace SoundNest_Windows_Client.ViewModels
                 HttpStatusCode.InternalServerError => "Ocurrió un error inesperado al crear tu cuenta. Inténtalo más tarde.",
                 _ => "No se pudo conectar con el servidor. Verifica tu conexión a internet."
             };
-
             DialogHelper.ShowAcceptDialog(title, message, AcceptDialogType.Error);
         }
 
@@ -152,6 +151,9 @@ namespace SoundNest_Windows_Client.ViewModels
 
             if (errorMessage.Contains("Email", StringComparison.OrdinalIgnoreCase))
                 return "El correo electrónico ya está en uso. Intenta con uno diferente.";
+
+            if (errorMessage.Contains("code", StringComparison.OrdinalIgnoreCase))
+                return "El código ingresado no es válido, confirmelo e inténtelo de nuevo";
 
             return "El nombre de usuario o correo ya se encuentra registrado en la plataforma. Intenta con otros datos.";
         }
